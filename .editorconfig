@@ -1,0 +1,48 @@
+root = true
+
+[*]
+# LF line endings required for deterministic hashing (see .gitattributes).
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Rust and Python: 4-space indents
+[*.rs]
+indent_style = space
+indent_size = 4
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+# Config and markup: 2-space indents
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.toml]
+indent_style = space
+indent_size = 2
+
+[*.yml]
+indent_style = space
+indent_size = 2
+
+[*.yaml]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_style = space
+indent_size = 2
+
+# Fixtures are byte-hashed evidence, not source to be tidied. expected.json
+# records a snippet_sha256 over their exact bytes, and trailing whitespace or a
+# missing final newline can be the very thing a rule detects — whitespace padding
+# is a real technique for hiding content in a skill bundle. An editor that
+# silently "cleans" a fixture on save breaks the rule and leaves a diff nobody
+# would think to question.
+[fixtures/**]
+insert_final_newline = false
+trim_trailing_whitespace = false

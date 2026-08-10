@@ -22,7 +22,8 @@ fixtures/python/credential-read/
 
 `skillaudit rules validate` checks that all three exist, that the query compiles against the
 grammar, that captures and roles line up **in both directions** (see below), and that both
-fixtures produce their expected outcome. It runs in CI. A rule missing a negative fixture is
+fixtures produce their expected outcome. It will run in CI once the engine exists (task T4);
+neither `rules validate` nor `rules bless` is implemented yet. A rule missing a negative fixture is
 rejected — that is an untested false-positive generator (invariant 8).
 
 ## Capture roles — the engine's whole vocabulary

@@ -1,0 +1,109 @@
+# CI for the pre-Rust stage of skillaudit (T0, docs/00-tasks.md).
+#
+# No cargo workspace member exists yet (Cargo.toml has `members = []` on
+# purpose — twelve empty crates would be twelve stubs, invariant 12), so
+# there is deliberately no fmt/clippy/test/determinism-matrix job here. Those
+# join this workflow when the first crate lands (T1, skillaudit-core).
+#
+# What these jobs guard today:
+#
+#   spec           - invariant 2  (canonical, sortable, schema-conformant manifest shape)
+#                     invariant 3  (unresolved vs. diagnostics stay two closed, non-overlapping enums)
+#                     invariant 4  (proven/pattern evidence is complete-or-rejected by the schema)
+#                     invariant 5  (the three assurance tiers never blend — advisory's
+#                                   evidence type structurally cannot carry rule_id/snippet_sha256)
+#                     invariant 6  (advisory.enabled pins model + prompt_sha256, or carries neither)
+#                     invariant 12 (every prose-referenced path either exists or is a documented,
+#                                   allowlisted gap — no aspirational references left unverified)
+#   line-endings   - invariant 2  (byte-identical hashing breaks the moment a fixture is
+#                                   checked out with CRLF; run on windows-latest specifically
+#                                   because that is the one platform where it can happen)
+#   toolchain-pin  - invariant 9  (reproducible builds require an exact, non-floating
+#                                   Rust channel — this guards the promise before any
+#                                   code exists to build)
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  spec:
+    name: spec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install jsonschema pyyaml
+
+      - name: Run spec verifier
+        run: python scripts/verify_spec.py
+
+  line-endings:
+    name: line-endings (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      # Must happen before checkout: otherwise the Windows runner's default
+      # autocrlf=true rewrites LF to CRLF on the way into the working tree,
+      # and this job ends up testing git's checkout behaviour instead of
+      # whether the repository's own tracked bytes are LF.
+      - name: Disable line-ending rewriting on checkout
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No pip install: --only line-endings uses nothing but the standard library
+      # and git. Installing jsonschema here would be a dependency this job never
+      # touches.
+      - name: Verify no tracked text file contains CRLF
+        run: python scripts/verify_spec.py --only line-endings
+
+  toolchain-pin:
+    name: toolchain-pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Assert rust-toolchain.toml pins an exact version
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          path = pathlib.Path("rust-toolchain.toml")
+          if not path.is_file():
+              print("rust-toolchain.toml is missing")
+              sys.exit(1)
+
+          text = path.read_text(encoding="utf-8")
+          match = re.search(r'channel\s*=\s*"([^"]+)"', text)
+          if not match:
+              print("rust-toolchain.toml has no [toolchain] channel field")
+              sys.exit(1)
+
+          channel = match.group(1)
+          if channel in {"stable", "beta", "nightly"} or not re.fullmatch(r"\d+\.\d+\.\d+", channel):
+              print(f"rust-toolchain.toml channel is not pinned to an exact version: {channel!r}")
+              sys.exit(1)
+
+          print(f"rust-toolchain.toml pins channel = {channel}")
+          PY

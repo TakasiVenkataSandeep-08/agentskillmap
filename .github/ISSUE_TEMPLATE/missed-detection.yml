@@ -1,0 +1,44 @@
+name: Missed detection
+description: The manifest did not report a capability this skill actually has.
+title: "[missed-detection] "
+labels: ["missed-detection"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the single highest-value report this project can receive: a real skill doing
+        something the manifest stayed quiet about. It doesn't need a fix attached — the
+        capability term and a pointer to the bundle are enough.
+  - type: input
+    id: bundle
+    attributes:
+      label: Bundle
+      description: Link to the skill repo, or a path if it's local.
+      placeholder: "https://github.com/<user>/<repo> or a local path"
+    validations:
+      required: true
+  - type: input
+    id: capability
+    attributes:
+      label: Capability that was missed
+      description: >-
+        The taxonomy term from docs/02-manifest-schema.md, if you know it (e.g.
+        fs.read.credential). If none fits, say so — that's useful too.
+      placeholder: "e.g. process.exec.dynamic"
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Where in the bundle
+      description: File and line, if you know it.
+      placeholder: "scripts/run.sh:14"
+    validations:
+      required: false
+  - type: textarea
+    id: manifest-said
+    attributes:
+      label: What the manifest said instead
+      description: Paste the relevant section, or say "nothing at all" / "unresolved entry" / etc.
+    validations:
+      required: true

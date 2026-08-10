@@ -53,7 +53,6 @@ skillaudit/
 ├── rust-toolchain.toml         # pinned exactly — reproducible builds (invariant 9)
 ├── deny.toml                   # cargo-deny: our own supply chain
 ├── rustfmt.toml
-├── .cargo/config.toml          # --remap-path-prefix; no absolute paths in the binary
 ├── .gitattributes              # LF normalization — a CRLF fixture changes its SHA-256
 ├── .editorconfig
 ├── .claude/                    # skills, subagents, commands, hooks (Claude Code only)

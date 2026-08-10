@@ -1,0 +1,8 @@
+[toolchain]
+# Pin an exact stable Rust version to guarantee byte-identical builds.
+# An unpinned toolchain (e.g. "stable") compiles with a different version
+# on different CI runs and machines, breaking invariant 2's determinism promise.
+# Reproducible builds are non-negotiable for a supply-chain auditor.
+channel = "1.85.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

@@ -1,0 +1,32 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/hooks/check_library_lints.py 2>/dev/null || python scripts/hooks/check_library_lints.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 scripts/hooks/check_schema_change.py 2>/dev/null || python scripts/hooks/check_schema_change.py"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo tree:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(python scripts/verify_spec.py)"
+    ]
+  }
+}

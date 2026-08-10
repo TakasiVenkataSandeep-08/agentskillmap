@@ -154,6 +154,13 @@ esbuild-style. **No `postinstall` download script** — that is itself a supply-
 indefensible in this project specifically. Plus `cargo install`, Homebrew tap, reproducible
 and signed releases.
 
+**Path sanitization belongs here, not in a checked-in `.cargo/config.toml`.** Absolute build
+paths and usernames must not reach the binary, but neither `--remap-path-prefix` nor Cargo's
+`trim-paths` can express that portably in a committed file: `--remap-path-prefix` needs a
+literal `FROM=TO` where `FROM` is the machine's own workspace path, and `trim-paths` is still
+nightly-only. So it is set via `RUSTFLAGS` in the release workflow, where the actual paths are
+known, and verified by the byte-identity check below rather than assumed.
+
 **Done when:** two builds of the same tag from clean checkouts are byte-identical.
 
 ---

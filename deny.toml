@@ -1,0 +1,58 @@
+# cargo-deny policy — this project's own supply chain.
+#
+# SECURITY.md promises a minimal dependency tree where "every dependency is one
+# this project would have to defend in the threat model above". That promise
+# erodes on the first convenience crate unless something enforces it. A
+# supply-chain auditor with an ungated supply chain is precisely the failure this
+# project exists to describe in other people's repositories.
+#
+# Run: cargo deny check
+#
+# Schema note: cargo-deny 0.16 removed the per-severity toggles that older
+# configs carry (`vulnerability`, `notice`, `severity-threshold` under
+# [advisories]; `copyleft`, `allow-osi-fsf-free`, `unlicensed` under [licenses]).
+# All advisories now error unconditionally. Do not reintroduce those keys — they
+# make the config fail to parse, which silently disables the gate.
+
+[advisories]
+# Any crate with a yanked version in the lockfile fails the check.
+yanked = "deny"
+# "all": an unmaintained advisory on any crate in the graph fails, direct or
+# transitive. A transitive unmaintained crate is still code we ship.
+unmaintained = "all"
+# Every ignore needs a comment naming why and when it gets revisited.
+ignore = []
+
+[licenses]
+# Permissive only. The project is Apache-2.0; anything reciprocal would change
+# what downstream users can do with the binary, which is not a decision to make
+# by accident in a transitive dependency.
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+]
+# Below this, treat the license as undetermined rather than guessing.
+confidence-threshold = 0.8
+
+[bans]
+# Duplicate versions are how a "minimal dependency tree" stops being minimal:
+# two versions of the same crate double the code that has to be defended, and
+# nobody notices because neither one is a new name in Cargo.toml.
+multiple-versions = "deny"
+# A wildcard version is an unreviewed future upgrade.
+wildcards = "deny"
+# Exceptions go here with a comment naming the crate, the reason, and who owns
+# removing it. An empty list is the desired steady state.
+skip = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# No git dependencies. A git dep is a dependency without a published, immutable
+# artifact behind it — the exact shape of supply-chain risk this tool reports.
+allow-git = []

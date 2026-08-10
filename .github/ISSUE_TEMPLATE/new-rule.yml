@@ -1,0 +1,39 @@
+name: New rule proposal
+description: Propose detection coverage for a pattern no existing rule catches.
+title: "[new-rule] "
+labels: ["new-rule"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For the full walkthrough on writing the rule yourself — no Rust required — see
+        CONTRIBUTING.md, "Add a detection rule in 15 minutes".
+  - type: textarea
+    id: pattern
+    attributes:
+      label: What pattern is missed
+      description: Code or prose shape that should be detected but isn't today.
+    validations:
+      required: true
+  - type: input
+    id: capability
+    attributes:
+      label: Capability term
+      description: From the closed taxonomy in docs/02-manifest-schema.md. If none fits, say so.
+      placeholder: "e.g. code.obfuscation"
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "e.g. python, bash, markdown (instruction-plane)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to write the rule (query + TOML + fixtures) myself
+          required: false

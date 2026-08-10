@@ -1,0 +1,44 @@
+name: False positive
+description: The manifest reported a capability that isn't really there.
+title: "[false-positive] "
+labels: ["false-positive"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        False-positive rate on the benign stratum is the headline metric that determines
+        whether this tool survives contact with users (docs/05-eval.md). If a rule fired on
+        something it shouldn't have, this is the report that fixes it.
+  - type: input
+    id: bundle
+    attributes:
+      label: Bundle
+      description: Link to the skill repo, or a path if it's local.
+      placeholder: "https://github.com/<user>/<repo> or a local path"
+    validations:
+      required: true
+  - type: input
+    id: capability
+    attributes:
+      label: Capability or signal reported
+      description: The taxonomy term or instruction.* signal from the manifest.
+      placeholder: "e.g. fs.read.credential"
+    validations:
+      required: true
+  - type: input
+    id: rule-id
+    attributes:
+      label: Rule id
+      description: From the evidence entry's rule_id field, if the manifest includes one.
+      placeholder: "e.g. py.credential-read.dotfile"
+    validations:
+      required: false
+  - type: textarea
+    id: why-wrong
+    attributes:
+      label: Why this is wrong
+      description: >-
+        What's actually happening at that site, and why it isn't the capability the manifest
+        claims. Quote or link the code if you can.
+    validations:
+      required: true

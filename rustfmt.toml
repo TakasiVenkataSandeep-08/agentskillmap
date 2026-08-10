@@ -1,0 +1,8 @@
+# Rustfmt configuration - conservative and reproducible.
+# Only uses stable options to work with the pinned toolchain.
+# Nightly-only options (group_imports, imports_granularity, wrap_comments)
+# are omitted because they silently no-op on stable, breaking consistency.
+
+edition = "2021"
+max_width = 100
+newline_style = "Unix"

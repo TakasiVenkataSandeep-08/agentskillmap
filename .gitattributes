@@ -1,0 +1,34 @@
+# Line-ending normalization for byte-identical builds.
+# ============================================================
+# Test fixtures and hashed content must have LF line endings.
+# If a fixture is checked out with CRLF, its SHA-256 hash changes,
+# silently breaking determinism checks and invariant 2.
+
+* text=auto eol=lf
+
+# Explicitly set LF for files that are hashed or byte-compared:
+# Fixtures (multiple languages)
+*.py eol=lf
+*.js eol=lf
+*.ts eol=lf
+*.sh eol=lf
+*.rb eol=lf
+
+# Documentation and configuration
+*.md eol=lf
+*.json eol=lf
+*.toml eol=lf
+*.scm eol=lf
+*.yml eol=lf
+*.yaml eol=lf
+
+# Rust source
+*.rs eol=lf
+
+# Binary files (truly binary, not text). Anything listed here is skipped by the
+# CRLF check in scripts/verify_spec.py, so a binary left unmarked gets read as
+# text and its byte pairs reported as line-ending damage.
+*.png binary
+*.gz binary
+*.zip binary
+*.pyc binary

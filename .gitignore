@@ -1,0 +1,28 @@
+# Rust build artifacts
+/target/
+
+# Corpus raw data (may be large)
+/corpus/raw/
+
+# Environment variables
+.env
+
+# Coverage profiling data
+*.profraw
+
+# Python bytecode. scripts/ is run directly by CI and by the PostToolUse hooks,
+# so __pycache__ appears during ordinary work. Committing it is not merely noise:
+# a .pyc is binary, verify_spec.py's CRLF check reads every tracked non-binary
+# file as text, and the byte pairs inside bytecode trip it — producing a false
+# invariant-2 alarm on the repo's own determinism check.
+__pycache__/
+*.pyc
+.venv/
+
+# Merge and patch leftovers
+*.orig
+*.rej
+
+# OS-specific noise
+.DS_Store
+Thumbs.db
