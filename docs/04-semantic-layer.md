@@ -45,8 +45,8 @@ them. The auditor is a target. Treat every design decision accordingly.
 The pass returns its own type, `AdvisoryFinding`, and the manifest assembler is the only
 code that sees both it and the deterministic findings. There is no code path by which an
 advisory finding can create, modify, suppress, or reprioritize an entry in `capabilities`,
-`instructions`, or `unresolved`. Enforce this with crate boundaries — `skillaudit-semantic`
-does not depend on `skillaudit-code` or `skillaudit-instr` — not with review discipline.
+`instructions`, or `unresolved`. Enforce this with crate boundaries — `skillmap-semantic`
+does not depend on `skillmap-code` or `skillmap-instr` — not with review discipline.
 
 A consumer must be able to delete the `advisory` key and lose nothing else.
 

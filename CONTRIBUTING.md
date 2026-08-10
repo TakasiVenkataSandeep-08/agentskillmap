@@ -1,8 +1,8 @@
-# Contributing to skillaudit
+# Contributing to skillmap
 
-This repository is **pre-alpha**. Nothing runs yet — there is no `skillaudit` binary, no
+This repository is **pre-alpha**. Nothing runs yet — there is no `skillmap` binary, no
 `cargo` workspace member outside what `docs/00-tasks.md` has already unlocked, and the
-commands referenced below (`skillaudit rules validate`, `skillaudit rules bless`) do not
+commands referenced below (`skillmap rules validate`, `skillmap rules bless`) do not
 exist yet. `docs/00-tasks.md` is the source of truth for what is being built, in what order,
 and what "done" means for each stage. Do not start a task whose predecessor's acceptance
 criteria are unmet — the ordering is load-bearing, not a suggestion (see `AGENTS.md`, build
@@ -35,7 +35,7 @@ coverage cannot be allowed to require Rust. This section is what backs that bet.
 read a tree-sitter query and edit a TOML file, you can add a rule — no crate ever needs to
 change.
 
-The engine itself doesn't exist yet (`skillaudit-rules` and `skillaudit-code` are task **T4**
+The engine itself doesn't exist yet (`skillmap-rules` and `skillmap-code` are task **T4**
 in `docs/00-tasks.md`), so a rule PR today can't be run against a live scanner. What it can
 do, and what reviewers will check, is match the shape of the one rule this repository
 already ships as its contract: `rules/python/credential-read.toml`,
@@ -73,7 +73,7 @@ structural query; a textual one breaks on the first reformat.
 Two hard rules for the query file:
 
 - **Capture the smallest span that identifies the site**, and tag it `@site`. Evidence spans
-  are what a human reads inside a PR or a `skillaudit ci` failure — a whole-function capture
+  are what a human reads inside a PR or a `skillmap ci` failure — a whole-function capture
   tells a reviewer nothing they can act on in ten seconds.
 - **Never put a path list, a host list, or any other literal data inside the query.** Data
   goes in the TOML's `[match]` table (step 3), specifically so a contributor extending
@@ -140,9 +140,9 @@ grep in disguise.
 
 ### 5. Bless and validate
 
-`skillaudit rules bless` will fill in the byte offsets in `expected.json` once the engine
+`skillmap rules bless` will fill in the byte offsets in `expected.json` once the engine
 exists — those offsets are not something you hand-write, and `expected.json` in the
-reference triple says so explicitly rather than pretending to be complete. `skillaudit rules
+reference triple says so explicitly rather than pretending to be complete. `skillmap rules
 validate` will then check that the query compiles, that captures and roles line up in both
 directions, and that both fixtures produce their expected outcome.
 

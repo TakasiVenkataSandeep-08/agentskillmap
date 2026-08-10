@@ -42,7 +42,7 @@ returns its own finding type, and only the manifest assembler sees all three.
 ## Workspace layout
 
 ```
-skillaudit/
+skillmap/
 ├── Cargo.toml                  # workspace
 ├── AGENTS.md                   # invariants — read first (canonical)
 ├── CLAUDE.md                   # pointer to AGENTS.md + Claude Code tooling
@@ -58,18 +58,18 @@ skillaudit/
 ├── .claude/                    # skills, subagents, commands, hooks (Claude Code only)
 ├── scripts/                    # verify_spec.py and friends
 ├── crates/                     # target layout; members are added as their task begins
-│   ├── skillaudit-core/        # types, manifest, canonical ser, capability taxonomy
-│   ├── skillaudit-resolve/     # Resolver trait + per-agent discovery conventions
-│   ├── skillaudit-parse/       # bundle parse, frontmatter, inventory, reference graph
-│   ├── skillaudit-rules/       # rule loading, validation, tree-sitter query engine
-│   ├── skillaudit-code/        # code plane: sinks + reachability      → tier `proven`
-│   ├── skillaudit-instr/       # instruction plane: lexical patterns   → tier `pattern`
-│   ├── skillaudit-semantic/    # quarantined model pass                → tier `advisory`
-│   ├── skillaudit-policy/      # policy.toml, allowlists, exit codes
-│   ├── skillaudit-diff/        # manifest delta
-│   ├── skillaudit-corpus/      # research harvester (build step 1)
-│   ├── skillaudit-eval/        # labeled corpus, metrics, CI gate
-│   └── skillaudit-cli/         # bin: `skillaudit`
+│   ├── skillmap-core/        # types, manifest, canonical ser, capability taxonomy
+│   ├── skillmap-resolve/     # Resolver trait + per-agent discovery conventions
+│   ├── skillmap-parse/       # bundle parse, frontmatter, inventory, reference graph
+│   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine
+│   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`
+│   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`
+│   ├── skillmap-semantic/    # quarantined model pass                → tier `advisory`
+│   ├── skillmap-policy/      # policy.toml, allowlists, exit codes
+│   ├── skillmap-diff/        # manifest delta
+│   ├── skillmap-corpus/      # research harvester (build step 1)
+│   ├── skillmap-eval/        # labeled corpus, metrics, CI gate
+│   └── skillmap-cli/         # bin: `skillmap`
 ├── rules/                      # TOML rule metadata (data, not code)
 ├── queries/                    # tree-sitter .scm queries
 ├── fixtures/                   # positive/negative + expected manifests
@@ -136,7 +136,7 @@ A rule is a directory-free triple:
 - `queries/<lang>/<id>.scm` — tree-sitter query producing captures
 - `fixtures/<lang>/<id>/{positive,negative}.*` + `expected.json`
 
-The engine loads and validates all rules at startup (`skillaudit rules validate` in CI),
+The engine loads and validates all rules at startup (`skillmap rules validate` in CI),
 runs queries per parsed file, maps captures to capability findings, and attaches provenance
 from the capture's byte range. See `docs/03-rules-authoring.md`.
 
@@ -161,9 +161,9 @@ javascript/typescript, then the long tail. Every unsupported language yields an
 
 ## Distribution
 
-Rust binary, npm wrapper, esbuild-style: `skillaudit` is a thin package whose
-`optionalDependencies` are per-platform packages (`@skillaudit/linux-x64`,
-`@skillaudit/darwin-arm64`, …) each containing one prebuilt binary. The wrapper resolves and
+Rust binary, npm wrapper, esbuild-style: `skillmap` is a thin package whose
+`optionalDependencies` are per-platform packages (`@skillmap/linux-x64`,
+`@skillmap/darwin-arm64`, …) each containing one prebuilt binary. The wrapper resolves and
 execs. No `postinstall` download script — that is itself a supply-chain smell and would be
 indefensible in this project specifically.
 
@@ -180,4 +180,4 @@ than a Claude-Code-shaped hardcode, and why `policy` and `diff` are first-class 
 than CLI flags.
 
 The durable asset is not the scanner — it is the corpus and the growing labeled set.
-Treat `crates/skillaudit-corpus` and `fixtures/` as the crown jewels.
+Treat `crates/skillmap-corpus` and `fixtures/` as the crown jewels.

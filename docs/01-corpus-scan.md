@@ -11,7 +11,7 @@ credibility than a scanner nobody needs.
 
 ## Deliverable
 
-`skillaudit corpus` — a subcommand in `crates/skillaudit-corpus`, not a throwaway script.
+`skillmap corpus` — a subcommand in `crates/skillmap-corpus`, not a throwaway script.
 It shares the parser and inventory code with the main path, which is exactly why it goes
 first: writing it forces the parser and the manifest into existence against real input
 instead of imagined input.

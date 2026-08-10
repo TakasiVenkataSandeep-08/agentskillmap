@@ -1,6 +1,6 @@
-# skillaudit — agent and contributor context
+# skillmap — agent and contributor context
 
-> `skillaudit` is a placeholder name. Check crates.io / npm availability before the first
+> `skillmap` is a placeholder name. Check crates.io / npm availability before the first
 > publish and `sed` it across the workspace if you rename. Do not defer this past v0.2.
 
 **This file is canonical.** It is the single source of truth for the invariants, the build
@@ -90,7 +90,7 @@ tier by the schema, not by the author's judgement:
   a model's prose citation would be manufactured precision — worse than an honest line
   number, because it looks checkable and is not.
 
-The distinction is enforced by two separate evidence types in `skillaudit-core` and two
+The distinction is enforced by two separate evidence types in `skillmap-core` and two
 separate `$defs` in the schema, so the advisory tier cannot claim deterministic provenance
 even by accident.
 

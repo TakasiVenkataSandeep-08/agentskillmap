@@ -20,7 +20,7 @@ fixtures/python/credential-read/
     expected.json                        # canonical manifest fragment
 ```
 
-`skillaudit rules validate` checks that all three exist, that the query compiles against the
+`skillmap rules validate` checks that all three exist, that the query compiles against the
 grammar, that captures and roles line up **in both directions** (see below), and that both
 fixtures produce their expected outcome. It will run in CI once the engine exists (task T4);
 neither `rules validate` nor `rules bless` is implemented yet. A rule missing a negative fixture is

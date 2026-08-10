@@ -12,7 +12,7 @@ against that schema in CI — if the two ever disagree, the build fails.
 ```json
 {
   "schema_version": "1.0.0",
-  "tool": { "name": "skillaudit", "version": "0.1.0" },
+  "tool": { "name": "skillmap", "version": "0.1.0" },
 
   "target": {
     "kind": "skill",
@@ -181,7 +181,7 @@ root   = sha256( leaf_0 || leaf_1 || … || leaf_n )               # leaves in s
   Windows cannot change the digest.
 - **`load_phase` and `parse_status` are excluded.** The digest means *"these bytes"*, nothing
   more. Including classification would mean every improvement to the load-phase classifier
-  invalidates every `skillaudit.lock` in every repo that uses the tool — churn with no
+  invalidates every `skillmap.lock` in every repo that uses the tool — churn with no
   corresponding change in what the skill can do.
 
 **`target.root`** is a forward-slash path relative to the **resolver's discovery root** — for
@@ -221,7 +221,7 @@ Non-negotiable, per invariant 2:
 - Paths relative to bundle root, forward slashes.
 - Floats: none. If you think you need one, you're building a score. See invariant 1.
 
-Write the canonicalizer as one function in `skillaudit-core` and make it the only path to
+Write the canonicalizer as one function in `skillmap-core` and make it the only path to
 serialization. Do not let `serde_json::to_string_pretty` escape into the codebase.
 
 ## Capability taxonomy (v1, closed vocabulary)
@@ -270,7 +270,7 @@ about logging verbosity and permissions — negative fixtures for those are load
 | `semantic_call_failed` | The semantic model call did not complete |
 | `policy_load_error` | `policy.toml` could not be read or parsed |
 
-## `skillaudit.lock`
+## `skillmap.lock`
 
 Per-project lockfile: for each installed bundle, `{ resolver, root, content_digest,
 capabilities: [term…], schema_version }`. Deliberately *not* the full manifest — it is

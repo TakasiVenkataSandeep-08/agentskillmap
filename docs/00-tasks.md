@@ -30,7 +30,7 @@ the schema and `docs/02-manifest-schema.md` example validate against each other.
 
 ---
 
-## T1 — `skillaudit-core`: manifest types and canonical serialization
+## T1 — `skillmap-core`: manifest types and canonical serialization
 
 Build the spine before anything that produces data.
 
@@ -46,7 +46,7 @@ across 1,000 randomized field-insertion orders, and validates against the schema
 
 ---
 
-## T2 — `skillaudit-parse` + `skillaudit-resolve`: bundles and inventory
+## T2 — `skillmap-parse` + `skillmap-resolve`: bundles and inventory
 
 - `Resolver` trait; `claude-code` impl first, second resolver chosen by T4 data.
 - Frontmatter parsing, file walk, per-file SHA-256, merkle `content_digest`.
@@ -62,7 +62,7 @@ across two runs on two platforms.
 
 ---
 
-## T3 — `skillaudit-corpus`: the harvest
+## T3 — `skillmap-corpus`: the harvest
 
 Depends on T2 because it reuses the parser. See `docs/01-corpus-scan.md` for sources,
 sampling discipline, and the full measurement list.
@@ -79,9 +79,9 @@ format-scope decision rule (≥5% presence) has been applied to pick v1 resolver
 
 ---
 
-## T4 — `skillaudit-rules` + `skillaudit-code`: the engine
+## T4 — `skillmap-rules` + `skillmap-code`: the engine
 
-- Rule loader and validator (`skillaudit rules validate`), tree-sitter query execution,
+- Rule loader and validator (`skillmap rules validate`), tree-sitter query execution,
   capture → finding mapping with provenance.
 - Reachability: call graph from entry points; `observed` / `present` / `unresolved`.
   Intra-file plus direct cross-file imports only. Do not claim more than you established.
@@ -96,7 +96,7 @@ unported, and the adversarial "sink in dead code" case reports `present` rather 
 
 ---
 
-## T5 — `skillaudit-instr`: instruction plane
+## T5 — `skillmap-instr`: instruction plane
 
 - `tier = "pattern"`, markdown grammar, `instruction.*` namespace only.
 - Write three negative fixtures **drawn from real corpus bundles** before writing the query
@@ -107,7 +107,7 @@ signal.
 
 ---
 
-## T6 — `skillaudit-eval`: harness and CI gate
+## T6 — `skillmap-eval`: harness and CI gate
 
 See `docs/05-eval.md`. Three suites: fixture, corpus, adversarial. Per-capability metrics,
 `unresolved` rate tracked, held-out split fixed by seed.
@@ -117,12 +117,12 @@ with the corpus version that produced them.
 
 ---
 
-## T7 — `skillaudit-semantic`: the quarantined pass
+## T7 — `skillmap-semantic`: the quarantined pass
 
 See `docs/04-semantic-layer.md`. Built now, not earlier, because it is measured against the
 labels from T3.
 
-- Crate does not depend on `skillaudit-code` or `skillaudit-instr` — quarantine enforced by
+- Crate does not depend on `skillmap-code` or `skillmap-instr` — quarantine enforced by
   the dependency graph, not by review.
 - Deleting the `advisory` key from output must lose nothing else.
 
@@ -134,10 +134,10 @@ without this and say so in the README.
 
 ---
 
-## T8 — `skillaudit-policy` + `skillaudit-diff` + CI action
+## T8 — `skillmap-policy` + `skillmap-diff` + CI action
 
 - `policy.toml`: per-repo capability allowlist, exit codes.
-- `skillaudit.lock`: digest + capability set only, human-reviewable in a PR.
+- `skillmap.lock`: digest + capability set only, human-reviewable in a PR.
 - Diff: capability escalation detection between lock and recompute.
 - GitHub Action wrapping the CI subcommand.
 
@@ -179,7 +179,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **`policy.toml` has no format spec.** Referenced in `AGENTS.md` (invariant 1),
   `docs/02-manifest-schema.md`, and T8. Writing it before T8 would be speculation, since the
   exit-code semantics depend on what the diff turns out to need.
-- **`skillaudit.lock` is specified in one sentence.** Enough to build against at T8, not
+- **`skillmap.lock` is specified in one sentence.** Enough to build against at T8, not
   enough for a third party to write a compatible reader. Expand when the diff exists.
 - **`rules/languages.toml` does not exist.** The extension → grammar mapping described in
   `docs/03-rules-authoring.md`. A T4 input.
@@ -187,4 +187,4 @@ front of; each is a thing this repository currently claims or implies but does n
   shipping a term no rule detects, so v1.0 either grows rules to cover the taxonomy or the
   taxonomy shrinks to match the rules. T4 decides which, from T3's data — not from ambition.
 - **`OWNER` is a placeholder** in `Cargo.toml`'s `repository` and the schema `$id`, and
-  `skillaudit` is a placeholder name. `AGENTS.md` says do not defer past v0.2.
+  `skillmap` is a placeholder name. `AGENTS.md` says do not defer past v0.2.

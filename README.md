@@ -1,4 +1,4 @@
-# skillaudit
+# skillmap
 
 > Name is a placeholder — check crates.io and npm availability before first publish.
 
@@ -25,8 +25,8 @@ closes that gap mechanically.
 ## The check that matters
 
 ```
-$ skillaudit ci
-✗ example-skill  capability escalation vs skillaudit.lock
+$ skillmap ci
+✗ example-skill  capability escalation vs skillmap.lock
     + fs.read.credential   scripts/collect.py:17   py.credential-read.dotfile
       reads ~/.aws/credentials — added in this update
 ```
