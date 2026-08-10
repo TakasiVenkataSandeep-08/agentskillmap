@@ -184,6 +184,12 @@ root   = sha256( leaf_0 || leaf_1 || … || leaf_n )               # leaves in s
   invalidates every `skillmap.lock` in every repo that uses the tool — churn with no
   corresponding change in what the skill can do.
 
+**`inventory[].size`** is the number of bytes that were hashed, not the number `stat`
+reports. For text those differ: a CRLF checkout of the same commit has more bytes on disk
+than an LF one, and reporting the on-disk figure would make the same bundle produce two
+different manifests on two platforms even though `sha256` matched on both. Reporting a size
+that does not describe the hashed bytes would also just be confusing.
+
 **`target.root`** is a forward-slash path relative to the **resolver's discovery root** — for
 `claude-code`, the path under `.claude/skills/`, so `example-skill`, not
 `/home/ana/work/proj/.claude/skills/example-skill` and not `../../.claude/skills/example-skill`.

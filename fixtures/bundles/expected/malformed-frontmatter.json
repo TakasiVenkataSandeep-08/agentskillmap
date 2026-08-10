@@ -1,0 +1,46 @@
+{
+  "advisory": {
+    "enabled": false,
+    "findings": []
+  },
+  "capabilities": [],
+  "diagnostics": [],
+  "disclosure": {
+    "declared_capabilities": [],
+    "description_bytes": 0,
+    "reference_files": 0,
+    "trigger_terms": [],
+    "unreferenced_files": 0
+  },
+  "instructions": [],
+  "inventory": [
+    {
+      "load_phase": "on_trigger",
+      "parse_status": "ok",
+      "parsed_as": "markdown",
+      "path": "SKILL.md",
+      "sha256": "sha256:f9b3999d04a24e6f2bede6b3a20c18b94cc4f9c76a5afd0f294a679cfbb13fd3",
+      "size": 194
+    }
+  ],
+  "schema_version": "1.0.0",
+  "target": {
+    "content_digest": "sha256:b84f63bb586f1137ee7b540b4a97586d3e2607e7f2aae5f439a3743d6438636b",
+    "kind": "skill",
+    "name": "malformed-frontmatter",
+    "resolver": "claude-code",
+    "root": "malformed-frontmatter"
+  },
+  "tool": {
+    "name": "skillmap",
+    "version": "0.1.0"
+  },
+  "unresolved": [
+    {
+      "file": "SKILL.md",
+      "note": "frontmatter: duplicate key `description`: which value wins is engine-dependent",
+      "reason": "parse_error",
+      "start_line": 4
+    }
+  ]
+}

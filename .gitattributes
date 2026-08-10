@@ -32,3 +32,4 @@
 *.gz binary
 *.zip binary
 *.pyc binary
+*.bin binary

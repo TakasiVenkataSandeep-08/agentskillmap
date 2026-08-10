@@ -1,0 +1,16 @@
+[package]
+name = "skillmap-parse"
+description = "Bundle parsing: frontmatter, inventory, hashing, and load-phase classification."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+skillmap-core = { path = "../skillmap-core" }
+skillmap-resolve = { path = "../skillmap-resolve" }
+sha2.workspace = true
+
+[lints]
+workspace = true

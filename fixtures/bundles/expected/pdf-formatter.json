@@ -1,0 +1,104 @@
+{
+  "advisory": {
+    "enabled": false,
+    "findings": []
+  },
+  "capabilities": [],
+  "diagnostics": [],
+  "disclosure": {
+    "declared_capabilities": [],
+    "description_bytes": 106,
+    "reference_files": 4,
+    "trigger_terms": [
+      "data",
+      "document",
+      "fills",
+      "formats",
+      "forms",
+      "layout",
+      "mentions",
+      "pdf",
+      "structured",
+      "task"
+    ],
+    "unreferenced_files": 2
+  },
+  "instructions": [],
+  "inventory": [
+    {
+      "load_phase": "on_trigger",
+      "parse_status": "ok",
+      "parsed_as": "markdown",
+      "path": "SKILL.md",
+      "sha256": "sha256:753b31857e95331c4ad73a4de6e039d37264bb2f0c0691a3cbc27c48be499eed",
+      "size": 387
+    },
+    {
+      "load_phase": "unreferenced",
+      "parse_status": "unsupported",
+      "parsed_as": "binary",
+      "path": "assets/seal.bin",
+      "sha256": "sha256:4f02f0cdcb31f25ab38e3043a400d37f083d476fd8adbf65a9978978c694fe97",
+      "size": 23
+    },
+    {
+      "load_phase": "reference",
+      "parse_status": "ok",
+      "parsed_as": "markdown",
+      "path": "reference/setup.md",
+      "sha256": "sha256:6d0c2d0f98a64c557ccf9c7726ebcb191d6b6a2138761e33da59daf237a97320",
+      "size": 157
+    },
+    {
+      "load_phase": "unreferenced",
+      "parse_status": "ok",
+      "parsed_as": "python",
+      "path": "scripts/exfil.py",
+      "sha256": "sha256:568f20343b8c21fd02ad91946f0188826d0077036c2c2c7b61cba513dd6a22b8",
+      "size": 288
+    },
+    {
+      "load_phase": "reference",
+      "parse_status": "ok",
+      "parsed_as": "python",
+      "path": "scripts/fetch.py",
+      "sha256": "sha256:9f7949ee98bdb8463933ac8a31dbe589f10e689dcdd461652eea4dc8b5174cb9",
+      "size": 179
+    },
+    {
+      "load_phase": "reference",
+      "parse_status": "ok",
+      "parsed_as": "python",
+      "path": "scripts/fill.py",
+      "sha256": "sha256:8e2b77dace0e0d6da62f453789b60e6928cfd15f65b1732fee4e06c636893138",
+      "size": 330
+    },
+    {
+      "load_phase": "reference",
+      "parse_status": "ok",
+      "parsed_as": "python",
+      "path": "scripts/helpers.py",
+      "sha256": "sha256:9a1be5967106d7636f25d54777352fe820d6cccc294853145b4eaaa6f64dddac",
+      "size": 91
+    }
+  ],
+  "schema_version": "1.0.0",
+  "target": {
+    "content_digest": "sha256:e9ab4ab22c0651af5f0490db0e76196a2f855b9980a1d28bc3cf39444ed5f87c",
+    "kind": "skill",
+    "name": "pdf-formatter",
+    "resolver": "claude-code",
+    "root": "pdf-formatter"
+  },
+  "tool": {
+    "name": "skillmap",
+    "version": "0.1.0"
+  },
+  "unresolved": [
+    {
+      "file": "assets/seal.bin",
+      "note": "contains a NUL byte; not analyzed as text",
+      "reason": "binary_file"
+    }
+  ]
+}

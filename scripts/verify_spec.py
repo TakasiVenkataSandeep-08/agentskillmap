@@ -74,13 +74,28 @@ KNOWN_GAP_EXACT = {
 }
 KNOWN_GAP_PREFIXES = ("corpus/", "npm/")
 
+# Paths that describe the layout of a *scanned project*, not of this repository.
+# They will never exist here, so unlike KNOWN_GAP_EXACT they are not gaps waiting
+# to be filled and must not be checked against disk. They need listing because
+# this repo has its own `.claude/`, so a token like `.claude/plugins` looks
+# repo-relative to the first-segment gate and gets resolved against our tree.
+#
+#   .claude/plugins   the plugin-wrapper convention the claude-code resolver does
+#                     not yet walk; named in docs/00-tasks.md's known gaps
+#   .claude/skills    the discovery root the resolver looks for in a user's project
+#   .agents/skills    the equivalent convention for other agents
+EXTERNAL_CONVENTIONS = {
+    ".claude/plugins",
+    ".claude/skills",
+    ".agents/skills",
+}
+
 # Crates named in prose that their task has not created yet. `crates/` itself is
 # NOT a blanket gap: it exists now (T1 landed skillmap-core), so a reference to
 # `crates/skillmap-core` is checked normally and a typo in it fails. Each entry
 # below retires when its task begins — the same self-retiring rule as
 # KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
 #
-#   skillmap-resolve, skillmap-parse    T2
 #   skillmap-corpus                     T3
 #   skillmap-rules, skillmap-code       T4
 #   skillmap-instr                      T5
@@ -88,11 +103,11 @@ KNOWN_GAP_PREFIXES = ("corpus/", "npm/")
 #   skillmap-semantic                   T7
 #   skillmap-policy, skillmap-diff      T8
 #   skillmap-cli                        T9
+#
+# Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2).
 PLANNED_CRATES = {
     f"crates/{name}"
     for name in (
-        "skillmap-resolve",
-        "skillmap-parse",
         "skillmap-corpus",
         "skillmap-rules",
         "skillmap-code",
@@ -112,6 +127,13 @@ PLANNED_CRATES = {
 # field added to a Rust type without a matching schema change fails here, because
 # the schema sets additionalProperties: false.
 GOLDEN_MANIFEST_PATH = REPO_ROOT / "crates" / "skillmap-core" / "tests" / "golden" / "manifest-maximal.json"
+
+# Manifests the parser produces for the fixture bundle corpus, blessed by
+# `cargo test -p skillmap-parse`. Validated here for the same reason as the
+# maximal manifest above, and for one more: these come from a real walk of real
+# files, so they are the only check that what the *parser* emits — not just what
+# the types can represent — is a legal manifest.
+BUNDLE_MANIFEST_DIR = REPO_ROOT / "fixtures" / "bundles" / "expected"
 
 # Top-level names that belong to this repo's own namespace, even though some
 # of them (npm/, corpus/, policy.toml, skillmap.lock, run-meta.json) don't exist
@@ -276,52 +298,64 @@ def check_negative_positive_cases(result: CheckResult) -> None:
 def check_golden_manifest(result: CheckResult) -> None:
     import jsonschema
 
-    rel = GOLDEN_MANIFEST_PATH.relative_to(REPO_ROOT).as_posix()
-    if not GOLDEN_MANIFEST_PATH.exists():
+    goldens = [GOLDEN_MANIFEST_PATH, *sorted(BUNDLE_MANIFEST_DIR.glob("*.json"))]
+    if not BUNDLE_MANIFEST_DIR.is_dir():
         result.fail(
-            f"{rel} is missing; re-bless it with "
-            "`SKILLMAP_BLESS=1 cargo test -p skillmap-core --test golden`"
+            f"{BUNDLE_MANIFEST_DIR.relative_to(REPO_ROOT).as_posix()} is missing; "
+            "re-bless it with `SKILLMAP_BLESS=1 cargo test -p skillmap-parse`"
         )
-        return
-
-    raw = GOLDEN_MANIFEST_PATH.read_bytes()
-    try:
-        golden = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        result.fail(f"{rel} is not valid UTF-8 JSON: {exc}")
-        return
 
     validator = jsonschema.Draft202012Validator(load_schema())
-    for err in sorted(validator.iter_errors(golden), key=lambda e: list(e.path)):
-        path = "/".join(str(p) for p in err.path) or "<root>"
-        result.fail(
-            f"{rel} fails the schema at {path}: {err.message} — the Rust types in "
-            "skillmap-core and schema/manifest-v1.schema.json have drifted apart"
-        )
 
-    # The canonical framing rules from docs/02-manifest-schema.md, checked on the
-    # bytes rather than on the parsed object, because every one of them is a
-    # property of the file that json.loads would happily discard.
-    if not raw.endswith(b"\n"):
-        result.fail(f"{rel} must end with a trailing newline")
-    if raw.endswith(b"\n\n"):
-        result.fail(f"{rel} must end with exactly one trailing newline")
-    if raw.startswith(b"\xef\xbb\xbf"):
-        result.fail(f"{rel} must not carry a UTF-8 BOM")
-    # A byte-identical artifact cannot contain a float: it would be a score
-    # (invariant 1) and its formatting is not portable.
-    if re.search(rb": -?\d+\.\d", raw):
-        result.fail(f"{rel} contains a float; invariant 1 forbids scores and floats do not round-trip portably")
+    for path in goldens:
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        if not path.exists():
+            result.fail(
+                f"{rel} is missing; re-bless it with "
+                "`SKILLMAP_BLESS=1 cargo test --workspace`"
+            )
+            continue
 
-    # Re-rendering with sorted keys and the documented framing must be a no-op.
-    # This is the cheap, dependency-free half of "canonical serialization" —
-    # it catches an unsorted key or a wrong indent even if the schema is happy.
-    recanonicalized = json.dumps(golden, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
-    if recanonicalized != raw.decode("utf-8"):
-        result.fail(
-            f"{rel} is not in canonical form (sorted keys, two-space indent, LF, "
-            "one trailing newline) — invariant 2"
-        )
+        raw = path.read_bytes()
+        try:
+            golden = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            result.fail(f"{rel} is not valid UTF-8 JSON: {exc}")
+            continue
+
+        for err in sorted(validator.iter_errors(golden), key=lambda e: list(e.path)):
+            where = "/".join(str(p) for p in err.path) or "<root>"
+            result.fail(
+                f"{rel} fails the schema at {where}: {err.message} — the Rust types "
+                "and schema/manifest-v1.schema.json have drifted apart"
+            )
+
+        # The canonical framing rules from docs/02-manifest-schema.md, checked on
+        # the bytes rather than the parsed object, because every one of them is a
+        # property of the file that json.loads would happily discard.
+        if not raw.endswith(b"\n"):
+            result.fail(f"{rel} must end with a trailing newline")
+        if raw.endswith(b"\n\n"):
+            result.fail(f"{rel} must end with exactly one trailing newline")
+        if raw.startswith(b"\xef\xbb\xbf"):
+            result.fail(f"{rel} must not carry a UTF-8 BOM")
+        # A byte-identical artifact cannot contain a float: it would be a score
+        # (invariant 1) and its formatting is not portable.
+        if re.search(rb": -?\d+\.\d", raw):
+            result.fail(
+                f"{rel} contains a float; invariant 1 forbids scores and floats do "
+                "not round-trip portably"
+            )
+
+        # Re-rendering with sorted keys and the documented framing must be a no-op.
+        # This is the cheap, dependency-free half of "canonical serialization" —
+        # it catches an unsorted key or a wrong indent even if the schema is happy.
+        recanonicalized = json.dumps(golden, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+        if recanonicalized != raw.decode("utf-8"):
+            result.fail(
+                f"{rel} is not in canonical form (sorted keys, two-space indent, LF, "
+                "one trailing newline) — invariant 2"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -334,7 +368,11 @@ def _looks_like_path(token: str) -> bool:
 
 
 def _is_known_gap(candidate: str) -> bool:
-    if candidate in KNOWN_GAP_EXACT or candidate in PLANNED_CRATES:
+    if (
+        candidate in KNOWN_GAP_EXACT
+        or candidate in PLANNED_CRATES
+        or candidate in EXTERNAL_CONVENTIONS
+    ):
         return True
     # `candidate` has had any trailing slash stripped, so a bare directory
     # reference like `crates/` arrives as "crates" and would never match the

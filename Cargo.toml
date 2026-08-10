@@ -5,7 +5,11 @@ resolver = "2"
 # begins — twelve empty crates would be twelve stubs (invariant 12), and a workspace
 # that cannot resolve is worse than a short one. The full target layout, and the
 # dependency direction it must obey, live in ARCHITECTURE.md.
-members = ["crates/skillmap-core"]
+members = [
+    "crates/skillmap-core",
+    "crates/skillmap-resolve",
+    "crates/skillmap-parse",
+]
 
 [workspace.package]
 version = "0.1.0"

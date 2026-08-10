@@ -82,6 +82,44 @@ the same commit — a manifest shape change is a schema-version event.
 empty `capabilities` array (no rules yet) and a fully populated inventory, byte-identical
 across two runs on two platforms.
 
+**Status: done, against a local corpus rather than `anthropics/skills`.** The criterion is
+met by `fixtures/bundles/`, whose blessed manifests are byte-compared on every run and
+schema-validated by `scripts/verify_spec.py`; the two-platform half is CI's `rust` matrix.
+Running against the real `anthropics/skills` corpus is deliberately deferred to **T3**, which
+is the harvester and the task that owns fetching third-party bundles at all. Until T3, no
+part of this repository downloads anything (invariant 9).
+
+Decisions worth recording:
+
+- **Frontmatter is parsed by a strict subset parser, not a YAML library.** It accepts
+  `key: scalar`, quoted scalars, flow and block sequences, and block scalars, and **refuses
+  everything else with a line number** — anchors, aliases, merge keys, tags, nesting,
+  duplicate keys. A general engine would accept constructs no `SKILL.md` needs, some of
+  which (alias expansion) are a denial-of-service shape, in the first untrusted bytes this
+  tool touches; and `serde_yaml`, the obvious pick, was archived by its author in 2024.
+  Refusing loudly is a first-class outcome here (invariant 3). If real bundles turn out to
+  need more of YAML, T3's corpus is what will say so with a denominator.
+- **No file is classified `always`.** The always-loaded content is the frontmatter
+  *description*, which lives inside `SKILL.md` rather than in a file of its own, and is
+  reported as `disclosure.description_bytes`. Tagging `SKILL.md` itself `always` would claim
+  its body is seen at session start — the exact false comfort this tool exists to dispel.
+- **`inventory[].size` is the number of bytes hashed, not what `stat` reports.** A CRLF
+  checkout has more bytes on disk than an LF one; reporting the on-disk figure made the same
+  bundle produce two different manifests on two platforms even though `sha256` matched. Found
+  by a test, not by review.
+- **The reference graph follows links out of any text file, not just markdown.** A helper a
+  script imports is reachable by a documented path; reporting it as `unreferenced` would
+  drown the one signal that matters.
+- **The fixture corpus is stored flat, not under a real `.claude/skills/` tree.** A committed
+  `.claude/skills/` is a *live* skill directory — every agent reading this repository would
+  load the fixtures as installed skills, and one of them is deliberately shaped like an
+  exfiltration payload. Discovery against the real convention is tested in a scratch
+  directory instead.
+
+Still open, tracked below: plugin-wrapped bundles (`.claude/plugins`), a second resolver
+(chosen by T3 data, per this task's own note), and `unsupported_language` entries, which
+belong to T4 where the rule engine knows which grammars exist.
+
 ---
 
 ## T3 — `skillmap-corpus`: the harvest
@@ -208,5 +246,17 @@ front of; each is a thing this repository currently claims or implies but does n
 - **The taxonomy has thirteen terms and the repository has one rule.** Invariant 12 forbids
   shipping a term no rule detects, so v1.0 either grows rules to cover the taxonomy or the
   taxonomy shrinks to match the rules. T4 decides which, from T3's data — not from ambition.
-- **`OWNER` is a placeholder** in `Cargo.toml`'s `repository` and the schema `$id`, and
-  `skillmap` is a placeholder name. `AGENTS.md` says do not defer past v0.2.
+- **Plugin-wrapped bundles are not discovered.** `BundleKind::Plugin` exists in the schema
+  because the manifest format has to be able to describe them, but the `claude-code` resolver
+  does not walk `.claude/plugins` and never returns that kind. Returning it from a code path
+  that cannot produce one would be a stub (invariant 12). A T3 input: the corpus will say how
+  common plugin wrappers actually are before a walker is written for them.
+- **Only one resolver exists.** T2's own note defers the second to whatever T3's data shows
+  matters, rather than guessing between Cursor, Codex, and Windsurf.
+- **`unsupported_language` is never emitted yet.** Every file is unanalyzed for capabilities
+  at this stage, so attaching that reason to all of them would mean nothing. It becomes real
+  in T4, where the rule engine knows which grammars are wired up.
+- **The frontmatter subset is unvalidated against real bundles.** The parser refuses anything
+  outside the documented `SKILL.md` shape (see T2). Whether real skills stay inside it is a
+  T3 measurement, not a guess — widening it before there is a denominator would be the wrong
+  order.

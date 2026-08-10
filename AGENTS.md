@@ -1,7 +1,8 @@
 # skillmap — agent and contributor context
 
-> `skillmap` is a placeholder name. Check crates.io / npm availability before the first
-> publish and `sed` it across the workspace if you rename. Do not defer this past v0.2.
+> The name is settled: `skillmap`, available on crates.io as `skill-map` and on npm as
+> `skillmap`. The repository was renamed from `skillaudit` in full; if you find the old
+> name anywhere, that is a bug, not a variant spelling.
 
 **This file is canonical.** It is the single source of truth for the invariants, the build
 order, and the definition of done. `CLAUDE.md` points here and adds only Claude-Code-specific

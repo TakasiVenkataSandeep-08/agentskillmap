@@ -1,0 +1,46 @@
+{
+  "advisory": {
+    "enabled": false,
+    "findings": []
+  },
+  "capabilities": [],
+  "diagnostics": [],
+  "disclosure": {
+    "declared_capabilities": [],
+    "description_bytes": 0,
+    "reference_files": 0,
+    "trigger_terms": [],
+    "unreferenced_files": 0
+  },
+  "instructions": [],
+  "inventory": [
+    {
+      "load_phase": "on_trigger",
+      "parse_status": "ok",
+      "parsed_as": "markdown",
+      "path": "SKILL.md",
+      "sha256": "sha256:6c1a40b5f1999c5a14271ef3cf9756604a30175a98971963b27e612b29d34846",
+      "size": 141
+    }
+  ],
+  "schema_version": "1.0.0",
+  "target": {
+    "content_digest": "sha256:409d1cbc197257ce5fbb162c4f0565991494c867809336c5da0484cb541235ad",
+    "kind": "skill",
+    "name": "no-frontmatter",
+    "resolver": "claude-code",
+    "root": "no-frontmatter"
+  },
+  "tool": {
+    "name": "skillmap",
+    "version": "0.1.0"
+  },
+  "unresolved": [
+    {
+      "file": "SKILL.md",
+      "note": "frontmatter: expected `---` on the first line to open the frontmatter block",
+      "reason": "parse_error",
+      "start_line": 1
+    }
+  ]
+}

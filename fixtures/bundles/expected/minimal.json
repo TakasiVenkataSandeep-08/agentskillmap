@@ -1,0 +1,44 @@
+{
+  "advisory": {
+    "enabled": false,
+    "findings": []
+  },
+  "capabilities": [],
+  "diagnostics": [],
+  "disclosure": {
+    "declared_capabilities": [],
+    "description_bytes": 21,
+    "reference_files": 0,
+    "trigger_terms": [
+      "does",
+      "one",
+      "small",
+      "thing"
+    ],
+    "unreferenced_files": 0
+  },
+  "instructions": [],
+  "inventory": [
+    {
+      "load_phase": "on_trigger",
+      "parse_status": "ok",
+      "parsed_as": "markdown",
+      "path": "SKILL.md",
+      "sha256": "sha256:7e82ce32e20fcea2033a70aeb73758d6ea2206fcca8503a7a990bd5f64262cd9",
+      "size": 85
+    }
+  ],
+  "schema_version": "1.0.0",
+  "target": {
+    "content_digest": "sha256:ea34326855be3bb213af32d123c9e711ea18a0b8401dcedc1d5e22c0291feafb",
+    "kind": "skill",
+    "name": "minimal",
+    "resolver": "claude-code",
+    "root": "minimal"
+  },
+  "tool": {
+    "name": "skillmap",
+    "version": "0.1.0"
+  },
+  "unresolved": []
+}

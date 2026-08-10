@@ -59,8 +59,8 @@ skillmap/
 ├── scripts/                    # verify_spec.py and friends
 ├── crates/                     # target layout; members are added as their task begins
 │   ├── skillmap-core/        # types, manifest, canonical ser, capability taxonomy  [T1, exists]
-│   ├── skillmap-resolve/     # Resolver trait + per-agent discovery conventions
-│   ├── skillmap-parse/       # bundle parse, frontmatter, inventory, reference graph
+│   ├── skillmap-resolve/     # Resolver trait + per-agent discovery conventions  [T2, exists]
+│   ├── skillmap-parse/       # bundle parse, frontmatter, inventory, reference graph  [T2, exists]
 │   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine
 │   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`
 │   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`
@@ -73,6 +73,7 @@ skillmap/
 ├── rules/                      # TOML rule metadata (data, not code)
 ├── queries/                    # tree-sitter .scm queries
 ├── fixtures/                   # positive/negative + expected manifests
+│   └── bundles/                # whole-bundle corpus + blessed manifests (T2)
 ├── schema/                     # JSON Schema for the manifest
 ├── npm/                        # wrapper package + per-platform binaries
 └── .github/workflows/          # CI, release, and the published action
