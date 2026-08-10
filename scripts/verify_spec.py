@@ -1,33 +1,33 @@
-"""Spec verifier for skillmap — the pre-Rust stand-in for T1.
+"""Spec verifier for skillmap — the schema-side half of the checks.
 
-This repository is pre-alpha: no Rust crate exists yet (`Cargo.toml` has
-`members = []` on purpose, see AGENTS.md's build order). But the spine of the
-project — the manifest schema and the invariants it must encode — already
-exists as prose (`AGENTS.md`, `docs/02-manifest-schema.md`) and as a machine
-schema (`schema/manifest-v1.schema.json`). This script is what proves those
-two documents agree with each other and with the repository's own claims
-about itself, before there is a Rust test suite to do it.
+The spine of this project exists twice on purpose: as prose (`AGENTS.md`,
+`docs/02-manifest-schema.md`) and as a machine schema
+(`schema/manifest-v1.schema.json`). Since T1, it exists a third time, as Rust
+types in `crates/skillmap-core`. This script proves those representations
+still agree with each other and with the repository's claims about itself.
 
-Every check here is a stand-in for a Rust test that task T1
-(`skillmap-core`: manifest types and canonical serialization, see
-`docs/00-tasks.md`) is expected to port and supersede:
+T1 (`skillmap-core`) superseded some of what this script used to stand in
+for, and deliberately did not supersede the rest:
 
-- Check 1 (schema legality) becomes a `#[test]` that loads and validates the
-  JSON Schema at build time, or a `build.rs` assertion.
-- Check 2 and 3 (doc example + negative/positive cases) become the
-  round-trip and schema-conformance property tests described in T1's
-  "Done when" clause.
-- Check 4 (prose paths resolve) has no Rust equivalent — it stays a docs
-  lint — but is included here because nothing else in the repository runs
-  it yet.
-- Check 5 (no CRLF) becomes the two-platform determinism CI test AGENTS.md
-  invariant 2 requires once fixtures are consumed by Rust code.
-- Check 6 (TOML/JSON/YAML parse) is subsumed by `cargo` itself once crates
-  exist to parse their own config; until then, nothing else notices a
-  malformed `rules/*.toml` or `.github/workflows/*.yml`.
-
-Until T1 lands, this script is the only thing standing between "the spec
-documents agree with each other" and "nobody checked."
+- Check `schema` (legality) stays here. The Rust types are validated
+  *against* the schema, so something independent has to establish the schema
+  is itself a legal 2020-12 document.
+- Checks `doc-example` and `mutations` stay here. They exercise documents the
+  Rust types cannot construct — a manifest with an undeclared `detail` key, a
+  `diagnostics` entry carrying a bundle-scoped code. Those are exactly the
+  cases the types make unrepresentable, which is why the schema still has to
+  reject them on its own.
+- Check `golden-manifest` is new, and is one half of the type/schema drift
+  gate. The other half is `cargo test -p skillmap-core --test golden`, which
+  proves the types still render that file byte for byte; this proves the file
+  is still a legal manifest. A field added on the Rust side without a matching
+  schema change fails here via `additionalProperties: false`.
+- Check `prose-paths` has no Rust equivalent and stays a docs lint.
+- Check `line-endings` is still the cheapest guard on invariant 2: it needs
+  nothing but git and the standard library, so it runs on both platforms
+  without a toolchain.
+- Check `configs-parse` is only partly subsumed by `cargo`. Nothing else
+  notices a malformed `rules/*.toml` or `.github/workflows/*.yml`.
 
 Each check is independent, runs to completion regardless of earlier
 failures, and reports its own pass/fail with enough detail to act on without

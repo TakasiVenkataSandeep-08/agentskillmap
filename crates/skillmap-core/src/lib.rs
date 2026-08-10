@@ -30,6 +30,7 @@ mod canonical;
 mod digest;
 mod error;
 mod manifest;
+mod nonempty;
 
 pub use digest::{content_digest, Digest};
 pub use error::Error;
@@ -39,3 +40,4 @@ pub use manifest::{
     InstructionSignal, InventoryEntry, LoadPhase, Manifest, ParseStatus, Reachability, Target,
     Tool, Unresolved, UnresolvedReason, SCHEMA_VERSION,
 };
+pub use nonempty::NonEmpty;

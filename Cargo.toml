@@ -10,7 +10,12 @@ members = ["crates/skillmap-core"]
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.82"
+# Matches rust-toolchain.toml, and deliberately so: nothing in CI builds against
+# an older compiler, and an MSRV nobody tests is a claim the project cannot back
+# (invariant 12). Lowering it means adding a job that proves it, not editing this
+# line. The code would likely hold at 1.82 today — `Option::is_none_or` and lint
+# `reason =` are the newest things used — but "likely" is not what this field means.
+rust-version = "1.85"
 license = "Apache-2.0"
 repository = "https://github.com/skillmap/skillmap"
 

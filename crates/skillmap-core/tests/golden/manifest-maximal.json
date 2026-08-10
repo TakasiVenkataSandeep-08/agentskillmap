@@ -25,6 +25,16 @@
           }
         ],
         "kind": "injection_attempt"
+      },
+      {
+        "claim": "reference/setup.md asserts prior authorization",
+        "evidence": [
+          {
+            "file": "reference/setup.md",
+            "start_line": 31
+          }
+        ],
+        "kind": "injection_attempt"
       }
     ],
     "model": "claude-sonnet-5",
@@ -38,7 +48,7 @@
           "end_byte": 48,
           "file": "scripts/run.sh",
           "rule_id": "sh.eval.dynamic",
-          "snippet_sha256": "sha256:ff13b2bbb0ecc9fc0da09ec51342b719c869ce4bddc4aa427b625e8836d4154d",
+          "snippet_sha256": "sha256:dae1a681e826a46075ec5c45a410af0e397e8b4a866eeaeed9ffc53d992d374d",
           "start_byte": 12,
           "start_line": 2
         }
@@ -58,7 +68,7 @@
           "end_byte": 448,
           "file": "scripts/collect.py",
           "rule_id": "py.credential-read.dotfile",
-          "snippet_sha256": "sha256:4dc9387f77036adb1ffc0a2b4301f4865d3310b4cbf4b39b996b31ca45a0ccc8",
+          "snippet_sha256": "sha256:93d28ac00a5a60ed1a5ed8e2639ae5f06e4150bc47d2beecaeb4b227be6e566b",
           "start_byte": 412,
           "start_line": 17
         }
@@ -78,7 +88,15 @@
           "end_byte": 646,
           "file": "scripts/collect.py",
           "rule_id": "py.net.requests-post",
-          "snippet_sha256": "sha256:cf63b2c73eb5a895c0802ab5fea64f979c3134a20c61562424ff62d8be6a4fc0",
+          "snippet_sha256": "sha256:63be3d5840c49c3619626aedf7b2866071e241f03b24e9fe1a120bf68f9ed92c",
+          "start_byte": 610,
+          "start_line": 24
+        },
+        {
+          "end_byte": 646,
+          "file": "scripts/collect.py",
+          "rule_id": "py.net.urllib-open",
+          "snippet_sha256": "sha256:78283a666cd56c210c6736eb15f5ea848ff8a408bc22ad6b37662c20adba7afb",
           "start_byte": 610,
           "start_line": 24
         },
@@ -86,7 +104,7 @@
           "end_byte": 1016,
           "file": "scripts/collect.py",
           "rule_id": "py.net.requests-post",
-          "snippet_sha256": "sha256:bcd6311086f126b32fdf0a7ab625371fb305f04ad0b6ad264751915fe9b2701b",
+          "snippet_sha256": "sha256:09af1fc797de6ae910e1ca8eac97e98dec17737829b428fbbe3249f0b0d8a2e0",
           "start_byte": 980,
           "start_line": 41
         }
@@ -97,6 +115,11 @@
   "diagnostics": [
     {
       "code": "policy_load_error"
+    },
+    {
+      "code": "policy_load_error",
+      "file": "policy.toml",
+      "note": "unexpected key `severity`"
     },
     {
       "code": "rule_validation_error",
@@ -125,7 +148,7 @@
           "end_byte": 124,
           "file": "reference/setup.md",
           "rule_id": "instr.fetch-as-instruction",
-          "snippet_sha256": "sha256:0a26c5b38e9268b92c63f5ef86252f68aeb8840e0d2e413983043a3db766213b",
+          "snippet_sha256": "sha256:dccf411eb7233c681c54b4de3658ee2cbc6b00a5c30cd3d21a83f5234351fc62",
           "start_byte": 88,
           "start_line": 6
         }
@@ -138,7 +161,7 @@
           "end_byte": 336,
           "file": "reference/setup.md",
           "rule_id": "instr.silence",
-          "snippet_sha256": "sha256:de73c687ab8d4c2a57dda5f5b1b749c9cf616ae40887ec0435a1e77e4aec4f71",
+          "snippet_sha256": "sha256:e03c2ac2443798dc0214eb887b4a2b809d824641ffc67a9c42b1c0723c3a0693",
           "start_byte": 300,
           "start_line": 22
         }
@@ -193,6 +216,11 @@
     "version": "0.1.0"
   },
   "unresolved": [
+    {
+      "file": "scripts/run.sh",
+      "note": "call graph never reaches a statically-known target",
+      "reason": "dynamic_dispatch"
+    },
     {
       "end_byte": 118,
       "file": "scripts/run.sh",

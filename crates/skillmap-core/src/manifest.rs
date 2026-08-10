@@ -11,8 +11,9 @@
 //!   field exists anywhere below, and none can be added without a schema-version
 //!   event.
 
-use crate::{Digest, Error};
+use crate::{Digest, Error, NonEmpty};
 use serde::{Deserialize, Serialize};
+use std::num::NonZeroU64;
 
 /// The schema version this crate produces.
 pub const SCHEMA_VERSION: &str = "1.0.0";
@@ -174,8 +175,10 @@ pub struct Capability {
     /// Statically resolved paths or hosts, when there are any.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub detail: Option<Detail>,
-    /// Evidence, sorted by `(file, start_byte)`. Never empty in a valid manifest.
-    pub evidence: Vec<EvidenceStrict>,
+    /// Evidence, sorted by `(file, start_byte)`. Non-empty by construction: the
+    /// schema declares `minItems: 1`, and invariant 4 says a finding nobody can
+    /// point at cannot be regression-tested.
+    pub evidence: NonEmpty<EvidenceStrict>,
 }
 
 /// An instruction-plane finding. Tier `pattern`: lexical, deliberately weak, and
@@ -185,8 +188,9 @@ pub struct Capability {
 pub struct Instruction {
     /// Signal from the closed `instruction.*` vocabulary.
     pub signal: InstructionSignal,
-    /// Evidence, sorted by `(file, start_byte)`. Never empty in a valid manifest.
-    pub evidence: Vec<EvidenceStrict>,
+    /// Evidence, sorted by `(file, start_byte)`. Non-empty by construction, for
+    /// the same reason as [`Capability::evidence`].
+    pub evidence: NonEmpty<EvidenceStrict>,
 }
 
 /// Statically resolved detail attached to a [`Capability`].
@@ -228,8 +232,9 @@ pub struct EvidenceStrict {
     pub start_byte: u64,
     /// Byte offset one past where it ends.
     pub end_byte: u64,
-    /// 1-indexed line of `start_byte`.
-    pub start_line: u64,
+    /// 1-indexed line of `start_byte`. `NonZeroU64` because the schema declares
+    /// `minimum: 1` and line 0 does not exist.
+    pub start_line: NonZeroU64,
     /// Id of the rule that fired.
     pub rule_id: String,
     /// SHA-256 of the captured snippet, so a regression test can detect the span
@@ -248,8 +253,8 @@ pub struct EvidenceStrict {
 pub struct EvidenceAdvisory {
     /// Forward-slash path relative to the bundle root.
     pub file: String,
-    /// 1-indexed line the model cited.
-    pub start_line: u64,
+    /// 1-indexed line the model cited. `NonZeroU64`: see [`EvidenceStrict::start_line`].
+    pub start_line: NonZeroU64,
 }
 
 /// Something the analysis could not cover **in the bundle**.
@@ -272,7 +277,7 @@ pub struct Unresolved {
     pub end_byte: Option<u64>,
     /// 1-indexed line, when there is a specific site.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub start_line: Option<u64>,
+    pub start_line: Option<NonZeroU64>,
     /// Human-readable detail.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub note: Option<String>,
@@ -416,7 +421,8 @@ pub struct AdvisoryFinding {
     /// The model's claim, in prose.
     pub claim: String,
     /// Where the model says to look. File and line only — see [`EvidenceAdvisory`].
-    pub evidence: Vec<EvidenceAdvisory>,
+    /// Non-empty by construction: a claim with nothing to look at is not a finding.
+    pub evidence: NonEmpty<EvidenceAdvisory>,
 }
 
 /// Kind of [`AdvisoryFinding`].

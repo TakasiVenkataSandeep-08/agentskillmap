@@ -8,9 +8,10 @@
 //!   [`serde_json::Value`], whose object map is a `BTreeMap` because the
 //!   workspace deliberately does not enable serde_json's `preserve_order`
 //!   feature. Struct field order therefore cannot leak into the output.
-//! - **Arrays** are sorted by the total orders declared in
-//!   `docs/02-manifest-schema.md`, with ties broken by each element's own JSON
-//!   rendering so the order is genuinely total. A merely *partial* order is a
+//! - **Arrays** are sorted by the orders declared in
+//!   `docs/02-manifest-schema.md`, with ties broken by each element's own
+//!   *canonical* (sorted-key) rendering so the order is genuinely total. Those
+//!   declared keys are not total on their own, and a merely partial order is a
 //!   nondeterminism bug that surfaces only on the one input that has a tie.
 //! - **Comparison is byte-wise over UTF-8**, never locale collation. Rust's
 //!   `str`/`String` `Ord` is already byte-wise; the point is that nothing here
@@ -21,13 +22,22 @@
 
 use crate::{
     Advisory, AdvisoryFinding, Capability, Detail, Diagnostic, Error, EvidenceAdvisory,
-    EvidenceStrict, Instruction, Manifest, Unresolved,
+    EvidenceStrict, Instruction, Manifest, NonEmpty, Unresolved,
 };
 use serde::Serialize;
+use std::num::NonZeroU64;
 
-/// The `(file, offset)` pair used as a secondary sort key, owned so it can
-/// outlive the element it was read from during decorate-sort-undecorate.
-type Head = Option<(String, u64)>;
+/// `(file, start_byte)` of a parent's first strict evidence entry, owned so it
+/// can outlive the element it was read from during decorate-sort-undecorate.
+///
+/// `Option` only because [`NonEmpty::first`] returns one — see the note there;
+/// an evidence list is never actually empty.
+type StrictHead = Option<(String, u64)>;
+
+/// `(file, start_line)` of a finding's first advisory evidence entry. Distinct
+/// from [`StrictHead`] because the strict tier keys on a byte offset (minimum 0)
+/// and the advisory tier on a line number (minimum 1).
+type AdvisoryHead = Option<(String, NonZeroU64)>;
 
 impl Manifest {
     /// Render to canonical JSON.
@@ -44,7 +54,7 @@ impl Manifest {
     /// floats exist in the type graph at all.
     pub fn to_canonical_json(&self) -> Result<String, Error> {
         let mut canonical = self.clone();
-        canonical.canonicalize();
+        canonical.canonicalize()?;
         let value = serde_json::to_value(&canonical).map_err(Error::Serialize)?;
         let mut out = serde_json::to_string_pretty(&value).map_err(Error::Serialize)?;
         out.push('\n');
@@ -69,8 +79,17 @@ impl Manifest {
     ///
     /// Idempotent: canonicalizing an already-canonical manifest is a no-op, which
     /// is what makes [`Manifest::to_canonical_json`] a fixed point.
-    pub fn canonicalize(&mut self) {
-        sort_canonically(&mut self.inventory, |entry| entry.path.clone());
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Serialize`] if an element cannot be rendered for the tiebreak.
+    /// This propagates rather than being swallowed on purpose: falling back to a
+    /// constant tiebreak would leave tied elements in insertion order, which is
+    /// silent nondeterminism inside the function whose entire job is to prevent
+    /// it. A loud failure is strictly better than a manifest that is subtly
+    /// machine-dependent.
+    pub fn canonicalize(&mut self) -> Result<(), Error> {
+        sort_canonically(&mut self.inventory, |entry| entry.path.clone())?;
 
         self.disclosure.declared_capabilities.sort();
         self.disclosure.declared_capabilities.dedup();
@@ -81,38 +100,40 @@ impl Manifest {
         // evidence entry, so sorting parents before children would key them off
         // whichever evidence happened to be listed first.
         for capability in &mut self.capabilities {
-            sort_strict_evidence(&mut capability.evidence);
+            sort_strict_evidence(&mut capability.evidence)?;
             normalize_detail(&mut capability.detail);
         }
         sort_canonically(&mut self.capabilities, |c: &Capability| {
             (c.capability.as_str(), strict_head(&c.evidence))
-        });
+        })?;
 
         for instruction in &mut self.instructions {
-            sort_strict_evidence(&mut instruction.evidence);
+            sort_strict_evidence(&mut instruction.evidence)?;
         }
         sort_canonically(&mut self.instructions, |i: &Instruction| {
             (i.signal.as_str(), strict_head(&i.evidence))
-        });
+        })?;
 
         sort_canonically(&mut self.unresolved, |u: &Unresolved| {
             (u.file.clone(), u.reason.as_str(), u.start_byte)
-        });
+        })?;
 
         if let Advisory::Enabled(run) = &mut self.advisory {
             for finding in &mut run.findings {
-                sort_canonically(&mut finding.evidence, |e: &EvidenceAdvisory| {
+                sort_canonically(finding.evidence.as_mut_vec(), |e: &EvidenceAdvisory| {
                     (e.file.clone(), e.start_line)
-                });
+                })?;
             }
             sort_canonically(&mut run.findings, |f: &AdvisoryFinding| {
                 (f.kind.as_str(), advisory_head(&f.evidence), f.claim.clone())
-            });
+            })?;
         }
 
         sort_canonically(&mut self.diagnostics, |d: &Diagnostic| {
             (d.code.as_str(), d.file.clone())
-        });
+        })?;
+
+        Ok(())
     }
 }
 
@@ -129,46 +150,55 @@ impl Manifest {
 /// artifact's byte content depend on the *declaration order of struct fields and
 /// enum variants*, so a cosmetic reordering in a future PR would silently change
 /// every manifest in every repo.
-fn sort_canonically<T, K, F>(items: &mut Vec<T>, key: F)
+fn sort_canonically<T, K, F>(items: &mut Vec<T>, key: F) -> Result<(), Error>
 where
     T: Serialize,
     K: Ord,
     F: Fn(&T) -> K,
 {
+    // Render every element before taking ownership of any, so a failure leaves
+    // `items` exactly as it was rather than half-drained.
+    //
+    // `to_value` first, then `to_string` on the Value, is load-bearing and not a
+    // detour: `serde_json::to_string` applied straight to a struct emits fields in
+    // DECLARATION order, which would make this tiebreak — and therefore the bytes
+    // of every manifest containing a tie — depend on the order fields happen to
+    // appear in `manifest.rs`. Going through `Value` sorts keys (its map is a
+    // `BTreeMap`), so the tiebreak compares the same canonical form the artifact
+    // itself is written in, and moving a struct field is invisible to the output.
+    //
+    // These renderings are sort keys, never output; they are discarded below and
+    // nothing outside this function sees them.
+    let mut rendered: Vec<String> = Vec::with_capacity(items.len());
+    for item in items.iter() {
+        let value = serde_json::to_value(item).map_err(Error::Serialize)?;
+        rendered.push(value.to_string());
+    }
+
     let mut decorated: Vec<(K, String, T)> = items
         .drain(..)
-        .map(|item| {
-            let sort_key = key(&item);
-            // This `to_string` is a *sort key*, never output — it is discarded
-            // below and nothing outside this function sees it. The rule that
-            // serde_json output goes through `to_canonical_json` alone is intact.
-            //
-            // Serializing a value that is about to be serialized anyway cannot
-            // realistically fail. If it somehow did, falling back to an empty
-            // tiebreak leaves the declared key order intact — invariant 10 says
-            // a library crate does not get to panic over it.
-            let rendered = serde_json::to_string(&item).unwrap_or_default();
-            (sort_key, rendered, item)
-        })
+        .zip(rendered)
+        .map(|(item, rendered)| (key(&item), rendered, item))
         .collect();
     decorated.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
     items.extend(decorated.into_iter().map(|(_, _, item)| item));
+    Ok(())
 }
 
 /// Evidence for the deterministic tiers sorts by `(file, start_byte)`.
-fn sort_strict_evidence(evidence: &mut Vec<EvidenceStrict>) {
-    sort_canonically(evidence, |e: &EvidenceStrict| {
+fn sort_strict_evidence(evidence: &mut NonEmpty<EvidenceStrict>) -> Result<(), Error> {
+    sort_canonically(evidence.as_mut_vec(), |e: &EvidenceStrict| {
         (e.file.clone(), e.start_byte)
-    });
+    })
 }
 
-/// The `(file, start_byte)` of the first strict evidence entry, if any.
-fn strict_head(evidence: &[EvidenceStrict]) -> Head {
+/// The `(file, start_byte)` of the first strict evidence entry.
+fn strict_head(evidence: &NonEmpty<EvidenceStrict>) -> StrictHead {
     evidence.first().map(|e| (e.file.clone(), e.start_byte))
 }
 
-/// The `(file, start_line)` of the first advisory evidence entry, if any.
-fn advisory_head(evidence: &[EvidenceAdvisory]) -> Head {
+/// The `(file, start_line)` of the first advisory evidence entry.
+fn advisory_head(evidence: &NonEmpty<EvidenceAdvisory>) -> AdvisoryHead {
     evidence.first().map(|e| (e.file.clone(), e.start_line))
 }
 
