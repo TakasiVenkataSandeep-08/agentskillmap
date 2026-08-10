@@ -1,6 +1,6 @@
 ---
 name: manifest-invariants
-description: Use when editing the manifest schema (schema/manifest-v1.schema.json), docs/02-manifest-schema.md, or the canonical serialization / canonicalize() path in skillaudit-core. Triggers on adding or changing a manifest field, changing an array's sort order, adding a capability taxonomy term, touching evidence or tier types, or anything that changes what the manifest looks like on disk.
+description: Use when editing the manifest schema (schema/manifest-v1.schema.json), docs/02-manifest-schema.md, or the canonical serialization / canonicalize() path in skillmap-core. Triggers on adding or changing a manifest field, changing an array's sort order, adding a capability taxonomy term, touching evidence or tier types, or anything that changes what the manifest looks like on disk.
 ---
 
 # Manifest invariants
@@ -40,6 +40,15 @@ is the exact failure mode this guards against. Silently defaulting an absent key
 to "sorts last," is a rule — but an implicit one nobody wrote down, which means the next
 person to touch the sort has no way to know they broke it.
 
+**The keys in that table are not by themselves total, and the tiebreak is part of the spec.**
+Two elements can agree on every declared key and still differ — two capabilities sharing a
+term and a first-evidence position but differing in `reachability`, two `unresolved` entries
+sharing `(file, reason, start_byte)` but differing in `note`. `canonicalize()` breaks those
+ties on the element's own canonical JSON rendering. Don't replace that with a derived
+structural ordering over the Rust types (`#[derive(Ord)]` and friends): that makes the
+artifact's bytes depend on the declaration order of struct fields and enum variants, so
+reordering a variant for readability silently changes every manifest in every repo.
+
 ## Byte-wise sorting, never locale collation
 
 "All sorting is byte-wise over UTF-8, never locale collation" (invariant 2). Using a
@@ -65,7 +74,7 @@ Two consequences that are easy to violate in a change that looks like a cleanup:
   including "we're now very confident about it."
 - An `advisory` finding can add, remove, or modify nothing in `capabilities`,
   `instructions`, or `unresolved`. It is read-only with respect to the deterministic
-  branches, by construction — `skillaudit-semantic` doesn't even depend on the crates that
+  branches, by construction — `skillmap-semantic` doesn't even depend on the crates that
   produce them (see `ARCHITECTURE.md`). A PR that has the semantic pass adjust a
   `proven`/`pattern` finding, even to fix an apparent false positive, breaks quarantine.
 
@@ -109,11 +118,11 @@ Adding a field, a capability taxonomy term, an `unresolved` reason code, a `diag
 code, or an `instructionSignal` — all of it is a schema-version event with a migration
 note, per the DoD checklist in `AGENTS.md`. "It's additive so it's backward compatible" is
 not the bar here; the bar is that `schema_version` changes and the note explains what an
-existing `skillaudit.lock` consumer needs to know.
+existing `skillmap.lock` consumer needs to know.
 
 ## `canonicalize()` is the only serialization path
 
-`skillaudit-core` exposes one canonicalization function — sorted keys, the array orders
+`skillmap-core` exposes one canonicalization function — sorted keys, the array orders
 above, two-space indent, LF, trailing newline, UTF-8, no BOM — and it is the only place
 `serde_json` gets called for output. `serde_json::to_string_pretty` (or any ad hoc
 `serde_json::to_string`/`to_writer` on manifest types) must never escape into the codebase

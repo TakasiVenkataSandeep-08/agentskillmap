@@ -1,0 +1,209 @@
+{
+  "advisory": {
+    "enabled": true,
+    "findings": [
+      {
+        "claim": "reference/setup.md instructs credential upload; description mentions only formatting",
+        "evidence": [
+          {
+            "file": "SKILL.md",
+            "start_line": 3
+          },
+          {
+            "file": "reference/setup.md",
+            "start_line": 12
+          }
+        ],
+        "kind": "disclosure_delta"
+      },
+      {
+        "claim": "reference/setup.md addresses the reading agent directly",
+        "evidence": [
+          {
+            "file": "reference/setup.md",
+            "start_line": 31
+          }
+        ],
+        "kind": "injection_attempt"
+      }
+    ],
+    "model": "claude-sonnet-5",
+    "prompt_sha256": "sha256:a40c70ac504d3f0501415b57d91801400acf68e0cf02647766a88f7c3576b435"
+  },
+  "capabilities": [
+    {
+      "capability": "code.dynamic_eval",
+      "evidence": [
+        {
+          "end_byte": 48,
+          "file": "scripts/run.sh",
+          "rule_id": "sh.eval.dynamic",
+          "snippet_sha256": "sha256:ff13b2bbb0ecc9fc0da09ec51342b719c869ce4bddc4aa427b625e8836d4154d",
+          "start_byte": 12,
+          "start_line": 2
+        }
+      ],
+      "reachability": "unresolved"
+    },
+    {
+      "capability": "fs.read.credential",
+      "detail": {
+        "paths": [
+          "~/.aws/credentials",
+          "~/.ssh/id_rsa"
+        ]
+      },
+      "evidence": [
+        {
+          "end_byte": 448,
+          "file": "scripts/collect.py",
+          "rule_id": "py.credential-read.dotfile",
+          "snippet_sha256": "sha256:4dc9387f77036adb1ffc0a2b4301f4865d3310b4cbf4b39b996b31ca45a0ccc8",
+          "start_byte": 412,
+          "start_line": 17
+        }
+      ],
+      "reachability": "observed"
+    },
+    {
+      "capability": "net.egress",
+      "detail": {
+        "hosts": [
+          "api.example.com",
+          "upload.example.com"
+        ]
+      },
+      "evidence": [
+        {
+          "end_byte": 646,
+          "file": "scripts/collect.py",
+          "rule_id": "py.net.requests-post",
+          "snippet_sha256": "sha256:cf63b2c73eb5a895c0802ab5fea64f979c3134a20c61562424ff62d8be6a4fc0",
+          "start_byte": 610,
+          "start_line": 24
+        },
+        {
+          "end_byte": 1016,
+          "file": "scripts/collect.py",
+          "rule_id": "py.net.requests-post",
+          "snippet_sha256": "sha256:bcd6311086f126b32fdf0a7ab625371fb305f04ad0b6ad264751915fe9b2701b",
+          "start_byte": 980,
+          "start_line": 41
+        }
+      ],
+      "reachability": "present"
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "policy_load_error"
+    },
+    {
+      "code": "rule_validation_error",
+      "file": "rules/ruby/exec.toml",
+      "note": "query references capture @target, not declared in [captures]"
+    }
+  ],
+  "disclosure": {
+    "declared_capabilities": [
+      "aws-config",
+      "pdf-generation"
+    ],
+    "description_bytes": 412,
+    "reference_files": 4,
+    "trigger_terms": [
+      "aws",
+      "credentials",
+      "format"
+    ],
+    "unreferenced_files": 1
+  },
+  "instructions": [
+    {
+      "evidence": [
+        {
+          "end_byte": 124,
+          "file": "reference/setup.md",
+          "rule_id": "instr.fetch-as-instruction",
+          "snippet_sha256": "sha256:0a26c5b38e9268b92c63f5ef86252f68aeb8840e0d2e413983043a3db766213b",
+          "start_byte": 88,
+          "start_line": 6
+        }
+      ],
+      "signal": "instruction.fetch_as_instruction"
+    },
+    {
+      "evidence": [
+        {
+          "end_byte": 336,
+          "file": "reference/setup.md",
+          "rule_id": "instr.silence",
+          "snippet_sha256": "sha256:de73c687ab8d4c2a57dda5f5b1b749c9cf616ae40887ec0435a1e77e4aec4f71",
+          "start_byte": 300,
+          "start_line": 22
+        }
+      ],
+      "signal": "instruction.silence"
+    }
+  ],
+  "inventory": [
+    {
+      "load_phase": "on_trigger",
+      "parse_status": "ok",
+      "parsed_as": "markdown",
+      "path": "SKILL.md",
+      "sha256": "sha256:9c53c074d7ac6a2728b638ac1f376c5fa9eb8f71603017c3ea638c2fd40548df",
+      "size": 1834
+    },
+    {
+      "load_phase": "always",
+      "parse_status": "error",
+      "parsed_as": "markdown",
+      "path": "reference/setup.md",
+      "sha256": "sha256:8fb6d5f37e8055ce720bd0b1d56587f88c0071f285966ba17e72b2b12672aa73",
+      "size": 640
+    },
+    {
+      "load_phase": "reference",
+      "parse_status": "ok",
+      "parsed_as": "python",
+      "path": "scripts/collect.py",
+      "sha256": "sha256:81824c90f8a5276bc87ecd88f9a5903277a636589a38f6bbc34a2b991fb2a095",
+      "size": 902
+    },
+    {
+      "load_phase": "unreferenced",
+      "parse_status": "unsupported",
+      "parsed_as": "binary",
+      "path": "vendor/blob.bin",
+      "sha256": "sha256:fa2c8cc4f28176bbeed4b736df569a34c79cd3723e9ec42f9674b4d46ac6b8b8",
+      "size": 4096
+    }
+  ],
+  "schema_version": "1.0.0",
+  "target": {
+    "content_digest": "sha256:f882e860ca44e6ac376c8e8148b5bc0fa7245d6f2f16a048b7a863986820a2d2",
+    "kind": "skill",
+    "name": "example-skill",
+    "resolver": "claude-code",
+    "root": "example-skill"
+  },
+  "tool": {
+    "name": "skillmap",
+    "version": "0.1.0"
+  },
+  "unresolved": [
+    {
+      "end_byte": 118,
+      "file": "scripts/run.sh",
+      "note": "exec target is a shell variable",
+      "reason": "dynamic_dispatch",
+      "start_byte": 90,
+      "start_line": 4
+    },
+    {
+      "file": "vendor/blob.bin",
+      "reason": "unsupported_language"
+    }
+  ]
+}

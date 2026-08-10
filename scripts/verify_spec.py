@@ -1,4 +1,4 @@
-"""Spec verifier for skillaudit — the pre-Rust stand-in for T1.
+"""Spec verifier for skillmap — the pre-Rust stand-in for T1.
 
 This repository is pre-alpha: no Rust crate exists yet (`Cargo.toml` has
 `members = []` on purpose, see AGENTS.md's build order). But the spine of the
@@ -9,7 +9,7 @@ two documents agree with each other and with the repository's own claims
 about itself, before there is a Rust test suite to do it.
 
 Every check here is a stand-in for a Rust test that task T1
-(`skillaudit-core`: manifest types and canonical serialization, see
+(`skillmap-core`: manifest types and canonical serialization, see
 `docs/00-tasks.md`) is expected to port and supersede:
 
 - Check 1 (schema legality) becomes a `#[test]` that loads and validates the
@@ -60,7 +60,7 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 # indistinguishable from a typo somebody gave up on:
 #
 #   policy.toml         docs/00-tasks.md "Known gaps" — T8 input, unspecified
-#   skillaudit.lock     docs/00-tasks.md "Known gaps" — T8 input, one-line spec
+#   skillmap.lock     docs/00-tasks.md "Known gaps" — T8 input, one-line spec
 #   rules/languages.toml  docs/00-tasks.md "Known gaps" — T4 input
 #   run-meta.json       AGENTS.md invariant 2 — where run metadata goes instead
 #                       of the manifest; nothing writes it until a CLI exists
@@ -68,20 +68,61 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 #   corpus/             output of task T3, produced at runtime, never committed
 KNOWN_GAP_EXACT = {
     "policy.toml",
-    "skillaudit.lock",
+    "skillmap.lock",
     "rules/languages.toml",
     "run-meta.json",
 }
-KNOWN_GAP_PREFIXES = ("corpus/", "npm/", "crates/")
+KNOWN_GAP_PREFIXES = ("corpus/", "npm/")
+
+# Crates named in prose that their task has not created yet. `crates/` itself is
+# NOT a blanket gap: it exists now (T1 landed skillmap-core), so a reference to
+# `crates/skillmap-core` is checked normally and a typo in it fails. Each entry
+# below retires when its task begins — the same self-retiring rule as
+# KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
+#
+#   skillmap-resolve, skillmap-parse    T2
+#   skillmap-corpus                     T3
+#   skillmap-rules, skillmap-code       T4
+#   skillmap-instr                      T5
+#   skillmap-eval                       T6
+#   skillmap-semantic                   T7
+#   skillmap-policy, skillmap-diff      T8
+#   skillmap-cli                        T9
+PLANNED_CRATES = {
+    f"crates/{name}"
+    for name in (
+        "skillmap-resolve",
+        "skillmap-parse",
+        "skillmap-corpus",
+        "skillmap-rules",
+        "skillmap-code",
+        "skillmap-instr",
+        "skillmap-eval",
+        "skillmap-semantic",
+        "skillmap-policy",
+        "skillmap-diff",
+        "skillmap-cli",
+    )
+}
+
+# The canonical rendering the Rust types produce, blessed by
+# `cargo test -p skillmap-core --test golden`. Checking it against the schema here
+# is the other half of the drift gate: the Rust test proves the types still render
+# these exact bytes, and this proves those bytes are still a legal manifest. A
+# field added to a Rust type without a matching schema change fails here, because
+# the schema sets additionalProperties: false.
+GOLDEN_MANIFEST_PATH = REPO_ROOT / "crates" / "skillmap-core" / "tests" / "golden" / "manifest-maximal.json"
 
 # Top-level names that belong to this repo's own namespace, even though some
-# of them (crates/, npm/, corpus/, policy.toml, skillaudit.lock,
-# run-meta.json) don't exist on disk yet. A backticked token whose first path
-# segment isn't in this set is a reference to something outside this repo
-# (a URL, another GitHub repo, an npm scope, a generic filename like
-# `SKILL.md` or `settings.json` used illustratively) and is not a path this
-# check can meaningfully resolve.
-EXTRA_KNOWN_TOP_LEVEL = {"crates", "npm", "corpus", "policy.toml", "skillaudit.lock", "run-meta.json"}
+# of them (npm/, corpus/, policy.toml, skillmap.lock, run-meta.json) don't exist
+# on disk yet. A backticked token whose first path segment isn't in this set is a
+# reference to something outside this repo (a URL, another GitHub repo, an npm
+# scope, a generic filename like `SKILL.md` or `settings.json` used
+# illustratively) and is not a path this check can meaningfully resolve.
+#
+# `crates` is deliberately absent: it exists on disk now, so it arrives via the
+# real directory listing and references under it are checked for real.
+EXTRA_KNOWN_TOP_LEVEL = {"npm", "corpus", "policy.toml", "skillmap.lock", "run-meta.json"}
 
 PATH_EXT_RE = re.compile(r"\.(md|json|toml|scm|py|rs|yml|yaml)$")
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
@@ -230,6 +271,60 @@ def check_negative_positive_cases(result: CheckResult) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Check 3b — the golden manifest the Rust types produce is a legal manifest
+# ---------------------------------------------------------------------------
+def check_golden_manifest(result: CheckResult) -> None:
+    import jsonschema
+
+    rel = GOLDEN_MANIFEST_PATH.relative_to(REPO_ROOT).as_posix()
+    if not GOLDEN_MANIFEST_PATH.exists():
+        result.fail(
+            f"{rel} is missing; re-bless it with "
+            "`SKILLMAP_BLESS=1 cargo test -p skillmap-core --test golden`"
+        )
+        return
+
+    raw = GOLDEN_MANIFEST_PATH.read_bytes()
+    try:
+        golden = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        result.fail(f"{rel} is not valid UTF-8 JSON: {exc}")
+        return
+
+    validator = jsonschema.Draft202012Validator(load_schema())
+    for err in sorted(validator.iter_errors(golden), key=lambda e: list(e.path)):
+        path = "/".join(str(p) for p in err.path) or "<root>"
+        result.fail(
+            f"{rel} fails the schema at {path}: {err.message} — the Rust types in "
+            "skillmap-core and schema/manifest-v1.schema.json have drifted apart"
+        )
+
+    # The canonical framing rules from docs/02-manifest-schema.md, checked on the
+    # bytes rather than on the parsed object, because every one of them is a
+    # property of the file that json.loads would happily discard.
+    if not raw.endswith(b"\n"):
+        result.fail(f"{rel} must end with a trailing newline")
+    if raw.endswith(b"\n\n"):
+        result.fail(f"{rel} must end with exactly one trailing newline")
+    if raw.startswith(b"\xef\xbb\xbf"):
+        result.fail(f"{rel} must not carry a UTF-8 BOM")
+    # A byte-identical artifact cannot contain a float: it would be a score
+    # (invariant 1) and its formatting is not portable.
+    if re.search(rb": -?\d+\.\d", raw):
+        result.fail(f"{rel} contains a float; invariant 1 forbids scores and floats do not round-trip portably")
+
+    # Re-rendering with sorted keys and the documented framing must be a no-op.
+    # This is the cheap, dependency-free half of "canonical serialization" —
+    # it catches an unsorted key or a wrong indent even if the schema is happy.
+    recanonicalized = json.dumps(golden, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    if recanonicalized != raw.decode("utf-8"):
+        result.fail(
+            f"{rel} is not in canonical form (sorted keys, two-space indent, LF, "
+            "one trailing newline) — invariant 2"
+        )
+
+
+# ---------------------------------------------------------------------------
 # Check 4 — prose paths resolve
 # ---------------------------------------------------------------------------
 def _looks_like_path(token: str) -> bool:
@@ -239,7 +334,7 @@ def _looks_like_path(token: str) -> bool:
 
 
 def _is_known_gap(candidate: str) -> bool:
-    if candidate in KNOWN_GAP_EXACT:
+    if candidate in KNOWN_GAP_EXACT or candidate in PLANNED_CRATES:
         return True
     # `candidate` has had any trailing slash stripped, so a bare directory
     # reference like `crates/` arrives as "crates" and would never match the
@@ -256,7 +351,7 @@ def check_prose_paths_resolve(result: CheckResult) -> None:
     # A known-gap entry that now exists is no longer a gap, and leaving it on the
     # allowlist permanently exempts a real path from checking. Without this, the
     # check silently weakens exactly as the repo grows: the moment T1 lands
-    # crates/skillaudit-core/, every `crates/...` reference in every document
+    # crates/skillmap-core/, every `crates/...` reference in every document
     # stops being verified.
     for gap in sorted(KNOWN_GAP_EXACT):
         if (REPO_ROOT / gap).exists():
@@ -264,6 +359,9 @@ def check_prose_paths_resolve(result: CheckResult) -> None:
     for prefix in KNOWN_GAP_PREFIXES:
         if (REPO_ROOT / prefix.rstrip("/")).exists():
             result.fail(f"known-gap allowlist prefix `{prefix}` now exists on disk; remove it from KNOWN_GAP_PREFIXES so references under it are checked normally")
+    for crate in sorted(PLANNED_CRATES):
+        if (REPO_ROOT / crate).exists():
+            result.fail(f"planned-crate allowlist entry `{crate}` now exists on disk; remove it from PLANNED_CRATES so references to it are checked normally")
 
     # Every markdown file that carries prose, not just root and docs/. The
     # .claude/ and .github/ files are among the densest path-referencing in the
@@ -295,7 +393,7 @@ def check_prose_paths_resolve(result: CheckResult) -> None:
                 # which is the common case. The gate exists because without it the
                 # check drowns in false positives on illustrative tokens
                 # (`SKILL.md`, `settings.json`, `expected.json`) and on genuine
-                # external references (`anthropics/skills`, `@skillaudit/linux-x64`),
+                # external references (`anthropics/skills`, `@skillmap/linux-x64`),
                 # and a check that cries wolf gets deleted.
                 continue
 
@@ -410,6 +508,7 @@ CHECKS = [
     ("schema", "schema legality (Draft 2020-12)", check_schema_legality),
     ("doc-example", "doc example validates against schema", check_doc_example_validates),
     ("mutations", "negative and positive mutation cases", check_negative_positive_cases),
+    ("golden-manifest", "golden manifest validates and is canonical", check_golden_manifest),
     ("prose-paths", "prose paths resolve", check_prose_paths_resolve),
     ("line-endings", "no CRLF in tracked text files", check_no_crlf),
     ("configs-parse", "TOML/JSON/YAML files parse", check_configs_parse),
@@ -453,7 +552,7 @@ def main() -> int:
             result.fail(f"check raised an unexpected exception: {exc!r}")
         results.append(result)
 
-    print("skillaudit spec verification")
+    print("skillmap spec verification")
     print("=" * 60)
     for result in results:
         status = "PASS" if result.ok else "FAIL"

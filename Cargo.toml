@@ -5,7 +5,7 @@ resolver = "2"
 # begins — twelve empty crates would be twelve stubs (invariant 12), and a workspace
 # that cannot resolve is worse than a short one. The full target layout, and the
 # dependency direction it must obey, live in ARCHITECTURE.md.
-members = []
+members = ["crates/skillmap-core"]
 
 [workspace.package]
 version = "0.1.0"
@@ -28,12 +28,17 @@ sha2 = "0.10"
 tree-sitter = "0.24"
 toml = "0.8"
 
-# TEST-ONLY. Cargo has no [workspace.dev-dependencies] table, so this is declared
-# here like any other workspace dependency — but a member crate may only pull it in
-# under its own [dev-dependencies], never [dependencies]. It exists to prove the Rust
-# types and schema/manifest-v1.schema.json cannot drift. Shipping it in the binary
-# would drag regex machinery into a tree SECURITY.md promises to keep minimal.
-jsonschema = "0.26"
+# NO JSON SCHEMA VALIDATOR HERE, deliberately. Proving the Rust types and
+# schema/manifest-v1.schema.json cannot drift does not require one in this tree:
+# `cargo test -p skillmap-core --test golden` proves the types still render
+# crates/skillmap-core/tests/golden/manifest-maximal.json byte for byte, and
+# `scripts/verify_spec.py --only golden-manifest` proves that file still validates
+# against the schema. The loop closes in both directions across the two runners.
+#
+# The `jsonschema` crate would pull tokio, hyper, and reqwest — a full async HTTP
+# stack — into the dev-dependencies of a supply-chain auditor whose SECURITY.md
+# promises a minimal, defensible tree and no network. Python already owns the
+# schema checks and already had the dependency.
 
 # Invariant 10: hostile input is the normal case. A parser panic is a DoS on
 # someone's CI. These are denied workspace-wide and allowed only in the CLI

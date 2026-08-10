@@ -58,7 +58,7 @@ skillmap/
 ├── .claude/                    # skills, subagents, commands, hooks (Claude Code only)
 ├── scripts/                    # verify_spec.py and friends
 ├── crates/                     # target layout; members are added as their task begins
-│   ├── skillmap-core/        # types, manifest, canonical ser, capability taxonomy
+│   ├── skillmap-core/        # types, manifest, canonical ser, capability taxonomy  [T1, exists]
 │   ├── skillmap-resolve/     # Resolver trait + per-agent discovery conventions
 │   ├── skillmap-parse/       # bundle parse, frontmatter, inventory, reference graph
 │   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine

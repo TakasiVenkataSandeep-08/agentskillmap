@@ -6,17 +6,17 @@ This command is a placeholder for a real local determinism check, and it is not 
 yet. Say so plainly and stop — do not simulate a scan or fabricate a "pass" result.
 
 **Why it can't run:** the check this command names — "scan the fixture corpus twice, byte-
-compare the two manifests" — requires a working `skillaudit` binary that can actually
-produce a manifest from a bundle. That's `skillaudit-core` (manifest types + `canonicalize()`,
-task T1) plus `skillaudit-parse`/`skillaudit-resolve` (task T2) at minimum, and realistically
-`skillaudit-rules`/`skillaudit-code` (task T4) too, since the fixture corpus is only
+compare the two manifests" — requires a working `skillmap` binary that can actually
+produce a manifest from a bundle. That's `skillmap-core` (manifest types + `canonicalize()`,
+task T1) plus `skillmap-parse`/`skillmap-resolve` (task T2) at minimum, and realistically
+`skillmap-rules`/`skillmap-code` (task T4) too, since the fixture corpus is only
 interesting to scan once rules produce findings. None of these crates exist yet — see
 `docs/00-tasks.md` and `Cargo.toml`'s (empty) `members` list.
 
 **What to do when invoked:**
 
-1. Check whether `crates/skillaudit-cli` exists and builds
-   (`cargo build -p skillaudit-cli` if the crate is present). If it doesn't exist, report
+1. Check whether `crates/skillmap-cli` exists and builds
+   (`cargo build -p skillmap-cli` if the crate is present). If it doesn't exist, report
    exactly that — "the scanner binary does not exist yet (pre-T1/T4 per docs/00-tasks.md);
    this command has nothing to run" — and stop. Do not proceed to steps below.
 

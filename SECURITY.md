@@ -2,7 +2,7 @@
 
 ## Threat model
 
-`skillaudit` analyzes hostile input by design. A skill bundle is arbitrary text and code
+`skillmap` analyzes hostile input by design. A skill bundle is arbitrary text and code
 authored by an unknown party, and some fraction of what this tool reads will be actively
 trying to defeat it.
 
@@ -30,7 +30,7 @@ Scanning is **offline**. The binary makes network calls in exactly two places, b
 require explicit opt-in:
 
 1. `--semantic` — one model API call per chunk. Nothing else.
-2. `skillaudit corpus` — the research harvester, which fetches public repositories.
+2. `skillmap corpus` — the research harvester, which fetches public repositories.
 
 There is **no telemetry**. No analytics, no accounts, no phone-home, not even opt-in. A
 supply-chain tool with a supply-chain problem is worthless, and this project would have no
@@ -48,7 +48,7 @@ standing to audit anyone else while shipping a beacon.
 
 ## Reporting
 
-Report vulnerabilities in `skillaudit` privately via GitHub Security Advisories rather than
+Report vulnerabilities in `skillmap` privately via GitHub Security Advisories rather than
 a public issue.
 
 ## Reporting findings about third-party skills

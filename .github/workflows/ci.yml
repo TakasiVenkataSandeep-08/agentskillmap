@@ -1,11 +1,6 @@
-# CI for the pre-Rust stage of skillaudit (T0, docs/00-tasks.md).
+# CI for skillmap. Jobs join this workflow as their task lands (docs/00-tasks.md).
 #
-# No cargo workspace member exists yet (Cargo.toml has `members = []` on
-# purpose — twelve empty crates would be twelve stubs, invariant 12), so
-# there is deliberately no fmt/clippy/test/determinism-matrix job here. Those
-# join this workflow when the first crate lands (T1, skillaudit-core).
-#
-# What these jobs guard today:
+# What these jobs guard:
 #
 #   spec           - invariant 2  (canonical, sortable, schema-conformant manifest shape)
 #                     invariant 3  (unresolved vs. diagnostics stay two closed, non-overlapping enums)
@@ -15,6 +10,15 @@
 #                     invariant 6  (advisory.enabled pins model + prompt_sha256, or carries neither)
 #                     invariant 12 (every prose-referenced path either exists or is a documented,
 #                                   allowlisted gap — no aspirational references left unverified)
+#                    It also owns the schema half of the type/schema drift gate: the golden
+#                    manifest the Rust types render must still validate against the schema.
+#   rust           - invariant 2  (the 1,000-shuffle determinism suite), run on ubuntu AND
+#                                   windows because "byte-identical on any machine" is the
+#                                   claim, and a one-platform run does not test it
+#                     invariant 10 (clippy denies unwrap/expect/panic/indexing in library
+#                                   crates; -D warnings makes that a failure, not a note)
+#                    It also owns the types half of the drift gate: `--test golden` fails if
+#                    the canonical rendering changed without being re-blessed.
 #   line-endings   - invariant 2  (byte-identical hashing breaks the moment a fixture is
 #                                   checked out with CRLF; run on windows-latest specifically
 #                                   because that is the one platform where it can happen)
@@ -44,6 +48,46 @@ jobs:
 
       - name: Run spec verifier
         run: python scripts/verify_spec.py
+
+  rust:
+    name: rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Never cancel the sibling platform on first failure: when determinism
+      # breaks, "which platform disagreed" is the whole diagnostic, and a
+      # cancelled matrix leg throws that away.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      # Before checkout, for the same reason as the line-endings job: the Windows
+      # runner's default autocrlf=true would rewrite the golden manifest's LF
+      # endings on the way in, and the golden test would fail on the checkout
+      # rather than on anything this repository actually got wrong.
+      - name: Disable line-ending rewriting on checkout
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      # No toolchain is named here on purpose. rust-toolchain.toml pins the exact
+      # version (invariant 9) and rustup honours it automatically; naming one here
+      # too would create a second source of truth that drifts from the first.
+      - name: Show toolchain
+        run: rustup show active-toolchain
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace --all-targets
+
+      - name: Doc tests
+        run: cargo test --workspace --doc
 
   line-endings:
     name: line-endings (${{ matrix.os }})

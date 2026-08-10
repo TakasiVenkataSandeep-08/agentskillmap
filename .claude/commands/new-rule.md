@@ -43,6 +43,6 @@ Then:
    full list of what's easy to get wrong (capture roles, span size, dynamic targets, the
    closed capability vocabulary).
 
-5. Remind the user at the end: `skillaudit rules validate` does not exist yet (it's task
+5. Remind the user at the end: `skillmap rules validate` does not exist yet (it's task
    T4 in `docs/00-tasks.md`), so nothing here is machine-checked — the triple has to be
    reviewed by hand against `docs/03-rules-authoring.md` until then.

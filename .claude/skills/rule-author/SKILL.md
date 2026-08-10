@@ -1,6 +1,6 @@
 ---
 name: rule-author
-description: Use when authoring, adding, or extending a skillaudit detection rule — writing tree-sitter .scm queries, rule TOML metadata, or fixtures under rules/, queries/, fixtures/. Triggers on requests like "add a rule for X", "write a tree-sitter query", "extend capability coverage for language Y", "add a sink detector", or anything touching capture roles or the rule triple.
+description: Use when authoring, adding, or extending a skillmap detection rule — writing tree-sitter .scm queries, rule TOML metadata, or fixtures under rules/, queries/, fixtures/. Triggers on requests like "add a rule for X", "write a tree-sitter query", "extend capability coverage for language Y", "add a sink detector", or anything touching capture roles or the rule triple.
 ---
 
 # Authoring a rule triple
@@ -101,15 +101,15 @@ untested false-positive generator; a rule whose negative fixture is contrived to
 close to the same thing.
 
 `expected.json` records the manifest fragment each fixture should produce. Byte offsets are
-filled in by `skillaudit rules bless` once it exists — don't hand-compute them; leave the
+filled in by `skillmap rules bless` once it exists — don't hand-compute them; leave the
 fields that require a running engine out, matching the shape in
 `fixtures/python/credential-read/expected.json`.
 
 ## What does not exist yet
 
-`skillaudit rules validate` and `skillaudit rules bless` are specified in
+`skillmap rules validate` and `skillmap rules bless` are specified in
 `docs/03-rules-authoring.md` and referenced throughout, but neither command exists —
-there is no `skillaudit-rules` crate yet (it lands in task T4, per `docs/00-tasks.md`).
+there is no `skillmap-rules` crate yet (it lands in task T4, per `docs/00-tasks.md`).
 Write the triple to the shape those commands will eventually check by hand: query compiles
 conceptually against the grammar, captures line up with `[captures]` in both directions,
 fixtures match `expected.json`. Say so plainly if asked to "run validation" — do not

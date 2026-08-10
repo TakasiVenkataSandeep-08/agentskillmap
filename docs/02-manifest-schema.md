@@ -217,6 +217,20 @@ Non-negotiable, per invariant 2:
   Optional sort keys need an explicit rule for absence or the order is partial, and a partial
   order is a nondeterminism bug that only shows up on the one input that has a tie.
 
+- **Ties are broken by the element's own canonical JSON rendering.** The keys above are the
+  declared order; they are not by themselves total. Two capabilities can share a term and a
+  first-evidence position and still differ in `reachability`, and two `unresolved` entries can
+  share `(file, reason, start_byte)` and differ in `note`. Left there, their relative order
+  would be whatever order the analysis happened to emit them in — a different filesystem walk
+  or a different rule evaluation order would produce different bytes. Comparing the rendered
+  elements makes the order total; elements whose renderings are also equal are byte-for-byte
+  identical, so their relative order is unobservable in the output.
+
+  This is deliberately *not* implemented by deriving a structural ordering over the Rust
+  types. That would make the artifact's bytes depend on the declaration order of struct
+  fields and enum variants, so a cosmetic reordering in a later PR would silently change
+  every manifest in every repo that uses the tool.
+
 - Two-space indent, LF, trailing newline, UTF-8, no BOM.
 - Paths relative to bundle root, forward slashes.
 - Floats: none. If you think you need one, you're building a score. See invariant 1.

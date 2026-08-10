@@ -12,7 +12,7 @@ docs/00-tasks.md it belongs to.
 - Positive fixture: `fixtures/<lang>/<id>/positive.<ext>` — describe the case it triggers on
 - Negative fixture: `fixtures/<lang>/<id>/negative.<ext>` — **drawn from a real bundle**
   (name it or link it), not invented
-- `expected.json` — blessed via `skillaudit rules bless`, not hand-written (if that command
+- `expected.json` — blessed via `skillmap rules bless`, not hand-written (if that command
   does not exist yet in this repo, say so and note it will need blessing once it does)
 
 ## Definition of done

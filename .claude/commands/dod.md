@@ -20,7 +20,7 @@ canonical and this command must stay consistent with edits to it.
 
 3. Check the two remaining checklist items yourself, since they're process facts rather
    than code-content facts the subagent is built to find:
-   - **Determinism test still byte-identical** — if `skillaudit-core`'s determinism test
+   - **Determinism test still byte-identical** — if `skillmap-core`'s determinism test
      exists and is runnable, run it (`cargo test` targeting the determinism test) and
      report pass/fail. If it doesn't exist yet (pre-T1), say so explicitly rather than
      marking this item done.

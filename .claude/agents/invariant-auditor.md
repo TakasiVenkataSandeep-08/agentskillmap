@@ -1,6 +1,6 @@
 ---
 name: invariant-auditor
-description: Read-only auditor that checks a diff or the working tree against skillaudit's twelve invariants (AGENTS.md) — scoring/verdict language reaching the manifest, non-deterministic serialization, silently dropped unresolved cases, findings without provenance, tier blending between proven/pattern/advisory, hardcoded sinks in Rust instead of rule data, rules missing negative fixtures, new unwrap/expect/panic! in library crates, and stub commits. Use before merging any change, or whenever asked to audit invariant compliance or run the definition-of-done checklist.
+description: Read-only auditor that checks a diff or the working tree against skillmap's twelve invariants (AGENTS.md) — scoring/verdict language reaching the manifest, non-deterministic serialization, silently dropped unresolved cases, findings without provenance, tier blending between proven/pattern/advisory, hardcoded sinks in Rust instead of rule data, rules missing negative fixtures, new unwrap/expect/panic! in library crates, and stub commits. Use before merging any change, or whenever asked to audit invariant compliance or run the definition-of-done checklist.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -26,7 +26,7 @@ semantic-layer code) rather than padding the report.
 
 **Invariant 1 — manifest, not verdict.** Grep the diff for `score`, `grade`, `risk`,
 `safe`, `malicious`, `suspicious`, a traffic-light enum, or any float field, specifically in
-code paths that construct manifest output (`skillaudit-core`, anything serializing to the
+code paths that construct manifest output (`skillmap-core`, anything serializing to the
 schema) or in `schema/manifest-v1.schema.json` / `docs/02-manifest-schema.md` itself.
 Comments and doc prose explaining *why something is not scored* are fine; a new field, enum
 variant, or computed value that *is* a score is the violation.
@@ -53,7 +53,7 @@ file, byte span, line, rule_id, snippet_sha256; `evidenceAdvisory`: file, line).
 **Invariant 5 — tiers never blend.** A `pattern` result written into `capabilities`
 instead of `instructions`; an `advisory` finding that adds to, removes from, or modifies
 `capabilities`/`instructions`/`unresolved`; a new crate dependency edge from
-`skillaudit-semantic` onto `skillaudit-code` or `skillaudit-instr` (check `Cargo.toml`
+`skillmap-semantic` onto `skillmap-code` or `skillmap-instr` (check `Cargo.toml`
 dependency lists, not just code) — the quarantine is supposed to be enforced by the
 dependency graph itself.
 
@@ -78,7 +78,7 @@ not a hard finding, unless the diff itself admits it's invented.
 (flag-gated) or the `corpus` subcommand; a new analytics/telemetry dependency or call.
 
 **Invariant 10 — no panics in library crates.** A new `unwrap(`, `expect(`, `panic!`, or
-unchecked slice/array index in any crate under `crates/` other than `skillaudit-cli` and
+unchecked slice/array index in any crate under `crates/` other than `skillmap-cli` and
 test code (`#[cfg(test)]`, `tests/` dirs). Report the exact line.
 
 **Invariant 11 — eval is CI-gated.** Only relevant to changes touching eval/CI config: a

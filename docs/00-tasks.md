@@ -44,6 +44,28 @@ Build the spine before anything that produces data.
 **Done when:** a hand-built manifest with shuffled input ordering serializes byte-identically
 across 1,000 randomized field-insertion orders, and validates against the schema.
 
+**Status: done.** `crates/skillmap-core` ships the types, `canonicalize()`, and
+`content_digest()`. The determinism suite runs the 1,000-shuffle criterion above plus
+serialize→parse→serialize fixed-point, idempotence, framing, key-sort, and no-float checks.
+
+Two decisions worth recording, because neither is obvious from the code:
+
+- **Ties are broken by each element's canonical JSON rendering.** The declared array orders
+  are not total on their own; see `docs/02-manifest-schema.md`. Without a tiebreak, two
+  findings agreeing on every declared key would serialize in whatever order the analysis
+  emitted them, which is exactly the tie-dependent nondeterminism the spec warns about.
+- **Schema validation lives in Python, not in a Rust dev-dependency.** The drift gate is
+  split: `--test golden` proves the types still render
+  `crates/skillmap-core/tests/golden/manifest-maximal.json` byte for byte, and
+  `scripts/verify_spec.py` (check `golden-manifest`) proves that file still satisfies the
+  schema, whose `additionalProperties: false` catches a field added on the Rust side. The
+  `jsonschema` crate would have pulled tokio, hyper, and reqwest into the tree of a tool
+  whose `SECURITY.md` promises a minimal dependency set and no network.
+
+Re-bless the golden manifest after an intentional shape change with
+`SKILLMAP_BLESS=1 cargo test -p skillmap-core --test golden`, and bump `schema_version` in
+the same commit — a manifest shape change is a schema-version event.
+
 ---
 
 ## T2 — `skillmap-parse` + `skillmap-resolve`: bundles and inventory

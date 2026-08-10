@@ -6,7 +6,7 @@ gate, and a hook that fights the author gets disabled. This script never blocks 
 it always exits 0, whether or not it has something to say.
 
 Checked: Write/Edit targets under crates/ that are .rs files, excluding the CLI binary
-crate (skillaudit-cli, which is explicitly exempt per AGENTS.md invariant 10) and test
+crate (skillmap-cli, which is explicitly exempt per AGENTS.md invariant 10) and test
 code. Flags unwrap(, expect(, panic!, and serde_json::to_string_pretty appearing in the
 new content.
 
@@ -15,7 +15,7 @@ new content.
     malformed skill bundle is a denial-of-service on someone's CI, not just an ugly stack
     trace.
   - serde_json::to_string_pretty must never escape into the codebase (invariant 2):
-    canonicalize() in skillaudit-core is the ONLY serialization path, because it's the one
+    canonicalize() in skillmap-core is the ONLY serialization path, because it's the one
     place sorted keys, declared array orders, LF, and no-BOM are enforced. Any other
     serialization call is a byte-identity leak waiting to happen.
 """
@@ -33,7 +33,7 @@ PATTERNS = [
 
 CRATE_PATH_RE = re.compile(r"(^|/)crates/([^/]+)/")
 
-EXEMPT_CRATES = {"skillaudit-cli"}
+EXEMPT_CRATES = {"skillmap-cli"}
 
 
 def normalize(path: str) -> str:
@@ -92,7 +92,7 @@ def check(payload: object) -> int:
     )
     if "serde_json::to_string_pretty" in hits:
         print(
-            "  invariant 2: canonicalize() in skillaudit-core is the only serialization "
+            "  invariant 2: canonicalize() in skillmap-core is the only serialization "
             "path (sorted keys, declared array orders, LF, no BOM). "
             "serde_json::to_string_pretty must never escape into the codebase outside it."
         )

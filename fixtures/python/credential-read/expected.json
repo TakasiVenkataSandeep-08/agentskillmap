@@ -1,5 +1,5 @@
 {
-  "note": "Manifest fragment. Byte offsets are filled in by `skillaudit rules bless` once the engine exists; do not hand-maintain them.",
+  "note": "Manifest fragment. Byte offsets are filled in by `skillmap rules bless` once the engine exists; do not hand-maintain them.",
   "positive": {
     "capabilities": [
       {
