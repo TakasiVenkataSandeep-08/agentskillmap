@@ -4,11 +4,12 @@ Build this before any parser. It is the CLI output, the CI diff format, the poli
 allowlist target, and the eval ground-truth format simultaneously. Getting it wrong means
 rewriting everything downstream.
 
-Machine-readable version: `schema/manifest-v1.schema.json`.
+Machine-readable version: `schema/manifest-v1.schema.json`. The example below is validated
+against that schema in CI — if the two ever disagree, the build fails.
 
 ## Shape
 
-```jsonc
+```json
 {
   "schema_version": "1.0.0",
   "tool": { "name": "skillaudit", "version": "0.1.0" },
@@ -17,73 +18,97 @@ Machine-readable version: `schema/manifest-v1.schema.json`.
     "kind": "skill",
     "name": "example-skill",
     "resolver": "claude-code",
-    "root": "skills/example-skill",
-    "content_digest": "sha256:…"        // merkle root over sorted inventory
+    "root": "example-skill",
+    "content_digest": "sha256:db0823d8a7fb5fe544398af6db72238d80e28b80f5715eb6f560e89dd1d8585c"
   },
 
   "inventory": [
     {
       "path": "SKILL.md",
       "size": 1834,
-      "sha256": "…",
-      "load_phase": "on_trigger",        // always | on_trigger | reference | unreferenced
+      "sha256": "sha256:0e95f5a3666031d6fac42bc6ca698b40b61648f4974c8ec355181ed4888c5c26",
+      "load_phase": "on_trigger",
       "parsed_as": "markdown",
-      "parse_status": "ok"               // ok | error | unsupported
+      "parse_status": "ok"
+    },
+    {
+      "path": "scripts/collect.py",
+      "size": 902,
+      "sha256": "sha256:aa9ecfd639fb52aeb69483ac7654fc4a6662d22f698d6a096f7c9f818914ec99",
+      "load_phase": "reference",
+      "parsed_as": "python",
+      "parse_status": "ok"
     }
   ],
 
   "disclosure": {
     "description_bytes": 412,
-    "declared_capabilities": [],         // from frontmatter, if the agent supports it
-    "trigger_terms": ["…"],              // extracted, not scored
+    "declared_capabilities": [],
+    "trigger_terms": ["aws", "credentials", "format"],
     "reference_files": 4,
     "unreferenced_files": 1
   },
 
-  "capabilities": [                      // tier: proven — code plane only
+  "capabilities": [
     {
       "capability": "fs.read.credential",
-      "reachability": "observed",        // observed | present | unresolved
+      "reachability": "observed",
       "detail": { "paths": ["~/.aws/credentials"] },
       "evidence": [
         {
           "file": "scripts/collect.py",
-          "start_byte": 412, "end_byte": 448, "start_line": 17,
+          "start_byte": 412,
+          "end_byte": 448,
+          "start_line": 17,
           "rule_id": "py.credential-read.dotfile",
-          "snippet_sha256": "…"
+          "snippet_sha256": "sha256:bf69c1d222a7bedcb6a18bd2ada770bc79b87d5a82f61f0be14e02ea981b6302"
         }
       ]
     }
   ],
 
-  "instructions": [                      // tier: pattern — weak, lexical, prose
+  "instructions": [
     {
       "signal": "instruction.fetch_as_instruction",
-      "evidence": [ { "file": "reference/setup.md", "start_byte": 88, "end_byte": 140,
-                      "start_line": 6, "rule_id": "instr.fetch-as-instruction",
-                      "snippet_sha256": "…" } ]
+      "evidence": [
+        {
+          "file": "reference/setup.md",
+          "start_byte": 88,
+          "end_byte": 140,
+          "start_line": 6,
+          "rule_id": "instr.fetch-as-instruction",
+          "snippet_sha256": "sha256:4b652647dbbcea8c050dc169fb386d64efbe122e0777ba13f228c364b049689c"
+        }
+      ]
     }
   ],
 
   "unresolved": [
-    { "reason": "dynamic_dispatch", "file": "scripts/run.sh",
-      "start_byte": 90, "end_byte": 118, "start_line": 4,
-      "note": "exec target is a shell variable" }
+    {
+      "reason": "dynamic_dispatch",
+      "file": "scripts/run.sh",
+      "start_byte": 90,
+      "end_byte": 118,
+      "start_line": 4,
+      "note": "exec target is a shell variable"
+    }
   ],
 
-  "advisory": {                          // tier: advisory — flag-gated, quarantined
+  "advisory": {
     "enabled": true,
-    "model": "…",
-    "prompt_sha256": "…",
+    "model": "claude-sonnet-5",
+    "prompt_sha256": "sha256:22103d3836026a9e38910b068af4615458e410ba89d41bcc0d97fc737b9b85b3",
     "findings": [
-      { "kind": "disclosure_delta",
+      {
+        "kind": "disclosure_delta",
         "claim": "reference/setup.md instructs credential upload; description mentions only formatting",
-        "evidence": [ { "file": "reference/setup.md", "start_line": 12 } ] }
+        "evidence": [{ "file": "reference/setup.md", "start_line": 12 }]
+      }
     ]
   },
 
   "diagnostics": [
-    { "code": "unsupported_language", "file": "bin/helper.rb" }
+    { "code": "rule_load_error", "file": "rules/ruby/exec.toml", "note": "query references capture @target, not declared in [captures]" }
   ]
 }
 ```
@@ -96,31 +121,102 @@ every consumer would have to filter correctly, and eventually one wouldn't. Inva
 enforced by shape.
 
 **`advisory.enabled: false` is present, not omitted,** when the semantic pass didn't run.
-"Not checked" and "checked, found nothing" must be distinguishable in a diff.
+"Not checked" and "checked, found nothing" must be distinguishable in a diff. The schema
+enforces both halves: `enabled: false` requires an empty `findings` and forbids `model` and
+`prompt_sha256`; `enabled: true` requires both, because an unpinned advisory branch is not
+reproducible and turns every CI diff into noise (invariant 6).
 
 **`unresolved` is top-level, not nested per capability.** It describes gaps in the analysis,
 not properties of findings. Nesting it would make it invisible when the capability list is
 empty — precisely the case where it matters most.
 
+**`unresolved` is about the bundle; `diagnostics` is about the run.** Anything the analysis
+could not cover *in the skill being scanned* — an unsupported language, a computed target, a
+file too large, a symlink leaving the root — is an `unresolved` entry, because that is a fact
+a reviewer needs about this bundle. Anything wrong with *the tool's own execution* — a rule
+file that would not load, a semantic response that failed schema validation, an unreadable
+`policy.toml` — is a `diagnostic`. Both vocabularies are closed enums, so the boundary cannot
+blur by accretion. When in doubt: would this entry still be true if a different tool scanned
+the same bundle? If yes, it is `unresolved`.
+
+**Evidence completeness is tier-dependent, and the schema enforces it.** `capabilities` and
+`instructions` carry `evidenceStrict`: file, byte span, line, `rule_id`, and
+`snippet_sha256`, all required. A rule fired, so all five exist, and a finding that cannot be
+pointed at cannot be regression-tested. `advisory` carries `evidenceAdvisory`: file and line
+only, and the type structurally *cannot* hold a `rule_id` or a snippet hash. No rule fired
+there, and a byte span back-derived from a model's prose citation is manufactured precision —
+worse than an honest line number, because it looks checkable and isn't.
+
+**`detail` is a closed object.** `paths` and `hosts`, both sorted and deduplicated, nothing
+else. It sits inside an artifact required to be byte-identical, so every key needs a declared
+type and a declared order. Adding a key is a schema-version event, same rule as adding a
+taxonomy term.
+
+**`declared_capabilities` holds raw strings, not taxonomy terms.** It is read from
+third-party frontmatter written by authors who have never seen our vocabulary, so
+constraining it to `capabilityTerm` would hard-fail on the first real bundle. We record
+verbatim what the author declared. Mapping those strings into our taxonomy is a separate,
+explicitly lossy step, and it never happens silently.
+
 **No `count` or `total` fields anywhere.** They're derivable, and they create diff churn
 that swamps the signal when one finding is added.
-
-**`content_digest` is a merkle root over the sorted inventory**, so it is stable under
-directory-walk order and file-mtime changes. It is the identity used by the lockfile and
-by corpus deduplication.
 
 **Reachability is per-capability, not per-evidence.** If any evidence for a capability is
 `observed`, the capability is `observed`. A capability whose evidence is entirely `present`
 stays `present`. Do not silently upgrade.
+
+## Identity: `content_digest` and `target.root`
+
+Both are machine-independent by construction, or invariant 2 is false.
+
+**`content_digest`** is a merkle root over the sorted inventory, covering **file bytes only**:
+
+```
+leaf_i = sha256( path_i_utf8 || 0x00 || raw_sha256_bytes_i )     # 32 raw bytes, not hex
+root   = sha256( leaf_0 || leaf_1 || … || leaf_n )               # leaves in sorted path order
+```
+
+- Paths are forward-slash and relative to the bundle root, sorted **byte-wise over UTF-8**.
+- Text files are LF-normalized before their `sha256` is computed, so a CRLF checkout on
+  Windows cannot change the digest.
+- **`load_phase` and `parse_status` are excluded.** The digest means *"these bytes"*, nothing
+  more. Including classification would mean every improvement to the load-phase classifier
+  invalidates every `skillaudit.lock` in every repo that uses the tool — churn with no
+  corresponding change in what the skill can do.
+
+**`target.root`** is a forward-slash path relative to the **resolver's discovery root** — for
+`claude-code`, the path under `.claude/skills/`, so `example-skill`, not
+`/home/ana/work/proj/.claude/skills/example-skill` and not `../../.claude/skills/example-skill`.
+Anchoring to cwd or the project directory would leak machine layout into the manifest and
+break byte-identity between two developers with different checkout paths.
 
 ## Canonical serialization
 
 Non-negotiable, per invariant 2:
 
 - Keys sorted lexicographically at every level.
-- Arrays sorted by a declared total order: `inventory` by `path`; `capabilities` by
-  `(capability, first evidence file, start_byte)`; `evidence` by `(file, start_byte)`;
-  `unresolved` by `(file, start_byte, reason)`; `diagnostics` by `(code, file)`.
+- **All sorting is byte-wise over UTF-8**, never locale collation. Locale-sensitive
+  comparison makes "byte-identical on any machine" false on the first non-ASCII path, and it
+  fails on the machine that has a different `LANG` rather than in CI.
+- Arrays sorted by a declared total order — every array, no exceptions:
+
+  | Array | Order |
+  |---|---|
+  | `inventory` | `path` |
+  | `capabilities` | `(capability, first evidence file, first evidence start_byte)` |
+  | `instructions` | `(signal, first evidence file, first evidence start_byte)` |
+  | `evidence` (strict) | `(file, start_byte)` |
+  | `evidence` (advisory) | `(file, start_line)` |
+  | `unresolved` | `(file, reason, start_byte)` — absent `start_byte` sorts **before** any present one |
+  | `advisory.findings` | `(kind, first evidence file, first evidence start_line, claim)` |
+  | `diagnostics` | `(code, file)` — absent `file` sorts **before** any present one |
+  | `disclosure.trigger_terms` | lexicographic, deduplicated |
+  | `disclosure.declared_capabilities` | lexicographic, deduplicated |
+  | `detail.paths`, `detail.hosts` | lexicographic, deduplicated |
+
+  Optional sort keys need an explicit rule for absence or the order is partial, and a partial
+  order is a nondeterminism bug that only shows up on the one input that has a tie.
+
 - Two-space indent, LF, trailing newline, UTF-8, no BOM.
 - Paths relative to bundle root, forward slashes.
 - Floats: none. If you think you need one, you're building a score. See invariant 1.
@@ -163,6 +259,16 @@ Instruction-plane signals use a separate `instruction.*` namespace and never app
 `instruction.silence` and `instruction.privilege_claim` are the two that will earn this
 project attention. They are also the two most likely to false-positive on legitimate skills
 about logging verbosity and permissions — negative fixtures for those are load-bearing.
+
+## Run-scoped diagnostic codes (closed)
+
+| Code | Means |
+|---|---|
+| `rule_load_error` | A rule file could not be read or parsed |
+| `rule_validation_error` | A rule loaded but failed validation (undeclared capture, unknown capability term, missing fixture) |
+| `semantic_schema_violation` | The semantic pass returned output that failed schema validation; the finding was discarded |
+| `semantic_call_failed` | The semantic model call did not complete |
+| `policy_load_error` | `policy.toml` could not be read or parsed |
 
 ## `skillaudit.lock`
 

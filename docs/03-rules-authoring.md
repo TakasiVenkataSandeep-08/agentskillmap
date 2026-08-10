@@ -21,9 +21,34 @@ fixtures/python/credential-read/
 ```
 
 `skillaudit rules validate` checks that all three exist, that the query compiles against the
-grammar, that captures referenced in the TOML exist in the query, and that both fixtures
-produce their expected outcome. It runs in CI. A rule missing a negative fixture is rejected
-— that is an untested false-positive generator (invariant 8).
+grammar, that captures and roles line up **in both directions** (see below), and that both
+fixtures produce their expected outcome. It runs in CI. A rule missing a negative fixture is
+rejected — that is an untested false-positive generator (invariant 8).
+
+## Capture roles — the engine's whole vocabulary
+
+The engine knows **roles**, never sink names. This is the mechanism that makes invariant 7
+enforceable rather than aspirational: a new sink, a new language, a new obfuscation trick all
+reduce to the same four roles, so none of them is a reason to touch a `.rs` file.
+
+| Role | What the engine does with it |
+|---|---|
+| `site` | **Required.** Byte span reported as the evidence span. |
+| `path` | Optional. Literal value filtered through `[match].path_prefixes`; survivors land in `detail.paths`. |
+| `host` | Optional. Literal value filtered through `[match].host_suffixes`; survivors land in `detail.hosts`. |
+| `dynamic` | Optional. The target could not be resolved statically. Emits an `unresolved` entry with reason `computed_target` **instead of** a capability — never a silent skip (invariant 3). |
+
+Two naming rules, both enforced by `rules validate`:
+
+- **Captures prefixed `@_` are query-local.** They exist to drive `#eq?` / `#match?`
+  predicates and are invisible to the engine. Do not declare them.
+- **Every other capture must appear in `[captures]` and map to a role above.** Validation
+  runs TOML→query *and* query→TOML. A capture the query produces but the TOML never declares
+  is a rule silently dropping information on the floor, which is how a detection quietly
+  stops firing; it is a `rule_validation_error`, not a warning.
+
+Adding a role is an engine change and a schema-version event. If a rule seems to need a fifth
+role, that is a design discussion, not a patch.
 
 ## Metadata format
 
@@ -34,10 +59,12 @@ capability  = "fs.read.credential"     # must be in the closed taxonomy
 tier        = "proven"                 # proven | pattern
 query       = "queries/python/credential-read.scm"
 
-# Captures the engine reads out of the query.
+# Captures the engine reads out of the query. Keys are roles from the table above;
+# values are the capture names in the .scm. Every non-`@_` capture must appear here.
 [captures]
 site        = "@site"                  # byte span reported as evidence
 path        = "@path"                  # optional; lands in detail.paths
+dynamic     = "@dynamic"               # optional; becomes unresolved: computed_target
 
 # Literal path prefixes that make this a credential read. Data, not code.
 [match]

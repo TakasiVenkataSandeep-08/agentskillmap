@@ -1,19 +1,11 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/skillaudit-core",
-    "crates/skillaudit-resolve",
-    "crates/skillaudit-parse",
-    "crates/skillaudit-rules",
-    "crates/skillaudit-code",
-    "crates/skillaudit-instr",
-    "crates/skillaudit-semantic",
-    "crates/skillaudit-policy",
-    "crates/skillaudit-diff",
-    "crates/skillaudit-corpus",
-    "crates/skillaudit-eval",
-    "crates/skillaudit-cli",
-]
+
+# Only crates that exist. A crate joins this list when its task in docs/00-tasks.md
+# begins — twelve empty crates would be twelve stubs (invariant 12), and a workspace
+# that cannot resolve is worse than a short one. The full target layout, and the
+# dependency direction it must obey, live in ARCHITECTURE.md.
+members = []
 
 [workspace.package]
 version = "0.1.0"
@@ -24,13 +16,23 @@ repository = "https://github.com/OWNER/skillaudit"
 
 [workspace.dependencies]
 # Deliberately small. Every dependency here is one this project would have to
-# defend in its own threat model — see SECURITY.md.
+# defend in its own threat model — see SECURITY.md. `cargo deny check` gates
+# additions; deny.toml is the policy.
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1", features = ["preserve_order"] }
+# No `preserve_order`. That feature swaps serde_json's default BTreeMap for an
+# IndexMap, preserving *insertion* order — the exact opposite of the sorted keys
+# invariant 2 requires. The default is already canonical.
+serde_json = "1"
 thiserror = "2"
 sha2 = "0.10"
 tree-sitter = "0.24"
 toml = "0.8"
+
+# TEST-ONLY. Cargo has no [workspace.dev-dependencies] table, so this is declared
+# here like any other workspace dependency — but a member crate may only pull it in
+# under its own [dev-dependencies], never [dependencies]. It exists to prove the Rust
+# types and schema/manifest-v1.schema.json cannot drift. Shipping it in the binary
+# would drag regex machinery into a tree SECURITY.md promises to keep minimal.
 jsonschema = "0.26"
 
 # Invariant 10: hostile input is the normal case. A parser panic is a DoS on

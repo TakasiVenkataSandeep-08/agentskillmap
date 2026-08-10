@@ -8,6 +8,28 @@ Releases are not phased: v1.0 ships everything. The **build** order is fixed.
 
 ---
 
+## T0 — project infrastructure
+
+Not in the original backlog, because the original backlog assumed the repository already
+enforced its own standards. It did not: `AGENTS.md` claimed a two-platform determinism CI test
+that did not exist, invariant 7's contributor argument had no `CONTRIBUTING.md` behind it, and
+`SECURITY.md` promised reproducible builds with no pinned toolchain and no dependency gate.
+
+- Documented directory layout; `AGENTS.md` canonical, `CLAUDE.md` a pointer.
+- Spec repairs so the manifest schema stops contradicting the invariants: total sort order on
+  every array, tier-dependent evidence types, closed `detail` and `diagnostics`, exact
+  `content_digest` and `target.root` definitions, `declared_capabilities` as raw strings.
+- Reproducibility and supply-chain gates: pinned toolchain, `--remap-path-prefix`,
+  `cargo-deny`, `.gitattributes` LF normalization.
+- `CONTRIBUTING.md` with a rule-authoring walkthrough that requires no Rust; issue and PR
+  templates.
+- `scripts/verify_spec.py` and the CI jobs that can genuinely pass before any crate exists.
+
+**Done when:** CI is green, `scripts/verify_spec.py` passes including its negative cases, and
+the schema and `docs/02-manifest-schema.md` example validate against each other.
+
+---
+
 ## T1 — `skillaudit-core`: manifest types and canonical serialization
 
 Build the spine before anything that produces data.
@@ -139,3 +161,23 @@ and signed releases.
 ## Cross-cutting, every task
 
 The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of the above.
+
+---
+
+## Known gaps
+
+Tracked here rather than left to be rediscovered. None is a blocker for the task it sits in
+front of; each is a thing this repository currently claims or implies but does not yet have.
+
+- **`policy.toml` has no format spec.** Referenced in `AGENTS.md` (invariant 1),
+  `docs/02-manifest-schema.md`, and T8. Writing it before T8 would be speculation, since the
+  exit-code semantics depend on what the diff turns out to need.
+- **`skillaudit.lock` is specified in one sentence.** Enough to build against at T8, not
+  enough for a third party to write a compatible reader. Expand when the diff exists.
+- **`rules/languages.toml` does not exist.** The extension → grammar mapping described in
+  `docs/03-rules-authoring.md`. A T4 input.
+- **The taxonomy has thirteen terms and the repository has one rule.** Invariant 12 forbids
+  shipping a term no rule detects, so v1.0 either grows rules to cover the taxonomy or the
+  taxonomy shrinks to match the rules. T4 decides which, from T3's data — not from ambition.
+- **`OWNER` is a placeholder** in `Cargo.toml`'s `repository` and the schema `$id`, and
+  `skillaudit` is a placeholder name. `AGENTS.md` says do not defer past v0.2.

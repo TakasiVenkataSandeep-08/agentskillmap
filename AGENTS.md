@@ -78,9 +78,21 @@ meaningful next to a complete `unresolved` list.
 
 ### 4. Every finding carries provenance
 
-`{ file, byte span, line, rule_id, snippet_sha256 }`. A finding you cannot point at is a
-finding nobody trusts, and it cannot be regression-tested. No exceptions, including for
-instruction-plane findings.
+A finding you cannot point at is a finding nobody trusts, and it cannot be regression-tested.
+Every finding in every tier names a file and a location. What "location" means is fixed per
+tier by the schema, not by the author's judgement:
+
+- **`proven` and `pattern`** carry the full set — `{ file, byte span, line, rule_id,
+  snippet_sha256 }`, all required. A rule fired, so all five exist. **No exceptions**,
+  including for instruction-plane findings.
+- **`advisory`** carries `{ file, line }`, and the type structurally cannot hold anything
+  more. No rule fired, so there is no `rule_id` to report, and a byte span reconstructed from
+  a model's prose citation would be manufactured precision — worse than an honest line
+  number, because it looks checkable and is not.
+
+The distinction is enforced by two separate evidence types in `skillaudit-core` and two
+separate `$defs` in the schema, so the advisory tier cannot claim deterministic provenance
+even by accident.
 
 ### 5. Three assurance tiers, never blended
 

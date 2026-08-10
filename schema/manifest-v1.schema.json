@@ -25,13 +25,19 @@
         "kind": { "enum": ["skill", "plugin", "bundle"] },
         "name": { "type": "string" },
         "resolver": { "type": "string", "description": "Resolver id, e.g. claude-code" },
-        "root": { "type": "string", "description": "Bundle root, forward-slash relative path" },
-        "content_digest": { "$ref": "#/$defs/digest" }
+        "root": {
+          "type": "string",
+          "description": "Bundle root as a forward-slash path relative to the RESOLVER'S DISCOVERY ROOT, never to cwd or the project directory. Two machines with different checkout layouts must produce the same string."
+        },
+        "content_digest": {
+          "$ref": "#/$defs/digest",
+          "description": "Merkle root over the sorted inventory, covering file bytes only. See docs/02-manifest-schema.md for the exact construction."
+        }
       }
     },
     "inventory": {
       "type": "array",
-      "description": "Sorted by path.",
+      "description": "Sorted by path, byte-wise over UTF-8.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -55,15 +61,25 @@
       "required": ["description_bytes", "declared_capabilities", "trigger_terms", "reference_files", "unreferenced_files"],
       "properties": {
         "description_bytes": { "type": "integer", "minimum": 0 },
-        "declared_capabilities": { "type": "array", "items": { "$ref": "#/$defs/capabilityTerm" } },
-        "trigger_terms": { "type": "array", "items": { "type": "string" } },
+        "declared_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "Verbatim capability strings as declared in third-party frontmatter, sorted byte-wise. Deliberately NOT our closed taxonomy: this records what the author said, in their vocabulary. Mapping into capabilityTerm is a separate, explicitly lossy step and never happens silently."
+        },
+        "trigger_terms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "Extracted, not scored. Sorted byte-wise."
+        },
         "reference_files": { "type": "integer", "minimum": 0 },
         "unreferenced_files": { "type": "integer", "minimum": 0 }
       }
     },
     "capabilities": {
       "type": "array",
-      "description": "Tier: proven. Code-plane static analysis only. Sorted by (capability, first evidence file, start_byte).",
+      "description": "Tier: proven. Code-plane static analysis only. Sorted by (capability, first evidence file, first evidence start_byte).",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -71,27 +87,27 @@
         "properties": {
           "capability": { "$ref": "#/$defs/capabilityTerm" },
           "reachability": { "enum": ["observed", "present", "unresolved"] },
-          "detail": { "type": "object" },
-          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+          "detail": { "$ref": "#/$defs/detail" },
+          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceStrict" } }
         }
       }
     },
     "instructions": {
       "type": "array",
-      "description": "Tier: pattern. Lexical signals over prose. Deliberately weak; never promoted to capabilities.",
+      "description": "Tier: pattern. Lexical signals over prose. Deliberately weak; never promoted to capabilities. Sorted by (signal, first evidence file, first evidence start_byte).",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["signal", "evidence"],
         "properties": {
           "signal": { "$ref": "#/$defs/instructionSignal" },
-          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceStrict" } }
         }
       }
     },
     "unresolved": {
       "type": "array",
-      "description": "Gaps in the analysis. Top-level so it stays visible when capabilities is empty.",
+      "description": "Gaps in the analysis of the BUNDLE. Top-level so it stays visible when capabilities is empty. Sorted by (file, reason, start_byte), with an absent start_byte ordering before any present one.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -110,7 +126,7 @@
     },
     "advisory": {
       "type": "object",
-      "description": "Tier: advisory. Model output. Cannot add to, remove from, or modify the deterministic branches.",
+      "description": "Tier: advisory. Model output. Cannot add to, remove from, or modify the deterministic branches. Findings sorted by (kind, first evidence file, first evidence start_line, claim).",
       "additionalProperties": false,
       "required": ["enabled", "findings"],
       "properties": {
@@ -126,20 +142,38 @@
             "properties": {
               "kind": { "enum": ["disclosure_delta", "undeclared_instruction", "injection_attempt", "obfuscated_intent"] },
               "claim": { "type": "string" },
-              "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+              "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceAdvisory" } }
             }
           }
         }
-      }
+      },
+      "allOf": [
+        {
+          "$comment": "Invariant 6: the model id and prompt template hash are pinned whenever the pass ran, or the advisory branch is not reproducible and CI diffs become noise.",
+          "if": { "required": ["enabled"], "properties": { "enabled": { "const": true } } },
+          "then": { "required": ["model", "prompt_sha256"] }
+        },
+        {
+          "$comment": "'Not checked' and 'checked, found nothing' must stay distinguishable in a diff. A disabled pass carries no findings and no pinning.",
+          "if": { "required": ["enabled"], "properties": { "enabled": { "const": false } } },
+          "then": {
+            "properties": { "findings": { "maxItems": 0 } },
+            "not": { "anyOf": [{ "required": ["model"] }, { "required": ["prompt_sha256"] }] }
+          }
+        }
+      ]
     },
     "diagnostics": {
       "type": "array",
+      "description": "Problems with the RUN, not with the bundle. Anything the analysis could not cover in the bundle belongs in `unresolved` instead. Sorted by (code, file).",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["code"],
         "properties": {
-          "code": { "type": "string" },
+          "code": {
+            "enum": ["rule_load_error", "rule_validation_error", "semantic_schema_violation", "semantic_call_failed", "policy_load_error"]
+          },
           "file": { "type": "string" },
           "note": { "type": "string" }
         }
@@ -148,10 +182,20 @@
   },
   "$defs": {
     "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "evidence": {
+    "detail": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["file"],
+      "description": "Closed by design: this object is part of a byte-identical artifact, so every key needs a declared type and sort order. Adding a key here is a schema-version event, same rule as adding a taxonomy term.",
+      "properties": {
+        "paths": { "type": "array", "uniqueItems": true, "items": { "type": "string" }, "description": "Sorted byte-wise." },
+        "hosts": { "type": "array", "uniqueItems": true, "items": { "type": "string" }, "description": "Sorted byte-wise." }
+      }
+    },
+    "evidenceStrict": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Provenance for the deterministic tiers (proven, pattern). Complete by requirement: a finding that cannot be pointed at cannot be regression-tested. Sorted by (file, start_byte).",
+      "required": ["file", "start_byte", "end_byte", "start_line", "rule_id", "snippet_sha256"],
       "properties": {
         "file": { "type": "string" },
         "start_byte": { "type": "integer", "minimum": 0 },
@@ -159,6 +203,16 @@
         "start_line": { "type": "integer", "minimum": 1 },
         "rule_id": { "type": "string" },
         "snippet_sha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "evidenceAdvisory": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Provenance for the advisory tier. File and line only: no rule fired, so there is no rule_id, and a byte span reconstructed from a model's prose citation would be manufactured precision. Structurally cannot carry rule_id or snippet_sha256. Sorted by (file, start_line).",
+      "required": ["file", "start_line"],
+      "properties": {
+        "file": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 1 }
       }
     },
     "capabilityTerm": {
