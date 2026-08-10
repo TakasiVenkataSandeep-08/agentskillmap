@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/OWNER/skillaudit/schema/manifest-v1.schema.json",
+  "title": "skillaudit capability manifest",
+  "description": "Capability manifest for an AI agent skill bundle. Descriptive only: contains no risk score, grade, or safety judgement by design.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tool", "target", "inventory", "disclosure", "capabilities", "instructions", "unresolved", "advisory", "diagnostics"],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "resolver", "root", "content_digest"],
+      "properties": {
+        "kind": { "enum": ["skill", "plugin", "bundle"] },
+        "name": { "type": "string" },
+        "resolver": { "type": "string", "description": "Resolver id, e.g. claude-code" },
+        "root": { "type": "string", "description": "Bundle root, forward-slash relative path" },
+        "content_digest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "inventory": {
+      "type": "array",
+      "description": "Sorted by path.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size", "sha256", "load_phase", "parsed_as", "parse_status"],
+        "properties": {
+          "path": { "type": "string" },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "$ref": "#/$defs/digest" },
+          "load_phase": {
+            "enum": ["always", "on_trigger", "reference", "unreferenced"],
+            "description": "When this file enters the agent's context. The always/reference gap is the disclosure signal."
+          },
+          "parsed_as": { "type": "string" },
+          "parse_status": { "enum": ["ok", "error", "unsupported"] }
+        }
+      }
+    },
+    "disclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description_bytes", "declared_capabilities", "trigger_terms", "reference_files", "unreferenced_files"],
+      "properties": {
+        "description_bytes": { "type": "integer", "minimum": 0 },
+        "declared_capabilities": { "type": "array", "items": { "$ref": "#/$defs/capabilityTerm" } },
+        "trigger_terms": { "type": "array", "items": { "type": "string" } },
+        "reference_files": { "type": "integer", "minimum": 0 },
+        "unreferenced_files": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Tier: proven. Code-plane static analysis only. Sorted by (capability, first evidence file, start_byte).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability", "reachability", "evidence"],
+        "properties": {
+          "capability": { "$ref": "#/$defs/capabilityTerm" },
+          "reachability": { "enum": ["observed", "present", "unresolved"] },
+          "detail": { "type": "object" },
+          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+        }
+      }
+    },
+    "instructions": {
+      "type": "array",
+      "description": "Tier: pattern. Lexical signals over prose. Deliberately weak; never promoted to capabilities.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["signal", "evidence"],
+        "properties": {
+          "signal": { "$ref": "#/$defs/instructionSignal" },
+          "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+        }
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "description": "Gaps in the analysis. Top-level so it stays visible when capabilities is empty.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason", "file"],
+        "properties": {
+          "reason": {
+            "enum": ["dynamic_dispatch", "computed_target", "indirect_call", "unsupported_language", "parse_error", "binary_file", "size_limit", "symlink_escape"]
+          },
+          "file": { "type": "string" },
+          "start_byte": { "type": "integer", "minimum": 0 },
+          "end_byte": { "type": "integer", "minimum": 0 },
+          "start_line": { "type": "integer", "minimum": 1 },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "advisory": {
+      "type": "object",
+      "description": "Tier: advisory. Model output. Cannot add to, remove from, or modify the deterministic branches.",
+      "additionalProperties": false,
+      "required": ["enabled", "findings"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "model": { "type": "string" },
+        "prompt_sha256": { "$ref": "#/$defs/digest" },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "claim", "evidence"],
+            "properties": {
+              "kind": { "enum": ["disclosure_delta", "undeclared_instruction", "injection_attempt", "obfuscated_intent"] },
+              "claim": { "type": "string" },
+              "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+            }
+          }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string" },
+          "file": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string" },
+        "start_byte": { "type": "integer", "minimum": 0 },
+        "end_byte": { "type": "integer", "minimum": 0 },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "rule_id": { "type": "string" },
+        "snippet_sha256": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "capabilityTerm": {
+      "enum": [
+        "process.exec",
+        "process.exec.dynamic",
+        "net.egress",
+        "net.fetch_then_execute",
+        "fs.read.credential",
+        "fs.read.outside_bundle",
+        "fs.write.outside_bundle",
+        "fs.write.agent_config",
+        "agent.hook.install",
+        "code.dynamic_eval",
+        "code.obfuscation",
+        "env.read.secret",
+        "mcp.tool_reference"
+      ]
+    },
+    "instructionSignal": {
+      "enum": [
+        "instruction.fetch_as_instruction",
+        "instruction.exfil",
+        "instruction.config_mutation",
+        "instruction.silence",
+        "instruction.privilege_claim"
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "note": "Manifest fragment. Byte offsets are filled in by `skillaudit rules bless` once the engine exists; do not hand-maintain them.",
+  "positive": {
+    "capabilities": [
+      {
+        "capability": "fs.read.credential",
+        "reachability": "present",
+        "detail": { "paths": ["~/.aws/credentials"] },
+        "evidence": [{ "file": "positive.py", "rule_id": "py.credential-read.dotfile" }]
+      }
+    ],
+    "unresolved": [
+      { "reason": "computed_target", "file": "positive.py" }
+    ]
+  },
+  "negative": {
+    "capabilities": [],
+    "unresolved": []
+  }
+}
