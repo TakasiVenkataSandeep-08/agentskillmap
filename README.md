@@ -33,9 +33,58 @@ $ skillmap ci
 
 Everything else in this repository exists to make that line trustworthy.
 
+## Measured
+
+Corpus snapshot `2026-08`, produced by skillmap at commit `242ecac`.
+Full report: [`corpus/report.md`](corpus/report.md).
+
+**34,284 distinct bundles** from 202 public repositories, deduplicated by content digest.
+881 came from curated sources — the `anthropics/skills` baseline and an awesome-list — and
+33,403 from GitHub code search, which is the only source that reaches the ecosystem's tail.
+
+The two populations are not alike, and that gap is the finding:
+
+| Measured, exactly | Curated head | Tail | Ratio |
+|---|---|---|---|
+| Ships executable scripts | 2.2% | **10.4%** | 4.7× |
+| Has files nothing references | 2.2% | **30.7%** | 14× |
+| Mentions a credential path¹ | 0.4% | **9.1%** | 23× |
+| Mentions a secret-bearing env var¹ | 0.9% | **17.5%** | 19× |
+| Mentions `eval` / `exec` / subprocess¹ | 4.8% | **25.1%** | 5× |
+
+Denominators are 881 (head) and 33,403 (tail). Anyone sampling only curated lists — which is
+what most writing about this ecosystem does — would conclude the risk was theoretical.
+
+**The progressive-disclosure gap.** The median bundle shows an agent **2.09%** of its bytes
+at session start; 32.4% show under 1%. Across the corpus, **1.17 GB of 1.63 GB (72%) sits in
+files nothing points at.** That asymmetry is the whole reason this project exists.
+
+**The lead worth chasing.** 1.6% of bundles mention a credential path *only* in files no
+documented path reaches — the disclosure-delta shape, and the starting list for labelling.
+
+¹ Lexical: substring matches, not analysis. They do not parse, establish no reachability, and
+carry no provenance, so they are **upper bounds** and never appear in a manifest. `corpus/report.md`
+labels every one.
+
+### What is not measured yet
+
+`docs/05-eval.md` names the false-positive rate on a benign stratum as the headline metric,
+and requires precision and recall **per capability term**. None of those exist here, because
+the corpus is measured but **not labelled** — there is no ground truth to score against, so
+there is no held-out split and no precision, recall, or false-positive rate. Publishing the
+base rates above as though they were quality metrics would be exactly that overstatement.
+
+What is gated in CI today is the eval suite: 4 rule-fixture cases and 5 adversarial cases
+pass on every commit, and 3 further adversarial cases from `docs/05-eval.md` are declared and
+reported as pending rather than omitted — they need the semantic pass (T7), the diff (T8), and
+a `code.obfuscation` rule. The gate fails on a failing case, on coverage shrinking, and on a
+case regressing to pending. See `eval/baseline.json`.
+
 ## Status
 
-Pre-alpha. Nothing works yet. Start with `docs/00-tasks.md`.
+Pre-alpha. The scanner runs and the corpus is harvested; the CLI, policy, diff, and semantic
+layer are not built. Start with `docs/00-tasks.md`, which records what each task actually
+delivered and what it deliberately did not.
 
 ## For contributors
 

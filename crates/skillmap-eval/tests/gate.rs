@@ -158,14 +158,20 @@ fn pending_cases_state_a_reason_naming_what_they_wait_on() {
 }
 
 #[test]
-fn the_baseline_does_not_claim_a_corpus_it_does_not_have() {
-    // docs/05-eval.md requires published numbers to name the corpus version and
-    // commit that produced them. There is no corpus, so this field must stay
-    // empty rather than being filled with something that looks like provenance.
+fn the_baseline_does_not_claim_a_corpus_the_eval_did_not_use() {
+    // A corpus now exists — snapshot `2026-08`, 34,284 bundles, published in the
+    // README. This field still has to stay empty, and the reason has changed:
+    // the corpus is measured but **not labelled**, so the eval has no ground
+    // truth to score against and has never been run over it. Naming a snapshot
+    // here would attach real-looking provenance to numbers that came from the
+    // fixture and adversarial suites alone.
+    //
+    // Fill this in when a labelled split exists and the eval actually consumes
+    // it — not when a corpus merely exists.
     let baseline = committed_baseline();
     assert!(
         baseline.corpus_snapshot.is_none(),
-        "the baseline names corpus snapshot {:?}, but T3 has not been harvested",
+        "the baseline names corpus snapshot {:?}, but the eval has not been run          against a labelled corpus — the harvest alone does not license this field",
         baseline.corpus_snapshot
     );
     assert!(

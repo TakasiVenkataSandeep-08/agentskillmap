@@ -317,13 +317,20 @@ and a gate that only counted failures would wave both through. Deleting a failin
 easiest way to get a green build, so the baseline records how many cases executed and the gate
 treats a fall as a regression.
 
-Clause two is blocked. Published numbers must name the corpus version and commit that produced
-them, and there is no corpus. So there is no held-out split, no per-capability precision or
-recall against ground truth, and no false-positive rate on a benign stratum — which
-`docs/05-eval.md` names as *the headline metric*. `eval/baseline.json` carries
-`corpus_snapshot: null` and a note saying what it is not, and a test fails if that field is
-ever populated without a harvest behind it. The README carries no numbers rather than
-fixture-only numbers dressed up as measurements.
+**Clause two is now partly met.** The harvest ran, and the README carries published numbers
+naming corpus snapshot `2026-08` and the commit that produced it. What it publishes are the
+*corpus base rates* — exact, mechanical, with denominators and the head/tail split — not
+quality metrics.
+
+What is still missing is the labelling pass. `docs/01-corpus-scan.md` calls for ~150
+hand-labelled bundles as ground truth; without them there is no held-out split, no precision
+or recall per capability, and no false-positive rate on a benign stratum — which
+`docs/05-eval.md` names as *the headline metric*. `eval/baseline.json` therefore still carries
+`corpus_snapshot: null`, and the test enforcing that was rewritten: the field stays empty not
+because no corpus exists, but because the eval has never been run against a labelled one.
+
+The original blocking statement, kept for the record: published numbers must name the corpus
+version and commit that produced them, and there was no corpus.
 
 **All eight adversarial cases from `docs/05-eval.md` are declared; five run.** The three that
 cannot are `obfuscated-exec` (needs a `code.obfuscation` rule), `injection-in-reference`
