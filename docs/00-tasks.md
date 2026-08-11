@@ -444,12 +444,14 @@ front of; each is a thing this repository currently claims or implies but does n
   common plugin wrappers actually are before a walker is written for them.
 - **Only one resolver exists.** T2's own note defers the second to whatever T3's data shows
   matters, rather than guessing between Cursor, Codex, and Windsurf.
-- **`cargo deny` is configured but never runs.** `deny.toml` has existed since T0 and no CI
-  job invokes it, so the supply-chain gate `SECURITY.md` promises is currently aspirational.
-  This matters more since T3: `ureq` brought rustls and `ring` into the tree, whose licences
-  (ISC, and `ring`'s OpenSSL-derived terms) may not satisfy the current allowlist. Adding the
-  job is small; it is listed here rather than done silently because it will probably fail
-  first time and that failure needs a decision, not a rubber stamp.
+- **~~`cargo deny` is configured but never runs.~~** Closed. The `supply-chain` job runs all
+  four checks on every push, and the first real run found two things: `webpki-roots` ships
+  under CDLA-Permissive-2.0 (a permissive *data* licence covering the Mozilla CA root store —
+  now allowed, with the reasoning recorded in `deny.toml`), and the workspace was **quietly
+  unpublishable**, because intra-workspace `path` dependencies carried no `version` and
+  crates.io rejects those. That second one would have surfaced at T9's first release attempt.
+  One duplicate remains and is skipped with a stated retirement condition: `syn@2.0`, reached
+  through `ureq -> url -> idna -> icu_*`, and a proc-macro that never ships in the binary.
 - **The frontmatter subset is unvalidated against real bundles.** The parser refuses anything
   outside the documented `SKILL.md` shape (see T2). Whether real skills stay inside it is a
   T3 measurement, not a guess — widening it before there is a denominator would be the wrong

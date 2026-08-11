@@ -8,8 +8,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-skillmap-core = { path = "../skillmap-core" }
-skillmap-rules = { path = "../skillmap-rules" }
+skillmap-core.workspace = true
+skillmap-rules.workspace = true
 tree-sitter.workspace = true
 streaming-iterator = "0.1"
 

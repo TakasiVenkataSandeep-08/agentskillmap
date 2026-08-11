@@ -27,13 +27,22 @@ ignore = []
 # Permissive only. The project is Apache-2.0; anything reciprocal would change
 # what downstream users can do with the binary, which is not a decision to make
 # by accident in a transitive dependency.
+# Matched to what is actually in the tree. An allowance nothing uses is not
+# harmless: cargo-deny warns on it every run, and an allowlist that drifts from
+# reality stops being read. If a future dependency needs a licence that is not
+# here, the check fails and somebody reviews the addition — which is the point.
 allow = [
     "Apache-2.0",
     "MIT",
-    "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
     "Unicode-3.0",
+    # webpki-roots: the Mozilla CA root store, packaged as data rather than code.
+    # CDLA-Permissive-2.0 is the Linux Foundation's permissive *data* licence —
+    # no reciprocal obligation on anything produced using the data, which is the
+    # property that matters here. Allowed because a TLS client needs a root store
+    # and this is the one the ecosystem ships; revisit if it ever covers code.
+    "CDLA-Permissive-2.0",
 ]
 # Below this, treat the license as undetermined rather than guessing.
 confidence-threshold = 0.8
@@ -45,9 +54,32 @@ confidence-threshold = 0.8
 multiple-versions = "deny"
 # A wildcard version is an unreviewed future upgrade.
 wildcards = "deny"
-# Exceptions go here with a comment naming the crate, the reason, and who owns
-# removing it. An empty list is the desired steady state.
-skip = []
+# ...except between crates in this workspace, which is every `path = "../..."`
+# dependency here. Those carry no version because there is no registry
+# resolution to review: they are this repository depending on itself. Without
+# this, the check reports seventeen "wildcard dependencies" that are all just
+# skillmap-core, and a gate that cries wolf on its first run gets switched off.
+allow-wildcard-paths = true
+# Exceptions carry the crate, the reason, and what retires them. An empty list is
+# the desired steady state; each entry below is a debt with a stated payoff.
+skip = [
+    { crate = "syn@2.0", reason = """
+The ICU stack (yoke-derive, zerofrom-derive, zerovec-derive, synstructure) still
+builds against syn 2 while every direct dependency here is on syn 3. It reaches
+this tree through skillmap-corpus -> ureq -> url -> idna -> icu_*, so it is not
+something this project chose or can drop without dropping the HTTP client.
+
+Worth noting what this duplicate is and is not: syn is a **proc-macro**
+dependency. It runs at build time and no part of it ends up in the shipped
+binary, so the "two versions double the code that has to be defended" argument
+in the comment above does not apply to it in the way it would to a runtime
+crate. It is still tracked rather than waved through, because the moment the ICU
+crates move to syn 3 this entry should disappear — and it will only disappear if
+somebody notices it is here.
+
+Retires when: icu_* / yoke / zerovec publish releases built on syn 3.
+""" },
+]
 
 [sources]
 unknown-registry = "deny"

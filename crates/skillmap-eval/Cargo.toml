@@ -8,12 +8,12 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-skillmap-core = { path = "../skillmap-core" }
-skillmap-parse = { path = "../skillmap-parse" }
-skillmap-resolve = { path = "../skillmap-resolve" }
-skillmap-rules = { path = "../skillmap-rules" }
-skillmap-code = { path = "../skillmap-code" }
-skillmap-instr = { path = "../skillmap-instr" }
+skillmap-core.workspace = true
+skillmap-parse.workspace = true
+skillmap-resolve.workspace = true
+skillmap-rules.workspace = true
+skillmap-code.workspace = true
+skillmap-instr.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true

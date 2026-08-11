@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-skillmap-core = { path = "../skillmap-core" }
+skillmap-core.workspace = true
 
 [lints]
 workspace = true

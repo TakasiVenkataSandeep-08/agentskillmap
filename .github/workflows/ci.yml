@@ -27,6 +27,13 @@
 #   toolchain-pin  - invariant 9  (reproducible builds require an exact, non-floating
 #                                   Rust channel — this guards the promise before any
 #                                   code exists to build)
+#   supply-chain   - invariant 9  (SECURITY.md promises a minimal dependency tree where
+#                                   "every dependency is one this project would have to
+#                                   defend in the threat model". deny.toml has existed
+#                                   since T0 with nothing running it, which made that
+#                                   promise aspirational — a supply-chain auditor with an
+#                                   ungated supply chain is the failure this project
+#                                   exists to describe in other people's repositories.)
 
 name: CI
 
@@ -161,3 +168,20 @@ jobs:
 
           print(f"rust-toolchain.toml pins channel = {channel}")
           PY
+
+  supply-chain:
+    name: supply-chain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to a released action rather than `cargo install cargo-deny`: this
+      # job's whole subject is not trusting unpinned dependencies, and building
+      # the auditor from an unlocked source would undercut the point of running
+      # it. The action ships a prebuilt binary at a tagged version.
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          # All four checks. `bans` and `sources` matter as much as `advisories`
+          # here: a duplicate version doubles the code to defend, and a git
+          # dependency is a dependency with no immutable artifact behind it.
+          command: check advisories bans licenses sources
