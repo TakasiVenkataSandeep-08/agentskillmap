@@ -78,25 +78,36 @@ pub fn walk(root: &Path, limits: &Limits) -> Result<Walk, ParseError> {
     let mut files = Vec::new();
     let mut unresolved = Vec::new();
     // Canonical directory paths already descended into, so a symlink cycle that
-    // stays inside the bundle terminates instead of recursing forever.
+    // stays inside the bundle terminates instead of looping forever.
     let mut visited: BTreeSet<PathBuf> = BTreeSet::new();
     visited.insert(canonical_root.clone());
 
-    descend(
-        root,
-        root,
-        &canonical_root,
-        limits,
-        &mut visited,
-        &mut files,
-        &mut unresolved,
-    )?;
+    // An explicit worklist rather than recursion. Directory nesting is attacker
+    // controlled — a bundle can ship a tree thousands of levels deep, and a
+    // recursive walk would exhaust the stack on it. A stack overflow aborts the
+    // process outright: it cannot be caught, so it is not merely a panic but an
+    // unrecoverable one, and invariant 10 exists precisely because a crash on
+    // malformed input is a denial of service on somebody's CI. Heap-allocated
+    // worklist, no depth limit needed, no new `unresolved` reason code needed.
+    let mut worklist: Vec<PathBuf> = vec![root.to_path_buf()];
+    while let Some(dir) = worklist.pop() {
+        let children = descend(
+            &dir,
+            root,
+            &canonical_root,
+            limits,
+            &mut visited,
+            &mut files,
+            &mut unresolved,
+        )?;
+        worklist.extend(children);
+    }
 
     files.sort_by(|a, b| a.path.as_bytes().cmp(b.path.as_bytes()));
     Ok(Walk { files, unresolved })
 }
 
-/// Recursively walk one directory.
+/// Process one directory, returning the subdirectories still to be walked.
 #[allow(
     clippy::too_many_arguments,
     reason = "threading accumulators explicitly keeps the walk a plain function \
@@ -110,7 +121,8 @@ fn descend(
     visited: &mut BTreeSet<PathBuf>,
     files: &mut Vec<WalkedFile>,
     unresolved: &mut Vec<Unresolved>,
-) -> Result<(), ParseError> {
+) -> Result<Vec<PathBuf>, ParseError> {
+    let mut pending: Vec<PathBuf> = Vec::new();
     let entries = std::fs::read_dir(dir).map_err(|source| ParseError::Io {
         path: dir.to_path_buf(),
         source,
@@ -211,15 +223,7 @@ fn descend(
                 });
                 continue;
             }
-            descend(
-                &child,
-                root,
-                canonical_root,
-                limits,
-                visited,
-                files,
-                unresolved,
-            )?;
+            pending.push(child);
             continue;
         }
 
@@ -239,7 +243,7 @@ fn descend(
         ingest_file(&child, relative, metadata.len(), limits, files, unresolved);
     }
 
-    Ok(())
+    Ok(pending)
 }
 
 /// Hash and classify a single regular file.

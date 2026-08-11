@@ -105,7 +105,9 @@ fn discovers_bundles_under_a_real_claude_tree() {
         copy_tree(&bundle, &skills.join(name));
     }
 
-    let bundles = discover(&ClaudeCode, temp.path(), Scope::Project).unwrap();
+    let bundles = discover(&ClaudeCode, temp.path(), Scope::Project)
+        .unwrap()
+        .bundles;
     let names: Vec<&str> = bundles.iter().map(|b| b.name.as_str()).collect();
     assert_eq!(
         names,
@@ -424,7 +426,9 @@ fn scratch_bundle(temp: &TempDir) -> PathBuf {
 }
 
 fn parse_scratch(temp: &TempDir, limits: &Limits) -> skillmap_core::Manifest {
-    let bundles = discover(&ClaudeCode, temp.path(), Scope::Project).unwrap();
+    let bundles = discover(&ClaudeCode, temp.path(), Scope::Project)
+        .unwrap()
+        .bundles;
     let bundle = bundles.first().expect("scratch bundle must be discovered");
     parse_bundle(bundle, &ClaudeCode, limits).unwrap()
 }
@@ -513,6 +517,45 @@ fn a_symlink_escaping_the_bundle_is_reported_and_not_hashed() {
             .any(|u| u.file == "linked.txt" && u.reason == UnresolvedReason::SymlinkEscape),
         "the escape must be reported; unresolved was {:?}",
         manifest.unresolved
+    );
+}
+
+#[test]
+fn a_deeply_nested_tree_does_not_exhaust_the_stack() {
+    // Directory nesting is attacker controlled, and a stack overflow aborts the
+    // process rather than unwinding — it cannot be caught, so it is worse than a
+    // panic, and invariant 10 exists because a crash on malformed input is a
+    // denial of service on somebody's CI. The walk uses an explicit heap worklist
+    // so depth costs heap, not stack.
+    //
+    // Honest about what this proves: it exercises the deep path and would fail on
+    // a recursive walk given enough depth, but the depth at which recursion
+    // actually overflows depends on the platform's thread stack size (2 MiB for
+    // Rust test threads, 8 MiB for a Unix main thread) and on frame size. It is a
+    // regression guard, not a demonstration of the exact limit. It is also the
+    // slowest test here, and the cost is filesystem calls, not the walk.
+    let temp = TempDir::new("deep");
+    let bundle = scratch_bundle(&temp);
+
+    let mut deep = bundle.clone();
+    for level in 0..2_000 {
+        deep = deep.join(format!("d{level}"));
+    }
+    if std::fs::create_dir_all(&deep).is_err() {
+        // Some filesystems cap total path length well below this. The bug this
+        // guards is real regardless; skipping beats a false failure.
+        eprintln!("skipping: this filesystem will not create a 2000-deep path");
+        return;
+    }
+    write(&deep.join("buried.txt"), "at the bottom\n");
+
+    let manifest = parse_scratch(&temp, &Limits::default());
+    assert!(
+        manifest
+            .inventory
+            .iter()
+            .any(|entry| entry.path.ends_with("buried.txt")),
+        "the deepest file must still be inventoried"
     );
 }
 

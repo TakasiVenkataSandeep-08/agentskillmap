@@ -42,9 +42,12 @@ const FENCE: &str = "---";
 pub struct Frontmatter {
     /// Every key in the block, sorted.
     pub entries: BTreeMap<String, Value>,
-    /// Byte length of the raw block between the fences, before parsing.
-    pub raw_bytes: usize,
     /// Byte offset just past the closing fence, where the body begins.
+    ///
+    /// The instruction plane (T5) scans prose for `instruction.*` signals and
+    /// must start here: frontmatter is structured metadata, and lexical patterns
+    /// matched against it would be findings about a data block rather than about
+    /// anything the agent is told to do.
     pub body_offset: usize,
 }
 
@@ -128,7 +131,6 @@ pub fn parse(text: &str) -> Result<Frontmatter, Error> {
 
     let mut entries: BTreeMap<String, Value> = BTreeMap::new();
     let mut pending_list: Option<(String, Vec<String>)> = None;
-    let mut raw_bytes = 0usize;
 
     while let Some((line_no, line)) = lines.next() {
         if line.trim_end() == FENCE {
@@ -137,12 +139,9 @@ pub fn parse(text: &str) -> Result<Frontmatter, Error> {
             }
             return Ok(Frontmatter {
                 entries,
-                raw_bytes,
                 body_offset: lines.consumed(),
             });
         }
-
-        raw_bytes += line.len();
 
         let trimmed = line.trim();
         if trimmed.is_empty() || trimmed.starts_with('#') {

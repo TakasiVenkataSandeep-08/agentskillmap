@@ -173,6 +173,29 @@ impl std::error::Error for DiscoverError {
     }
 }
 
+/// Something discovery found but could not turn into a [`BundleRef`].
+///
+/// Separate from an error because one unrepresentable directory must not hide
+/// every other bundle beside it, and separate from silence because a skill this
+/// tool cannot look at is exactly the thing an audit must not omit (invariant 3).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Skipped {
+    /// The path, as the OS gave it. Not manifest-safe by construction — that is
+    /// why it was skipped — so callers report it to stderr, never into the JSON.
+    pub path: PathBuf,
+    /// Why it could not be represented.
+    pub reason: &'static str,
+}
+
+/// What a discovery run found.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Discovery {
+    /// Bundles that can be scanned, sorted.
+    pub bundles: Vec<BundleRef>,
+    /// Directories that looked like bundles but could not be represented.
+    pub skipped: Vec<Skipped>,
+}
+
 /// Find every bundle `resolver` recognises beneath `base` for `scope`.
 ///
 /// `base` is the project root for [`Scope::Project`] and the user's home
@@ -191,8 +214,9 @@ pub fn discover(
     resolver: &dyn Resolver,
     base: &Path,
     scope: Scope,
-) -> Result<Vec<BundleRef>, DiscoverError> {
+) -> Result<Discovery, DiscoverError> {
     let mut found = Vec::new();
+    let mut skipped = Vec::new();
 
     for relative in resolver.search_paths(scope) {
         let discovery_root = base.join(&relative);
@@ -217,11 +241,20 @@ pub fn discover(
             if !entry.path().is_dir() {
                 continue;
             }
-            // A directory name that is not valid UTF-8 cannot round-trip through
-            // a JSON manifest, so it is skipped rather than lossily converted
-            // into a path that points nowhere.
-            if let Some(name) = entry.file_name().to_str() {
-                names.push(name.to_owned());
+            match entry.file_name().to_str() {
+                Some(name) => names.push(name.to_owned()),
+                // A directory name that is not valid UTF-8 cannot round-trip
+                // through a JSON manifest, so this bundle genuinely cannot be
+                // scanned. Reporting it is not optional: invariant 3 exists so
+                // that "found no bundles" and "could not look at that bundle"
+                // are never the same output. Silently skipping would hide a
+                // whole skill from an audit, which is the worst possible thing
+                // for this tool specifically to do quietly.
+                None => skipped.push(Skipped {
+                    path: entry.path(),
+                    reason: "directory name is not valid UTF-8 and cannot be \
+                             represented in a manifest",
+                }),
             }
         }
         names.sort_by(|a, b| a.as_bytes().cmp(b.as_bytes()));
@@ -241,7 +274,11 @@ pub fn discover(
     }
 
     found.sort_by(|a, b| a.sort_key().cmp(&b.sort_key()));
-    Ok(found)
+    skipped.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(Discovery {
+        bundles: found,
+        skipped,
+    })
 }
 
 /// Render `path` relative to `base` as a forward-slash string.
@@ -325,7 +362,9 @@ mod tests {
         // A stray file at the discovery root is not a bundle either.
         write(&skills.join("README.md"), "hello\n");
 
-        let found = discover(&ClaudeCode, temp.path(), Scope::Project).unwrap();
+        let found = discover(&ClaudeCode, temp.path(), Scope::Project)
+            .unwrap()
+            .bundles;
         let names: Vec<&str> = found.iter().map(|b| b.name.as_str()).collect();
         assert_eq!(names, ["alpha", "zebra"], "results must be sorted");
         assert_eq!(found[0].resolver, "claude-code");
@@ -337,9 +376,9 @@ mod tests {
     #[test]
     fn a_missing_discovery_root_is_not_an_error() {
         let temp = TempDir::new("missing");
-        assert!(discover(&ClaudeCode, temp.path(), Scope::Project)
-            .unwrap()
-            .is_empty());
+        let discovery = discover(&ClaudeCode, temp.path(), Scope::Project).unwrap();
+        assert!(discovery.bundles.is_empty());
+        assert!(discovery.skipped.is_empty());
     }
 
     #[test]
@@ -351,7 +390,9 @@ mod tests {
             "---\nname: demo\n---\n",
         );
 
-        let found = discover(&ClaudeCode, temp.path(), Scope::Project).unwrap();
+        let found = discover(&ClaudeCode, temp.path(), Scope::Project)
+            .unwrap()
+            .bundles;
         assert_eq!(found[0].root, "demo");
         assert!(
             !found[0].root.contains(std::path::MAIN_SEPARATOR),
@@ -369,6 +410,43 @@ mod tests {
         assert_eq!(relative_slash_path(base, base).as_deref(), Some(""));
         // Not a descendant.
         assert_eq!(relative_slash_path(base, Path::new("/etc/passwd")), None);
+    }
+
+    #[test]
+    fn a_bundle_whose_name_is_not_utf8_is_reported_not_dropped() {
+        // A skill this tool cannot represent is the single worst thing to omit
+        // quietly from an audit (invariant 3). Only reachable on Unix: Windows
+        // paths are UTF-16 and the OS rejects unpaired surrogates outright, so
+        // there is no way to create such a directory there.
+        #[cfg(unix)]
+        {
+            use std::os::unix::ffi::OsStrExt as _;
+
+            let temp = TempDir::new("nonutf8");
+            let skills = temp.path().join(".claude").join("skills");
+            write(
+                &skills.join("fine").join("SKILL.md"),
+                "---\nname: fine\n---\n",
+            );
+
+            // 0xFF is never valid UTF-8.
+            let bad = skills.join(std::ffi::OsStr::from_bytes(b"bad\xffname"));
+            std::fs::create_dir_all(&bad).unwrap();
+            std::fs::write(bad.join("SKILL.md"), "---\nname: bad\n---\n").unwrap();
+
+            let discovery = discover(&ClaudeCode, temp.path(), Scope::Project).unwrap();
+            assert_eq!(
+                discovery.bundles.len(),
+                1,
+                "the representable bundle must still be scanned"
+            );
+            assert_eq!(
+                discovery.skipped.len(),
+                1,
+                "the unrepresentable one must be reported, not silently dropped"
+            );
+            assert!(discovery.skipped[0].reason.contains("UTF-8"));
+        }
     }
 
     #[test]
