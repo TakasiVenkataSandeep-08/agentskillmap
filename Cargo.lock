@@ -534,6 +534,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "skillmap-instr"
+version = "0.1.0"
+dependencies = [
+ "skillmap-core",
+ "skillmap-rules",
+ "streaming-iterator",
+ "tree-sitter",
+]
+
+[[package]]
 name = "skillmap-parse"
 version = "0.1.0"
 dependencies = [
@@ -557,6 +567,7 @@ dependencies = [
  "skillmap-core",
  "toml",
  "tree-sitter",
+ "tree-sitter-md",
  "tree-sitter-python",
 ]
 
@@ -706,6 +717,16 @@ name = "tree-sitter-language"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "009994f150cc0cd50ff54917d5bc8bffe8cad10ca10d81c34da2ec421ae61782"
+
+[[package]]
+name = "tree-sitter-md"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17f968c22a01010b83fc960455ae729db08dbeb6388617d9113897cb9204b030"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
 
 [[package]]
 name = "tree-sitter-python"

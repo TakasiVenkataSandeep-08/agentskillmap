@@ -1,6 +1,6 @@
 [package]
-name = "skillmap-rules"
-description = "Rule loading, validation, and tree-sitter query compilation. Rules are data, not Rust."
+name = "skillmap-instr"
+description = "The instruction plane: lexical signals over prose. Tier `pattern` — deliberately weak, never promoted."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,11 +9,9 @@ repository.workspace = true
 
 [dependencies]
 skillmap-core = { path = "../skillmap-core" }
-serde.workspace = true
-toml.workspace = true
+skillmap-rules = { path = "../skillmap-rules" }
 tree-sitter.workspace = true
-tree-sitter-python = "0.23"
-tree-sitter-md = "0.3"
+streaming-iterator = "0.1"
 
 [lints]
 workspace = true

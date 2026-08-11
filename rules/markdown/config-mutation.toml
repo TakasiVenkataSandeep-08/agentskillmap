@@ -1,0 +1,21 @@
+id         = "instr.config-mutation"
+language   = "markdown"
+capability = "instruction.config_mutation"
+tier       = "pattern"
+query      = "queries/markdown/config-mutation.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Prose directing edits to agent configuration."
+rationale = """
+Editing agent config changes what every later session does, outliving the skill's
+own trigger. Entirely legitimate for setup and onboarding skills, which is most
+of what will match. Reported, never judged.
+"""
+false_positive_notes = """
+Fires hard on setup and installation documentation, which is exactly what most of
+these files are. It also fires on documentation *about* agent configuration —
+this repository's own docs among them — which is what the negative fixture covers.
+"""

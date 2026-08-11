@@ -1,0 +1,24 @@
+id         = "instr.fetch-as-instruction"
+language   = "markdown"
+capability = "instruction.fetch_as_instruction"
+tier       = "pattern"
+query      = "queries/markdown/fetch-as-instruction.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Prose telling the agent to treat fetched content as instructions."
+rationale = """
+The indirect prompt-injection setup: the bundle ships nothing malicious, and the
+actual instructions arrive at trigger time from a URL the reviewer never opened.
+Reported, never judged — a skill that legitimately follows a documented API
+contract can look identical, and policy.toml decides whether that is acceptable.
+"""
+false_positive_notes = """
+Fires on documentation that *describes* prompt injection, which is why the
+negative fixture is drawn from this repository's own security prose rather than
+invented. Also plausible on skills that legitimately instruct an agent to follow
+a spec fetched from a URL — a real pattern in API-client skills. This is tier
+`pattern` precisely because it cannot tell those apart.
+"""

@@ -12,6 +12,7 @@ members = [
     "crates/skillmap-corpus",
     "crates/skillmap-rules",
     "crates/skillmap-code",
+    "crates/skillmap-instr",
 ]
 
 [workspace.package]

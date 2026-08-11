@@ -20,3 +20,10 @@ reachability = "queries/python/_reachability.scm"
 # Files that execute on their own when a bundle is used. Data rather than code
 # because the conventions differ per ecosystem and contributors know theirs.
 entry_basenames = ["main.py", "__main__.py", "run.py", "cli.py"]
+
+[markdown]
+extensions = ["md", "markdown"]
+# No `reachability` key: prose has no call graph. Instruction-plane findings are
+# lexical and deliberately weak (invariant 5), and asking whether a sentence is
+# "reachable" is a category error — a paragraph nothing links to is still a
+# paragraph the agent reads when it reads the file.

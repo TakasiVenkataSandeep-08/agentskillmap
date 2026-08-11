@@ -35,13 +35,21 @@ fn rules() -> RuleSet {
     set
 }
 
-/// Every fixture directory: `fixtures/<lang>/<rule>/`.
+/// Every code-plane fixture directory: `fixtures/<lang>/<rule>/`.
+///
+/// Two directories are deliberately excluded. `fixtures/bundles/` is T2's
+/// whole-bundle corpus, not a rule fixture. `fixtures/markdown/` belongs to the
+/// **instruction plane** — those rules are tier `pattern`, this crate only
+/// executes tier `proven`, and asserting here that a markdown positive "produces
+/// a finding" would be asserting that the code plane does something invariant 5
+/// forbids it from doing. `skillmap-instr`'s own suite covers them.
 fn fixture_dirs() -> Vec<PathBuf> {
     let mut found = Vec::new();
     let root = repo_root().join("fixtures");
     for language in std::fs::read_dir(&root).unwrap().flatten() {
-        // `fixtures/bundles/` is T2's whole-bundle corpus, not a rule fixture.
-        if !language.path().is_dir() || language.file_name() == "bundles" {
+        if !language.path().is_dir()
+            || matches!(language.file_name().to_str(), Some("bundles" | "markdown"))
+        {
             continue;
         }
         for rule in std::fs::read_dir(language.path()).unwrap().flatten() {
@@ -395,6 +403,32 @@ fn a_file_nothing_documents_never_reports_observed() {
 }
 
 #[test]
+fn a_language_with_a_grammar_but_no_proven_rules_is_not_called_unsupported() {
+    // Markdown has a grammar (the instruction plane uses it) but no `proven`
+    // rules. Saying nothing about a .md file is therefore correct and is *not* a
+    // gap: `unsupported_language` would claim the analysis could not read it,
+    // which is a different and false statement.
+    let rules = rules();
+    let analysis = analyze(
+        &[SourceFile {
+            path: "notes.md",
+            text: "# notes
+
+Read ~/.aws/credentials.
+",
+            entered: true,
+        }],
+        &rules,
+    );
+    assert!(analysis.capabilities.is_empty());
+    assert!(
+        analysis.unresolved.is_empty(),
+        "a grammar exists, so nothing is unresolved: {:?}",
+        analysis.unresolved
+    );
+}
+
+#[test]
 fn an_unported_language_is_reported_not_skipped() {
     // T4's "done when", second clause. Silence here would be indistinguishable
     // from a clean scan (invariant 3).
@@ -407,8 +441,8 @@ fn an_unported_language_is_reported_not_skipped() {
                 entered: true,
             },
             SourceFile {
-                path: "notes.md",
-                text: "# notes\n",
+                path: "run.sh",
+                text: "cat ~/.aws/credentials\n",
                 entered: true,
             },
         ],
@@ -422,7 +456,7 @@ fn an_unported_language_is_reported_not_skipped() {
         .filter(|entry| entry.reason == UnresolvedReason::UnsupportedLanguage)
         .map(|entry| entry.file.as_str())
         .collect();
-    assert_eq!(reported, ["helper.rb", "notes.md"]);
+    assert_eq!(reported, ["helper.rb", "run.sh"]);
 }
 
 #[test]

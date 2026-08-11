@@ -87,7 +87,17 @@ impl Reach {
 /// is imported or invoked, and an unreferenced file is not.
 #[must_use]
 pub fn analyze(language: &LoadedLanguage, tree: &Tree, source: &str, entered: bool) -> Reach {
-    let query = &language.reachability;
+    // A language with no reachability query is not code — prose has no call
+    // graph. Nothing is ever `observed` there, which is the honest answer: the
+    // code plane established no execution path because there is none to establish.
+    let Some(query) = language.reachability.as_ref() else {
+        return Reach {
+            definitions: Vec::new(),
+            reachable: BTreeSet::new(),
+            blocked: false,
+            entered: false,
+        };
+    };
     let bytes = source.as_bytes();
 
     let index_of = |name: &str| query.capture_index_for_name(name);

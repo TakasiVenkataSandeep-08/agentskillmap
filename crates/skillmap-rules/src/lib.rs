@@ -34,6 +34,11 @@ use tree_sitter::{Language, Query};
 fn grammar(name: &str) -> Option<Language> {
     match name {
         "python" => Some(tree_sitter_python::LANGUAGE.into()),
+        // The *block* grammar. Its `inline` nodes are unparsed leaves, which is
+        // exactly what the instruction plane wants: a whole sentence to run a
+        // `#match?` over, with fenced code and headings still distinguishable so
+        // a rule can decline to fire inside a code sample.
+        "markdown" => Some(tree_sitter_md::LANGUAGE.into()),
         _ => None,
     }
 }
@@ -163,7 +168,13 @@ pub struct LanguageConfig {
     /// File extensions, without the dot.
     pub extensions: Vec<String>,
     /// Path to the reachability query, relative to the repository root.
-    pub reachability: String,
+    ///
+    /// Optional, because reachability is a code-plane concept. Prose has no call
+    /// graph: an instruction sitting in a paragraph nothing links to is still an
+    /// instruction, and asking "is this sentence reachable" is a category error.
+    /// A language without one is analyzed by the instruction plane only.
+    #[serde(default)]
+    pub reachability: Option<String>,
     /// Basenames that execute on their own.
     #[serde(default)]
     pub entry_basenames: Vec<String>,
@@ -177,8 +188,8 @@ pub struct LoadedLanguage {
     pub config: LanguageConfig,
     /// The tree-sitter grammar.
     pub grammar: Language,
-    /// The compiled reachability query.
-    pub reachability: Query,
+    /// The compiled reachability query, when the language has one.
+    pub reachability: Option<Query>,
 }
 
 /// Everything loaded: languages and rules, plus what went wrong loading them.
@@ -331,37 +342,41 @@ fn load_languages(
             continue;
         };
 
-        let query_path = root.join(&config.reachability);
-        let source = match std::fs::read_to_string(&query_path) {
-            Ok(source) => source,
-            Err(error) => {
-                diagnostics.push(diagnostic(
-                    DiagnosticCode::RuleLoadError,
-                    Some(config.reachability.clone()),
-                    format!("cannot read reachability query: {error}"),
-                ));
-                continue;
+        let mut reachability = None;
+        if let Some(relative) = config.reachability.clone() {
+            let source = match std::fs::read_to_string(root.join(&relative)) {
+                Ok(source) => source,
+                Err(error) => {
+                    diagnostics.push(diagnostic(
+                        DiagnosticCode::RuleLoadError,
+                        Some(relative),
+                        format!("cannot read reachability query: {error}"),
+                    ));
+                    continue;
+                }
+            };
+            match Query::new(&grammar, &source) {
+                Ok(query) => reachability = Some(query),
+                Err(error) => {
+                    diagnostics.push(diagnostic(
+                        DiagnosticCode::RuleValidationError,
+                        Some(relative),
+                        format!("reachability query does not compile: {error}"),
+                    ));
+                    continue;
+                }
             }
-        };
-
-        match Query::new(&grammar, &source) {
-            Ok(reachability) => {
-                loaded.insert(
-                    name.clone(),
-                    LoadedLanguage {
-                        name,
-                        config,
-                        grammar,
-                        reachability,
-                    },
-                );
-            }
-            Err(error) => diagnostics.push(diagnostic(
-                DiagnosticCode::RuleValidationError,
-                Some(config.reachability.clone()),
-                format!("reachability query does not compile: {error}"),
-            )),
         }
+
+        loaded.insert(
+            name.clone(),
+            LoadedLanguage {
+                name,
+                config,
+                grammar,
+                reachability,
+            },
+        );
     }
 
     loaded
@@ -608,10 +623,20 @@ mod tests {
             set.diagnostics
         );
         assert!(set.languages.contains_key("python"));
-        assert_eq!(set.rules.len(), 1);
+        assert!(set.languages.contains_key("markdown"));
 
-        let rule = &set.rules[0];
-        assert_eq!(rule.id, "py.credential-read.dotfile");
+        // Prose has no call graph; code does.
+        assert!(set.languages["python"].reachability.is_some());
+        assert!(
+            set.languages["markdown"].reachability.is_none(),
+            "asking whether a sentence is reachable is a category error"
+        );
+
+        let rule = set
+            .rules
+            .iter()
+            .find(|rule| rule.id == "py.credential-read.dotfile")
+            .expect("the reference rule must load");
         assert_eq!(
             rule.claim,
             Claim::Capability(CapabilityTerm::FsReadCredential)

@@ -1,0 +1,22 @@
+id         = "instr.exfil"
+language   = "markdown"
+capability = "instruction.exfil"
+tier       = "pattern"
+query      = "queries/markdown/exfil.scm"
+
+[docs]
+summary = "Prose directing data to an external destination."
+rationale = """
+Half of what this matches is legitimate: telemetry skills, backup skills, and
+deployment skills all send things somewhere by design. The manifest reports the
+instruction and the evidence; policy.toml decides whether this repo tolerates it.
+"""
+false_positive_notes = """
+Fires on any skill whose documented job is uploading — backups, deploys, log
+shipping. It also fires on prose warning against exfiltration, which is why the
+negative fixture is this project's own threat-model text. Narrowing the pattern
+to exclude warnings would lose real detections written in the imperative.
+"""
+
+[captures]
+site = "@site"

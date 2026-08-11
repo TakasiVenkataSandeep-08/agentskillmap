@@ -245,6 +245,54 @@ Decisions worth recording:
 **Done when:** false-positive rate on the benign stratum is measured and published, per
 signal.
 
+**Status: the plane is built and three of five signals ship. T5 is NOT done, and cannot be
+until T3 runs.**
+
+The "done when" above *is* a corpus measurement. There is no benign stratum without the
+harvest, so the false-positive rate is unmeasured and nothing is published. That is the honest
+state, not a technicality to wave through.
+
+**Two signals are deliberately withheld.** This task requires three negative fixtures drawn
+from real corpus bundles *before* the queries for `instruction.silence` and
+`instruction.privilege_claim` are written — they are the signals most likely to earn this
+project attention and most likely to false-positive on ordinary skills that discuss logging
+verbosity or permission handling. Those fixtures do not exist, so those queries are not
+written. `the_two_riskiest_signals_are_deliberately_not_shipped` fails if either appears, so
+shipping them without corpus negatives has to be a deliberate act that deletes an assertion.
+
+Shipped: `instruction.fetch_as_instruction`, `instruction.exfil`,
+`instruction.config_mutation` — each a full triple with a positive and a negative fixture.
+
+Decisions worth recording:
+
+- **The negatives are real prose, not invented.** Each one is drawn from this repository's own
+  security and architecture documentation, which describes exfiltration, indirect prompt
+  injection and agent-config writes at length without instructing any of them. Prose *about* a
+  behaviour is the hardest false positive a lexical rule faces. This is a stand-in for the
+  corpus negatives the review checklist asks for, and it is not a substitute — it is one
+  document set, written by one project, with a house style.
+- **`no_instruction_rule_fires_on_this_repositorys_own_documentation`** runs every rule over
+  every markdown file in the repository and requires zero hits. It is the closest thing to a
+  measured false-positive rate available pre-corpus, and it is what caught the bug below.
+- **Instruction findings carry `EvidenceStrict`, the same full provenance as the code plane.**
+  Invariant 4 says "No exceptions, including for instruction-plane findings". A weak tier is
+  not a licence for weak provenance: a lexical match still fired at an exact byte range and a
+  reviewer must be able to read the sentence.
+- **Prose has no reachability, so `reachability` in `rules/languages.toml` is now optional.**
+  Asking whether a sentence is reachable is a category error — a paragraph nothing links to is
+  still one the agent reads. A language without a reachability query is analyzed by the
+  instruction plane only, and the code plane never reports `observed` for it.
+- **A grammar without `proven` rules is not `unsupported_language`.** Markdown has a grammar
+  now, so the code plane saying nothing about a `.md` file is correct rather than a gap;
+  claiming the analysis could not read it would be false.
+
+One bug worth naming, because it would have been invisible without the negatives: a
+tree-sitter `#match?` predicate must be **grouped with the node it constrains** by an extra
+pair of parentheses. Written without them the predicate binds to nothing, the pattern
+degenerates to "every inline node", and all three rules fired on every sentence in the
+repository — including headings like "A rule is a triple". Every positive fixture still passed.
+Only the negatives caught it, which is invariant 8's entire argument in one incident.
+
 ---
 
 ## T6 — `skillmap-eval`: harness and CI gate

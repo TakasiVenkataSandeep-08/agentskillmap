@@ -63,7 +63,7 @@ skillmap/
 │   ├── skillmap-parse/       # bundle parse, frontmatter, inventory, reference graph  [T2, exists]
 │   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine  [T4, exists]
 │   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`  [T4, exists]
-│   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`
+│   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`  [T5, exists]
 │   ├── skillmap-semantic/    # quarantined model pass                → tier `advisory`
 │   ├── skillmap-policy/      # policy.toml, allowlists, exit codes
 │   ├── skillmap-diff/        # manifest delta
