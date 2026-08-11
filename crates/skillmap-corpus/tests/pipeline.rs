@@ -340,6 +340,59 @@ fn a_failed_fetch_does_not_abort_the_harvest() {
 }
 
 #[test]
+fn a_bundle_that_cannot_be_archived_is_skipped_not_fatal() {
+    // A real harvest died on `os error 225` — Windows Defender blocking one
+    // third-party SKILL.md during the archive copy — and threw away 202
+    // repositories of clone work. Anything the filesystem refuses is the same
+    // shape of problem: environmental, per-file, and no reason to discard a run
+    // that cost thousands of API calls.
+    //
+    // Simulated by making the archive's target path un-creatable: a plain file
+    // sits exactly where `store` needs a directory.
+    let temp = TempDir::new("blocked");
+    let archive = Archive::open(temp.path()).unwrap();
+
+    // First pass: learn the digests this fixture produces.
+    let probe = TempDir::new("blocked-probe");
+    let probe_archive = Archive::open(probe.path()).unwrap();
+    let discovered = report::harvest(
+        &[repo("acme", "skills", Provenance::CuratedList)],
+        &fetcher(),
+        &probe_archive,
+        "test",
+    )
+    .unwrap();
+    assert_eq!(discovered.records.len(), 2);
+
+    // Block one of them by occupying its archive path with a file.
+    let blocked = archive.bundle_dir(&discovered.records[0].digest);
+    std::fs::create_dir_all(blocked.parent().unwrap()).unwrap();
+    std::fs::write(&blocked, b"not a directory").unwrap();
+
+    let index = report::harvest(
+        &[repo("acme", "skills", Provenance::CuratedList)],
+        &fetcher(),
+        &archive,
+        "test",
+    )
+    .expect("one unarchivable bundle must not abort the harvest");
+
+    assert_eq!(
+        index.records.len(),
+        1,
+        "the other bundle must still be indexed"
+    );
+    assert!(
+        index
+            .skipped
+            .iter()
+            .any(|entry| entry.reason.contains("could not be archived")),
+        "the failure must be reported, not silently dropped: {:?}",
+        index.skipped
+    );
+}
+
+#[test]
 fn the_index_is_canonical_json() {
     let temp = TempDir::new("canonical");
     let archive = Archive::open(temp.path()).unwrap();

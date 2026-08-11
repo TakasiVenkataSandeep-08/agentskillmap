@@ -55,6 +55,18 @@ impl Archive {
             path: root.join("raw"),
             source,
         })?;
+
+        // Clear stale checkouts. A checkout directory is transient by
+        // construction — it holds a full clone only between fetching a
+        // repository and archiving its bundles — so anything present at startup
+        // is debris from a run that died. A real harvest crashed mid-way and left
+        // six full repository clones behind, which is both wasted disk and
+        // third-party code sitting somewhere nothing will look at it again.
+        //
+        // Failure to clear is not fatal: the harvest can still run, and refusing
+        // to start over leftover scratch space would be worse than the mess.
+        let _ = std::fs::remove_dir_all(root.join("raw").join(".checkout"));
+
         Ok(Self { root })
     }
 
@@ -230,6 +242,33 @@ mod tests {
             "a digest colon must not reach the path: {dir:?}"
         );
         assert!(dir.ends_with("abc123"));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn opening_clears_debris_from_a_crashed_run() {
+        let root = temp("debris");
+        let archive = Archive::open(&root).unwrap();
+
+        // Simulate a run that died between cloning and archiving.
+        let stranded = archive.checkout_dir(&RepoRef {
+            owner: "acme".to_owned(),
+            name: "skills".to_owned(),
+            commit: "0".repeat(40),
+            provenance: crate::Provenance::CodeSearch,
+            stars: None,
+        });
+        std::fs::create_dir_all(&stranded).unwrap();
+        std::fs::write(stranded.join("big.bin"), vec![0u8; 1024]).unwrap();
+        assert!(stranded.exists());
+
+        // Opening again is what the next harvest does first.
+        let _ = Archive::open(&root).unwrap();
+        assert!(
+            !stranded.exists(),
+            "a checkout is transient; one left at startup is debris from a crash"
+        );
+
         let _ = std::fs::remove_dir_all(&root);
     }
 

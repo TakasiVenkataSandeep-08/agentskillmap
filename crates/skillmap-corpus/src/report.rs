@@ -74,7 +74,14 @@ pub fn harvest_with_sources(
     // whatever is most copied, which is exactly the popular stuff.
     let mut seen_digests: BTreeSet<String> = BTreeSet::new();
 
-    for repo in repos {
+    let total = repos.len();
+    for (position, repo) in repos.iter().enumerate() {
+        // Progress goes to stderr from the library rather than through a callback.
+        // This crate is a research tool run from a terminal, and a harvest of a
+        // few hundred repositories is minutes of silence otherwise — which is
+        // indistinguishable from a hang, and invites the Ctrl+C that used to
+        // throw away the whole run's fetch cache.
+        eprintln!("  [{}/{total}] {}", position + 1, repo.slug());
         let key = repo.cache_key();
         if let Some(entry) = ledger.entries.get(&key) {
             if let Some(reason) = &entry.empty_reason {
@@ -133,6 +140,7 @@ pub fn harvest_with_sources(
                 reason,
             });
             let _ = std::fs::remove_dir_all(&checkout);
+            archive.write_ledger(&ledger)?;
             continue;
         }
 
@@ -152,7 +160,23 @@ pub fn harvest_with_sources(
                 });
                 continue;
             };
-            archive.store(&digest, &bundle_path)?;
+            // Archiving is not allowed to be fatal, for the same reason fetching
+            // is not: this function's own contract says one bad repository must
+            // not discard a run that cost thousands of API calls. A real harvest
+            // hit `os error 225` — a Windows Defender block on one third-party
+            // `SKILL.md` — and lost 202 repositories of work to a `?`.
+            //
+            // Note what is *not* done here: the failure is not worked around by
+            // copying the bundle partially. A partial copy would be archived
+            // under a digest describing content it no longer holds, which is
+            // worse than not archiving it at all.
+            if let Err(error) = archive.store(&digest, &bundle_path) {
+                skipped.push(Skipped {
+                    repo: repo.slug(),
+                    reason: format!("bundle {root} could not be archived: {error}"),
+                });
+                continue;
+            }
             entry.bundles.insert(root.clone(), digest.clone());
 
             if !seen_digests.insert(digest.clone()) {
@@ -171,6 +195,12 @@ pub fn harvest_with_sources(
 
         ledger.entries.insert(key, entry);
         let _ = std::fs::remove_dir_all(&checkout);
+
+        // Persist after every repository. `docs/01-corpus-scan.md` says a re-run
+        // must not re-fetch; writing the ledger only at the end made that true
+        // only for runs that completed, and a 200-repository harvest is long
+        // enough that interrupting one is the normal case, not the exception.
+        archive.write_ledger(&ledger)?;
     }
 
     archive.write_ledger(&ledger)?;

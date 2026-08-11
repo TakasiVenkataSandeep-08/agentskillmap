@@ -27,7 +27,8 @@ for, and deliberately did not supersede the rest:
   nothing but git and the standard library, so it runs on both platforms
   without a toolchain.
 - Check `configs-parse` is only partly subsumed by `cargo`. Nothing else
-  notices a malformed `rules/*.toml` or `.github/workflows/*.yml`.
+  notices a malformed `rules/*.toml` or `.github/workflows/*.yml`. It
+  covers files this repository authors, never downloaded corpus content.
 
 Each check is independent, runs to completion regardless of earlier
 failures, and reports its own pass/fail with enough detail to act on without
@@ -502,9 +503,20 @@ def check_no_crlf(result: CheckResult) -> None:
 # ---------------------------------------------------------------------------
 # Check 6 — TOML, JSON, and YAML parse
 # ---------------------------------------------------------------------------
+# Directories this repository does not author and must not lint. `corpus/` holds
+# third-party code the harvester downloaded; `target/` is build output. Both are
+# full of files that are none of this project's business, and the first real
+# harvest turned this check into a report on the ecosystem's malformed JSON.
+NOT_OURS = {".git", "corpus", "target", "__pycache__", "node_modules"}
+
+
+def _is_ours(path: Path) -> bool:
+    return not NOT_OURS.intersection(path.parts)
+
+
 def check_configs_parse(result: CheckResult) -> None:
     for path in sorted(REPO_ROOT.rglob("*.toml")):
-        if ".git" in path.parts:
+        if not _is_ours(path):
             continue
         rel = path.relative_to(REPO_ROOT).as_posix()
         try:
@@ -514,7 +526,7 @@ def check_configs_parse(result: CheckResult) -> None:
             result.fail(f"{rel} is not valid TOML: {exc}")
 
     for path in sorted(REPO_ROOT.rglob("*.json")):
-        if ".git" in path.parts:
+        if not _is_ours(path):
             continue
         rel = path.relative_to(REPO_ROOT).as_posix()
         try:
@@ -526,7 +538,7 @@ def check_configs_parse(result: CheckResult) -> None:
 
     for pattern in ("*.yml", "*.yaml"):
         for path in sorted(REPO_ROOT.rglob(pattern)):
-            if ".git" in path.parts:
+            if not _is_ours(path):
                 continue
             rel = path.relative_to(REPO_ROOT).as_posix()
             try:
