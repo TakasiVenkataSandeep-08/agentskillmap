@@ -13,6 +13,7 @@ members = [
     "crates/skillmap-rules",
     "crates/skillmap-code",
     "crates/skillmap-instr",
+    "crates/skillmap-semantic",
     "crates/skillmap-scan",
     "crates/skillmap-eval",
     "crates/skillmap-diff",
@@ -54,6 +55,7 @@ skillmap-rules = { path = "crates/skillmap-rules", version = "0.1.0" }
 skillmap-code = { path = "crates/skillmap-code", version = "0.1.0" }
 skillmap-instr = { path = "crates/skillmap-instr", version = "0.1.0" }
 skillmap-corpus = { path = "crates/skillmap-corpus", version = "0.1.0" }
+skillmap-semantic = { path = "crates/skillmap-semantic", version = "0.1.0" }
 skillmap-scan = { path = "crates/skillmap-scan", version = "0.1.0" }
 skillmap-eval = { path = "crates/skillmap-eval", version = "0.1.0" }
 skillmap-diff = { path = "crates/skillmap-diff", version = "0.1.0" }

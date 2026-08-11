@@ -378,6 +378,58 @@ provably does not alter any deterministic branch; variance across n runs is repo
 **Cut criterion:** if T3 labels show disclosure delta in under ~3% of bundles, ship v1.0
 without this and say so in the README.
 
+Built. **Two of the three "done when" clauses are met and the third is not**, and the split
+is worth stating precisely rather than rounding up:
+
+- *"provably does not alter any deterministic branch"* — **done**, and proved rather than
+  argued. `crates/skillmap-scan/tests/quarantine.rs` scans the same bundle with no semantic
+  pass, with one that finds nothing, and with one returning output written to suppress a
+  deterministic finding, then compares the deterministic half of the manifest byte for byte.
+- *"the red-team injection fixture produces an `injection_attempt` finding"* — **not done**,
+  because it needs a live model. What is proved is that a *relayed* injection is
+  reclassified as `injection_attempt` and never acted on, and that the fixture's
+  deterministic branches are unmoved by a hostile response.
+- *"variance across n runs is reported"* — **the harness exists and has never been run.**
+  `skillmap-semantic::variance` reports per kind, omits kinds that never fired, and counts
+  failed runs. Numbers require credentials this repository does not have and must not
+  fabricate.
+
+Decisions worth recording:
+
+- **The cut criterion could not be evaluated, and was not quietly skipped.** It reads "if T3
+  *labels* show…", and there are no labels. The nearest proxy is the corpus's lexical
+  disclosure-delta column: markers appearing **only** in files no documented path reaches —
+  credential paths 1.6%, secret env vars 1.6%, `eval`/`exec` 2.9%, encoding chains 1.3%,
+  agent-config writes 0.4%, network 9.6%. Every high-signal marker is under the 3% line and
+  the union across markers is unmeasured, so the proxy points at "cut" without being able to
+  say so. The layer therefore ships built, off by default, and unmeasured, and the README
+  says exactly that. **This is the decision the labelling pass exists to make**, and it is
+  the strongest remaining argument for doing it.
+- **The quarantine is enforced three ways, and only one of them is the dependency graph.**
+  The `Cargo.toml` has no `skillmap-code` and no `skillmap-instr`, as required — but the
+  input type carries the weight. `BundleView` holds a description and file text and has no
+  field for a capability, so the pass cannot read a deterministic finding, and
+  `bundle_view()` in `skillmap-scan` does not take the `Manifest` at all.
+- **The prompt hash covers two files, not one.** `prompts/auditor-directed.toml` decides
+  whether a finding is reclassified, so hashing only the template would leave a hole where
+  the advisory branch's output changes and `prompt_sha256` says nothing did.
+- **A fenced response is rejected.** Models fence JSON habitually and the prompt asks them
+  not to; unwrapping one is small, reasonable, and the first step of the lenient path
+  `docs/04-semantic-layer.md` names as how injection wins. The cost is a diagnostic somebody
+  reads. Listed in Known gaps because it is a real usability risk that no measurement has
+  been taken of.
+- **Hallucinated citations are discarded.** A model naming a file the bundle does not contain
+  loses the finding. An advisory finding's whole value is that a human can check it in
+  seconds, and one that leads nowhere has none.
+- **`docs/04-semantic-layer.md` contradicts itself about `unresolved`**, and the resolution is
+  recorded there rather than picked silently: the pass appends its own `size_limit` coverage
+  gaps and can never modify an entry a deterministic tier wrote.
+- **The eval case stayed pending, and its reason changed.** `injection-in-reference` now says
+  `needs a live model` rather than `needs T7`. T7 landed and the case still cannot run: the
+  eval gate is offline (invariant 9) and deterministic (invariant 2), and a case pointed at a
+  replay provider would assert what a fixture author typed. Adversarial coverage did not
+  grow, and inflating it would have been the easy lie here.
+
 ---
 
 ## T8 — `skillmap-policy` + `skillmap-diff` + CI action
@@ -527,6 +579,17 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
+- **The semantic layer is unmeasured, and that is now the largest gap in the repository.**
+  T7 built it; `docs/04-semantic-layer.md` requires precision, recall, a benign-stratum
+  false-positive rate and variance across n runs, and none exist because the corpus is not
+  labelled. It ships off by default and the README says so. **The cut criterion cannot be
+  evaluated until the labelling pass runs**, and the lexical proxy currently points at
+  cutting it.
+- **The semantic pass rejects a fenced JSON response.** Models fence habitually; the prompt
+  asks them not to, and tolerating it is the first step of the lenient path
+  `docs/04-semantic-layer.md` warns about. Whether real responses fence often enough to make
+  this unusable is a measurement nobody has taken, and the right time to take it is the same
+  run that produces the variance numbers.
 - **`skillmap ci` scans `Scope::Project` only.** Skills installed under the user's home
   directory apply to every project and are not checked. Discovery already supports the scope;
   what is missing is an answer to which lockfile they belong in, and guessing would produce a

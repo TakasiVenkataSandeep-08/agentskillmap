@@ -28,6 +28,20 @@ pub enum Requirement {
     Rule(String),
     /// Waits on the corpus harvest.
     Corpus(String),
+    /// Needs a live model call, which this suite deliberately never makes.
+    ///
+    /// Distinct from [`Requirement::Task`] because the distinction is the whole
+    /// point: T7 landed, and this case still cannot run. Leaving it as
+    /// `task = "T7"` after T7 shipped would misdescribe a permanent property of
+    /// the suite as a temporary backlog item.
+    ///
+    /// The eval gate is offline (invariant 9) and deterministic (invariant 2).
+    /// A case that called a model would be neither, and a case that called a
+    /// *replay* provider would be asserting what the fixture author typed. The
+    /// deterministic half of what this case claims — that the auditor is
+    /// unaffected by the injection — is proved in
+    /// `crates/skillmap-scan/tests/quarantine.rs`.
+    Model(String),
 }
 
 impl Requirement {
@@ -39,6 +53,7 @@ impl Requirement {
             Self::Task(task) => Some(format!("needs {task}")),
             Self::Rule(term) => Some(format!("needs a rule detecting `{term}`")),
             Self::Corpus(what) => Some(format!("needs the T3 corpus: {what}")),
+            Self::Model(what) => Some(format!("needs a live model: {what}")),
         }
     }
 }

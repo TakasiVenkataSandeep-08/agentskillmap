@@ -29,13 +29,24 @@ Consequences that shape the design:
 Scanning is **offline**. The binary makes network calls in exactly two places, both of which
 require explicit opt-in:
 
-1. `--semantic` — one model API call per chunk. Nothing else.
+1. `--advisory <model>` — **one** model API call per bundle. Nothing else. The key comes from
+   `ANTHROPIC_API_KEY` and never from a flag, a file skillmap writes, or a prompt.
 2. `skillmap corpus` — the research harvester, which fetches public repositories.
 
-**Where the network code actually lives.** Only `crates/skillmap-corpus` links an HTTP
-client, so the offline guarantee is a property of the dependency graph rather than of
-discipline: no crate on the scanning path can make a request, because none of them can
-reach a socket. The harvester contacts exactly one host, `api.github.com`, and does so only
+**Where the network code actually lives.** Only `crates/skillmap-corpus` and
+`crates/skillmap-semantic` link an HTTP client, and the second does so **only under a
+non-default Cargo feature**. A released binary contains no client at all: `--advisory` on one
+of those builds is an error telling you to rebuild, not a silently disabled pass. So the
+offline guarantee is a property of the dependency graph rather than of discipline — no crate
+on the default scanning path can make a request, because none of them can reach a socket.
+
+**The model call itself is one round trip with no tools.** `skillmap_semantic::Provider` takes
+a string and returns a string; there is no tool list to populate and no second turn, so
+nothing the model emits can cause an action. Its output is parsed as schema-validated JSON or
+discarded — never mined out of prose, because a fallback path is how an injection wins — and
+citations that do not resolve to a real file and line in the bundle are dropped. Findings land
+in tier `advisory` and provably cannot alter any deterministic branch; see
+`crates/skillmap-scan/tests/quarantine.rs`. The harvester contacts exactly one host, `api.github.com`, and does so only
 for authenticated GETs that return JSON. Bundle contents come down through `git clone`
 rather than an in-process transfer, which keeps the HTTP surface to a single verb and
 reuses a tool the operator already trusts.

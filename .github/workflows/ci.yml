@@ -96,6 +96,13 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      # The semantic pass's HTTP provider is behind a non-default feature, so the
+      # default build above never compiles it — and code nothing compiles rots.
+      # This only builds it; it makes no call, because a CI job that hit a model
+      # API would be neither offline (invariant 9) nor deterministic.
+      - name: Clippy (semantic provider compiled in)
+        run: cargo clippy -p skillmap-cli --all-targets --features anthropic -- -D warnings
+
       - name: Test
         run: cargo test --workspace --all-targets
 

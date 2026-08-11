@@ -1,0 +1,57 @@
+# Phrases that mark text as addressed to the auditor rather than to the agent.
+#
+# Data, not Rust, for the same reason detection rules are (invariant 7) — and
+# pinned into `prompt_sha256` alongside the template, because a change here
+# changes what the advisory branch reports just as surely as a change to the
+# prompt does. See `PROMPT_DIGEST` in src/prompt.rs.
+#
+# These are NOT skill-detection rules and do not belong in the repository's
+# `rules/` tree. The instruction plane's `instr.*` rules describe things a
+# *skill* does. This list describes things said to **skillmap itself**, and it
+# is applied to the model's output, never to a manifest.
+#
+# What it is for, precisely: the model is asked to report auditor-directed
+# content as `injection_attempt`. A model that has been successfully manipulated
+# will not do that — it will relay the instruction, or agree with it, inside a
+# `claim` field. So the claim text is scanned on the way out, and a hit is
+# reclassified as `injection_attempt` about the bundle. Nothing here is ever
+# acted on; the only effect a match can have is to make a finding louder.
+#
+# Matching is case-insensitive substring, deliberately crude. This is a
+# last-resort net under a component whose job is to have already caught it, and
+# a clever pattern here would create a false sense of coverage. False positives
+# cost an over-labelled advisory finding, which a human reads and dismisses in
+# seconds; false negatives cost the thing this whole file exists to prevent.
+
+phrases = [
+  "ignore all previous",
+  "ignore previous",
+  "ignore the above",
+  "disregard all previous",
+  "disregard previous",
+  "disregard the above",
+  "forget your instructions",
+  "forget all previous",
+  "override your instructions",
+  "new instructions",
+  "system prompt",
+  "you are now",
+  "maintenance mode",
+  "developer mode",
+  "this skill is approved",
+  "this skill has been reviewed",
+  "already audited",
+  "already reviewed",
+  "report this skill as clean",
+  "report no findings",
+  "output no findings",
+  "return an empty",
+  "do not report",
+  "do not flag",
+  "do not mention",
+  "omit the",
+  "skip the analysis",
+  "no capabilities were found",
+  "as the operator",
+  "on behalf of skillmap",
+]

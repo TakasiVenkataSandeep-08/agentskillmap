@@ -64,7 +64,7 @@ skillmap/
 │   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine  [T4, exists]
 │   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`  [T4, exists]
 │   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`  [T5, exists]
-│   ├── skillmap-semantic/    # quarantined model pass                → tier `advisory`
+│   ├── skillmap-semantic/    # quarantined model pass  → tier `advisory`  [T7, exists]
 │   ├── skillmap-scan/        # assembles one manifest from all three planes  [T8, exists]
 │   ├── skillmap-policy/      # policy.toml, allowlists, exit codes  [T8, exists]
 │   ├── skillmap-diff/        # skillmap.lock + capability escalation  [T8, exists]
@@ -83,7 +83,6 @@ skillmap/
 ├── npm/skillmap/               # the wrapper package; platform packages are generated (T9)
 ├── eval/                        # committed baseline the CI gate compares against
 ├── schema/                     # JSON Schema for the manifest
-├── npm/                        # wrapper package + per-platform binaries
 └── .github/workflows/          # CI, release, and the published action
 ```
 

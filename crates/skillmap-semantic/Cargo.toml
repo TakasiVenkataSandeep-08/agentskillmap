@@ -1,0 +1,35 @@
+[package]
+name = "skillmap-semantic"
+description = "The quarantined semantic pass: one model call, schema-validated output, tier `advisory`."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# NO skillmap-code, NO skillmap-instr, and no way to add one without this line
+# being edited in a diff somebody reads. `docs/04-semantic-layer.md`: *"Enforce
+# this with crate boundaries — skillmap-semantic does not depend on
+# skillmap-code or skillmap-instr — not with review discipline."* An advisory
+# finding cannot create, modify, suppress, or reprioritize a deterministic one
+# because the types to do so are not in scope here.
+[dependencies]
+skillmap-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+# The only network dependency, and it is off. Invariant 9 is offline by default,
+# and `docs/04-semantic-layer.md` calls the model call "the single network path
+# in the scan flow" — so a default build of this crate cannot make one, because
+# the HTTP client is not compiled into it. Enabling the feature is a visible
+# choice in a Cargo.toml, and running the pass is a second visible choice at the
+# command line.
+ureq = { version = "2", optional = true }
+
+[features]
+default = []
+anthropic = ["dep:ureq"]
+
+[lints]
+workspace = true

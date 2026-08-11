@@ -511,6 +511,7 @@ dependencies = [
  "skillmap-resolve",
  "skillmap-rules",
  "skillmap-scan",
+ "skillmap-semantic",
 ]
 
 [[package]]
@@ -627,12 +628,25 @@ dependencies = [
 name = "skillmap-scan"
 version = "0.1.0"
 dependencies = [
+ "serde_json",
  "skillmap-code",
  "skillmap-core",
  "skillmap-instr",
  "skillmap-parse",
  "skillmap-resolve",
  "skillmap-rules",
+ "skillmap-semantic",
+]
+
+[[package]]
+name = "skillmap-semantic"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "skillmap-core",
+ "toml",
+ "ureq",
 ]
 
 [[package]]

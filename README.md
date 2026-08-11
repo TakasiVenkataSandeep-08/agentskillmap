@@ -129,19 +129,39 @@ base rates above as though they were quality metrics would be exactly that overs
 
 What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
 pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and
-reported as pending rather than omitted — they need the semantic pass (T7) and a
-`code.obfuscation` rule. The gate fails on a failing case, on coverage shrinking, and on a
-case regressing to pending. See `eval/baseline.json`.
+reported as pending rather than omitted — one needs a `code.obfuscation` rule, and one needs a
+live model call the gate deliberately never makes. The gate fails on a failing case, on
+coverage shrinking, and on a case regressing to pending. See `eval/baseline.json`.
 
 ## Status
 
 Pre-alpha. The scanner runs, the corpus is harvested, `skillmap lock` / `skillmap ci` work
 end to end, and the binary ships with its own rules through a reproducible, attested release
-pipeline. Not built: the semantic layer (T7) and the labelling pass the quality metrics need.
-Four languages have rules (python, shell, javascript, typescript) and one capability term has
-coverage — thirteen terms are in the taxonomy, so most of what the manifest *can* describe,
-nothing yet detects. No version has been tagged. Start with `docs/00-tasks.md`, which records
-what each task actually delivered and what it deliberately did not.
+pipeline. Four languages have rules (python, shell, javascript, typescript) and one
+capability term has coverage — thirteen terms are in the taxonomy, so most of what the
+manifest *can* describe, nothing yet detects. No version has been tagged. Start with
+`docs/00-tasks.md`, which records what each task actually delivered and what it deliberately
+did not.
+
+### The semantic layer is built, off, and unmeasured
+
+`skillmap-semantic` (tier `advisory`) exists and runs only under `--advisory <model>`, in a
+build that opted into a network client. Its quarantine is proved: scanning the same bundle
+with a model response written to suppress a deterministic finding leaves the deterministic
+half of the manifest byte-identical, and the hostile claims come back reclassified as
+`injection_attempt`.
+
+What it does **not** have is the measurement `docs/04-semantic-layer.md` requires — precision
+and recall per finding kind, a false-positive rate on the benign stratum, and variance across
+n runs. All of those are scored against a labelled corpus, and the corpus is harvested but
+not labelled. The harness for the variance numbers is written and has never been run against
+a live model. Nothing is published in place of them.
+
+That document also specifies a **cut criterion**: if the labels show the disclosure delta in
+under ~3% of bundles, v1.0 should ship without this layer and say so. That criterion cannot
+be evaluated yet, and the nearest proxy currently points toward cutting — every high-signal
+marker that appears *only* in files nothing references sits between 0.4% and 2.9%. Deciding
+it is the strongest argument for doing the labelling pass.
 
 ## For contributors
 
@@ -158,7 +178,7 @@ file, and two fixtures — no Rust required. See `docs/03-rules-authoring.md`.
 | `docs/01-corpus-scan.md` | Step one, and the kill gate |
 | `docs/02-manifest-schema.md` | The spine |
 | `docs/03-rules-authoring.md` | How to add detection |
-| `docs/04-semantic-layer.md` | The quarantined model pass |
+| `docs/04-semantic-layer.md` | The quarantined model pass, and what T7 could not measure |
 | `docs/05-eval.md` | The falsifiable quality bar |
 | `docs/06-policy-and-lock.md` | `skillmap.lock`, `policy.toml`, and the exit codes |
 | `docs/07-distribution.md` | Embedded rules, reproducible builds, signing, install paths |

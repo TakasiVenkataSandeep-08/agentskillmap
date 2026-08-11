@@ -105,16 +105,13 @@ EXTERNAL_CONVENTIONS = {
 # below retires when its task begins — the same self-retiring rule as
 # KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
 #
-#   skillmap-semantic                   T7
+# Empty: every crate the prose names now exists.
 #
 # Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2),
 # skillmap-corpus (T3), skillmap-rules and skillmap-code (T4),
 # skillmap-instr (T5), skillmap-eval (T6), skillmap-policy, skillmap-diff,
-# skillmap-scan and skillmap-cli (T8).
-PLANNED_CRATES = {
-    f"crates/{name}"
-    for name in ("skillmap-semantic",)
-}
+# skillmap-scan and skillmap-cli (T8), skillmap-semantic (T7).
+PLANNED_CRATES: set[str] = set()
 
 # The canonical rendering the Rust types produce, blessed by
 # `cargo test -p skillmap-core --test golden`. Checking it against the schema here

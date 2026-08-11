@@ -1,5 +1,18 @@
 description = "Injection inside a reference file produces `injection_attempt`, and the auditor is unaffected by it."
-requires = { task = "T7 (the quarantined semantic pass)" }
+
+# T7 landed and this case still cannot run here, which is why the reason changed
+# rather than the requirement being dropped.
+#
+# The eval gate is offline (invariant 9) and deterministic (invariant 2). Calling
+# a model would break both. Calling a replay provider would assert what a fixture
+# author typed, which is the hollow-test shape this suite exists to avoid.
+#
+# The second half of the description — "the auditor is unaffected by it" — *is*
+# proved, in crates/skillmap-scan/tests/quarantine.rs: this exact bundle is
+# scanned with a hostile advisory response and its deterministic branches are
+# compared byte for byte against a quiet run. Only the first half, that a model
+# actually recognises the injection, needs credentials this suite does not have.
+requires = { model = "an injection the model must classify as `injection_attempt`" }
 
 [[expect]]
 kind = "no_verdict"

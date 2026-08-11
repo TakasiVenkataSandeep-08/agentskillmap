@@ -50,6 +50,13 @@ struct Args {
     rules: Option<PathBuf>,
     lock: PathBuf,
     policy: PathBuf,
+    /// Model id for the semantic pass. `None` means it does not run.
+    ///
+    /// A model id rather than a bare `--advisory` flag, because invariant 6
+    /// requires the manifest to pin which model produced the advisory branch,
+    /// and a default chosen by the binary would drift under readers who never
+    /// typed it.
+    advisory_model: Option<String>,
 }
 
 const USAGE: &str = "\
@@ -69,6 +76,11 @@ OPTIONS:
     --rules <DIR>      load rules from a checkout instead of the ones built in.
                        For developing against an edited rules tree; a release
                        carries its own and needs no argument.
+    --advisory <MODEL> run the semantic pass with this model, e.g. claude-sonnet-5.
+                       OFF unless given. This is the only part of skillmap that
+                       makes a network call, it needs ANTHROPIC_API_KEY, and it
+                       needs a build with --features anthropic. Its findings are
+                       tier `advisory` and never change what the other tiers say.
 
 EXIT CODES (ci):
     0  clean
@@ -121,6 +133,7 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
     let mut rules: Option<PathBuf> = None;
     let mut lock: Option<PathBuf> = None;
     let mut policy: Option<PathBuf> = None;
+    let mut advisory_model: Option<String> = None;
 
     let mut rest = flags.iter();
     while let Some(flag) = rest.next() {
@@ -129,6 +142,16 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
             "--rules" => &mut rules,
             "--lock" => &mut lock,
             "--policy" => &mut policy,
+            // Not a PathBuf, so it cannot share the slot machinery below.
+            "--advisory" => {
+                let Some(value) = rest.next() else {
+                    return Err(format!(
+                        "`{flag}` needs a model id, e.g. --advisory claude-sonnet-5"
+                    ));
+                };
+                advisory_model = Some(value.clone());
+                continue;
+            }
             other => return Err(format!("unknown option `{other}`\n\n{USAGE}")),
         };
         let Some(value) = rest.next() else {
@@ -142,6 +165,7 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
         rules,
         lock: lock.unwrap_or_else(|| project.join(DEFAULT_LOCK)),
         policy: policy.unwrap_or_else(|| project.join(DEFAULT_POLICY)),
+        advisory_model,
         project,
     })
 }
@@ -221,6 +245,51 @@ fn emit_manifests(args: &Args) -> Result<(), String> {
     Ok(())
 }
 
+/// Build the semantic pass's provider, if `--advisory` asked for one.
+///
+/// Returns `None` when the flag was absent — the default, and the only state in
+/// which `skillmap` makes no network call at all (invariant 9).
+///
+/// When the flag is present but the binary was built without the `anthropic`
+/// feature, this is an error rather than a silently disabled pass. Somebody who
+/// typed `--advisory` and got a manifest with `"enabled": false` would reasonably
+/// read it as "checked, found nothing".
+#[allow(
+    unused_variables,
+    reason = "args is unused in the default build, where there is no provider to construct"
+)]
+fn advisory_provider(args: &Args) -> Result<Option<Box<dyn skillmap_scan::Provider>>, String> {
+    #[cfg(feature = "anthropic")]
+    {
+        let Some(model) = &args.advisory_model else {
+            return Ok(None);
+        };
+        eprintln!(
+            "skillmap: semantic pass enabled with `{model}`. This is the only \
+             network call skillmap makes. Its findings are tier `advisory` and \
+             change nothing the other tiers report."
+        );
+        let provider = skillmap_semantic::provider::Anthropic::from_env(model)
+            .map_err(|error| error.to_string())?;
+        Ok(Some(Box::new(provider)))
+    }
+
+    #[cfg(not(feature = "anthropic"))]
+    {
+        match &args.advisory_model {
+            None => Ok(None),
+            Some(_) => Err(
+                "--advisory needs a build with the model provider compiled in. \
+                 Rebuild with `cargo build --release -p skillmap-cli --features \
+                 skillmap-semantic/anthropic`. Released binaries ship without it, \
+                 so that a default install of a supply-chain auditor cannot make \
+                 a network call."
+                    .to_owned(),
+            ),
+        }
+    }
+}
+
 /// Discover and scan every bundle in the project.
 ///
 /// Rule-loading diagnostics and undiscoverable directories both go to stderr and
@@ -240,11 +309,22 @@ fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
         );
     }
 
+    let provider = advisory_provider(args)?;
+
     let mut manifests = Vec::new();
     for bundle in &discovery.bundles {
         let path = bundle.path();
-        let manifest = skillmap_scan::analyze(&path, &rules)
-            .map_err(|error| format!("cannot analyze {}: {error}", path.display()))?;
+        let manifest = match provider.as_deref() {
+            Some(provider) => skillmap_scan::analyze_bundle_advised(
+                &path,
+                &rules,
+                &ClaudeCode,
+                provider,
+                &skillmap_scan::SemanticLimits::default(),
+            ),
+            None => skillmap_scan::analyze(&path, &rules),
+        }
+        .map_err(|error| format!("cannot analyze {}: {error}", path.display()))?;
         manifests.push(manifest);
     }
 

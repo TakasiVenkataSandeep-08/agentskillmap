@@ -5,7 +5,7 @@
     "fixtures_failed": 0,
     "fixtures_passed": 7,
     "pending": {
-      "injection-in-reference": "needs T7 (the quarantined semantic pass)",
+      "injection-in-reference": "needs a live model: an injection the model must classify as `injection_attempt`",
       "obfuscated-exec": "needs a rule detecting `code.obfuscation`"
     }
   },

@@ -146,12 +146,19 @@ fn pending_cases_state_a_reason_naming_what_they_wait_on() {
 
     for outcome in pending {
         let reason = outcome.pending.as_deref().unwrap_or_default();
+
+        // Structure, not an allowlist of task names. This was a list of
+        // substrings — "T7", "T8", "rule", "corpus" — until T7 landed and left
+        // `injection-in-reference` pending for a *different* reason, at which
+        // point the test failed for being out of date rather than because
+        // anything was wrong. A test that has to be edited every time a blocker
+        // is correctly re-described is measuring the wrong thing.
+        let Some(what) = reason.strip_prefix("needs ") else {
+            panic!("`{}` is pending without a reason: {reason:?}", outcome.id);
+        };
         assert!(
-            reason.contains("T7")
-                || reason.contains("T8")
-                || reason.contains("rule")
-                || reason.contains("corpus"),
-            "`{}` is pending for an unexplained reason: {reason:?}",
+            what.len() > 10,
+            "`{}` names its blocker too vaguely to act on: {reason:?}",
             outcome.id
         );
     }
