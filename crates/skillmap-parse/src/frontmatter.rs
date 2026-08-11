@@ -369,16 +369,55 @@ fn parse_value(
                     return Ok(Value::List(parse_sequence(rows, at, depth + 1)?));
                 }
             } else if next.indent > indent {
-                let at = next.indent;
-                return Ok(Value::Map(parse_map(rows, at, depth + 1)?));
+                // More-indented lines are a nested mapping if they are keys, and a
+                // multi-line plain scalar if they are prose.
+                if split_key(&next.content).is_some_and(|(key, _)| !key.is_empty()) {
+                    let at = next.indent;
+                    return Ok(Value::Map(parse_map(rows, at, depth + 1)?));
+                }
+                return Ok(Value::Scalar(read_continuation(rows, indent).join(" ")));
             }
             Ok(Value::Scalar(String::new()))
         }
 
         _ if inline.starts_with('[') => Ok(Value::List(parse_flow_sequence(inline, number)?)),
         _ if inline.starts_with('{') => Ok(Value::Map(parse_flow_map(inline, number, depth)?)),
-        _ => Ok(Value::Scalar(unquote(strip_comment(inline)))),
+
+        // A plain scalar may continue on more-indented lines. This is how almost
+        // every long `description:` in the corpus is written, and refusing it
+        // accounted for the largest remaining class of failures after nesting was
+        // supported — the parser was reading a wrapped sentence as a structural
+        // error.
+        //
+        // A continuation is any more-indented line that is not itself a `key:` and
+        // not a list item. That distinction is what keeps a genuine nested mapping
+        // from being swallowed into the sentence above it.
+        _ => {
+            let mut parts = vec![unquote(strip_comment(inline))];
+            parts.extend(read_continuation(rows, indent));
+            Ok(Value::Scalar(parts.join(" ").trim().to_owned()))
+        }
     }
+}
+
+/// Consume the more-indented lines continuing a plain scalar.
+fn read_continuation(rows: &mut Rows, indent: usize) -> Vec<String> {
+    let mut parts = Vec::new();
+    while let Some(row) = rows.rows.get(rows.at) {
+        if row.content.is_empty() || row.content.starts_with('#') || row.indent <= indent {
+            break;
+        }
+        // A key or a list item is structure, not prose.
+        if row.content.starts_with("- ")
+            || row.content == "-"
+            || split_key(&row.content).is_some_and(|(key, _)| !key.is_empty())
+        {
+            break;
+        }
+        parts.push(row.content.clone());
+        rows.at += 1;
+    }
+    parts
 }
 
 /// Parse a block sequence whose `-` markers sit at `indent`.
@@ -782,6 +821,47 @@ mod tests {
             front.scalar("description"),
             Some("First line.\nSecond line.")
         );
+    }
+
+    #[test]
+    fn a_plain_scalar_continues_across_indented_lines() {
+        // The commonest long `description:` shape in the corpus, and the largest
+        // remaining failure class once nesting was supported.
+        let text = "---
+name: demo
+description: Manages tasks by
+                      organizing them into checklists. Use when asked.
+other: x
+---
+";
+        let front = parse(text).unwrap();
+        assert_eq!(
+            front.scalar("description"),
+            Some("Manages tasks by organizing them into checklists. Use when asked.")
+        );
+        assert_eq!(
+            front.scalar("other"),
+            Some("x"),
+            "the next key still parses"
+        );
+    }
+
+    #[test]
+    fn a_continuation_does_not_swallow_a_nested_mapping() {
+        // The risk of supporting continuations: prose and structure both sit at a
+        // deeper indent, and only the `key:` shape tells them apart.
+        let text = "---
+description: short
+metadata:
+  author: someone
+---
+";
+        let front = parse(text).unwrap();
+        assert_eq!(front.scalar("description"), Some("short"));
+        let Some(Value::Map(metadata)) = front.entries.get("metadata") else {
+            panic!("metadata must stay a mapping, not become part of the sentence");
+        };
+        assert_eq!(metadata.get("author"), Some(&scalar("someone")));
     }
 
     #[test]

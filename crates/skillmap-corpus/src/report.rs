@@ -688,13 +688,30 @@ pub fn report(index: &Index) -> String {
              \"we never looked\".\n",
             index.skipped.len()
         );
+        // Bucketed by class, never listed per bundle. Two reasons, both binding:
+        //
+        // `docs/01-corpus-scan.md` says to name no maintainer as a suspect and to
+        // describe patterns rather than people. A list of several hundred named
+        // third-party bundles under the phrase "contains a virus" is exactly that
+        // prohibition — and it would be reporting one machine's antivirus
+        // heuristic as though it were a finding this project had established.
+        //
+        // The raw reasons also carry local filesystem paths, which have no place
+        // in a document meant to be read on a different machine than it was made.
         let mut reasons: BTreeMap<&str, u64> = BTreeMap::new();
         for entry in &index.skipped {
-            *reasons.entry(entry.reason.as_str()).or_default() += 1;
+            *reasons.entry(skip_class(&entry.reason)).or_default() += 1;
         }
-        for (reason, count) in reasons {
+        let mut ranked: Vec<(&&str, &u64)> = reasons.iter().collect();
+        ranked.sort_by(|a, b| b.1.cmp(a.1).then(a.0.cmp(b.0)));
+        for (reason, count) in ranked {
             let _ = writeln!(out, "- {count} × {reason}");
         }
+        let _ = writeln!(
+            out,
+            "
+Bundle names are deliberately omitted. These are facts about this              harvest — a clone that failed, a host antivirus that blocked a file —              not findings about the bundles, and `docs/01-corpus-scan.md` is              explicit that this report describes patterns rather than people."
+        );
     }
 
     let _ = writeln!(
@@ -713,6 +730,29 @@ pub fn report(index: &Index) -> String {
     );
 
     out
+}
+
+/// Bucket a skip reason into a class safe to publish.
+///
+/// The raw reasons embed bundle paths and local filesystem paths. Neither belongs
+/// in a published report: one names third parties, the other names this machine.
+fn skip_class(reason: &str) -> &'static str {
+    let lowered = reason.to_lowercase();
+    if lowered.contains("virus") || lowered.contains("unwanted software") {
+        "blocked by the host's antivirus while archiving"
+    } else if lowered.contains("could not be archived") {
+        "could not be written to the archive"
+    } else if lowered.contains("fetch failed") {
+        "could not be cloned"
+    } else if lowered.contains("no skill.md") {
+        "repository contained no SKILL.md"
+    } else if lowered.contains("could not be parsed") {
+        "bundle could not be parsed"
+    } else if lowered.contains("could not be measured") {
+        "archived bundle could not be re-measured"
+    } else {
+        "other"
+    }
 }
 
 /// The repository contributing the most bundles, and how many.
