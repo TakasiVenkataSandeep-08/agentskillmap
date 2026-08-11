@@ -33,6 +33,7 @@ pub mod archive;
 pub mod github;
 pub mod measure;
 pub mod report;
+pub mod sample;
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -222,6 +223,13 @@ impl std::error::Error for Error {
 /// Where corpus output goes and how much of it to gather.
 #[derive(Debug, Clone)]
 pub struct HarvestOptions {
+    /// Draw the labelling sample instead of harvesting. Reads `index.json` and
+    /// writes `sample.json`; makes no network request.
+    pub sample: bool,
+    /// Seed for `--sample`. `docs/05-eval.md` requires the split to be fixed by
+    /// a seed and never tuned against, so it is written into `sample.json`
+    /// alongside the draw rather than living only in somebody's shell history.
+    pub seed: String,
     /// Root for `raw/`, `index.json`, and `report.md`.
     pub corpus_dir: PathBuf,
     /// Maximum repositories to pull from each source.
@@ -248,6 +256,8 @@ impl Default for HarvestOptions {
             corpus_dir: PathBuf::from("corpus"),
             limit: 200,
             offline: false,
+            sample: false,
+            seed: "skillmap-labels-1".to_owned(),
             snapshot: "unlabelled".to_owned(),
         }
     }

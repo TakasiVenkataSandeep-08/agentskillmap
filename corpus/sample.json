@@ -1,0 +1,923 @@
+{
+  "snapshot": "2026-08",
+  "seed": "skillmap-labels-1",
+  "population": {
+    "code_clean": 720,
+    "code_credential": 769,
+    "code_other_marker": 1621,
+    "disclosure_shape": 385,
+    "prose_only": 20471
+  },
+  "selected": [
+    {
+      "digest": "sha256:028a7076bbf81d697ba8d9f52a9e7ff1f2cf0d877715da3eff10cda160934bd2",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/davemorin/clawdlink",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:0896ce7ec4ed568ffa99577e2afb63fb1b3b6e0a17a84ac3f10e9145b5e2de89",
+      "stratum": "disclosure_shape",
+      "repo": "AGLz/agl-hostman",
+      "bundle_root": ".agents/skills/devops/dokploy-deployment",
+      "commit": "add8e58b5c315d1e95b28c7cdf609bff5a3c4c25"
+    },
+    {
+      "digest": "sha256:0f58f2b3b4d6bd3f890df7bcf4f1f527da0e31efc6fa0d86049c91584d89a9cc",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/lxgicstudios/license-gen",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:3f846244d9405f79d2eb646df4e49f99546269cdf876589fdabd979ae469b016",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/refrigerator/readwise",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:52720be21d450b672a5c3c1cb5397d24c334556b521a66f78a593f06874c4617",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/eltontay/circle-wallet",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:5877ac8773ee9d2451a46a93db3e9eb2a74952b94c179032a151fb89f7053b22",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/swordfish444/nobot",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:708d76392f25108fb6a2944ec31d9bb419520182d645635b7bf44d35c93800ed",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/chattyclaw/solana-basics",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:76c7316f1dc08d0b268ca03a02cbdb2f12d77e8498297b14b8ec1fbee12f4acd",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/clawd800/onchat",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:7d914c0bf2c87b1644f983c35f3056f839bac48f7ac36a8a35f306d18939d883",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/henrino3/ec-skill-sharer",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:814aa6415e00103b4ea6be21aac9b80957095a10356ba45f595be21c972b793f",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/lxgicstudios/animation-gen",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:85e45ed7c985edfd8678832e677cf03cfdcdb3d9b8c013495e027d313080b052",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/makhatib/mcp-microsoft365",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:91f4a41ce0ed61a672c7f03224058cef9e31e31dd1f801746205e56274d4404a",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/koba42corp/autoresponder",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:ba0c9b4e31850c54c956c079b0d20eee24fc2e4ba21fd8fd10deb4caeb7356a8",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/aqiljaafree/ghostbot-uniswap-v4hooks-testnet",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:bda33abcfcfea891066aa1dbf589042cf21af67d6e4b1d2787ab39c9e6942b63",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dgriffin831/guardrails",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:c0d97695f8bc18733c2df27f94d4123a297843fbcbca044e3f93f065fb502242",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/tommygeoco/beanstalk-gateway",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:d6094aadd232d0351e12f0b65ed746dc592844f52f36a55fc0347f1a857d930c",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/autogame-17/feishu-post",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:d7412da33ddb392c5673519315ebc98d057f106703f33d5150130c4e9af4a052",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/hughpyle/keep",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:dee4289b4c1afa14ee290a9f38f30960b947a90cc4bfe8193f4a10e1b65be198",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/ampedfinance/amped-defi-publish",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:ea70c6d4c2480210214af1a0353322fb7ca6c4d69b009cf7b8c87291c5bc3061",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/lxgicstudios/ci-gen",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:f84e182cf7e4b0070e528aab6b7ec94d6765c2e3c19f356d904158e287e665fe",
+      "stratum": "disclosure_shape",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/orlyjamie/badboi-1",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:05f6685db4dd491b0d5fddf226ce8dd4f0937c04ac54083e032924d3abcd37b0",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/guccidgi/notebooklm-skill",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:0dec3e558d162cbd6dab214c88e03dfe1963e4c4d50a084ac67f29ea8dac975e",
+      "stratum": "code_credential",
+      "repo": "MrGr33n98/advini-hub",
+      "bundle_root": ".antigravity/skills/senior-fullstack",
+      "commit": "4cadf9fc9a46b5507b93b8ea0cae2a7fc592057c"
+    },
+    {
+      "digest": "sha256:11e471f09c28e053648405e3d7262492ebaebaa301f98d71dca4f5cb8dc2da8b",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/nkrcrft/recraft",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:226465e244ee2ba3aa688b1b28f45756ab81fad4eac3e095c0ea445cf22b5d64",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/lazaruseth/receipts-guard",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:2abf5bbdc4866ffd6f633091784f13f69c347200598106b5f74e4794245a0bf1",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/itsclawdbro/skill-defender",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:2ff5df0ddc756ce7ec5f769f72edacf4578eeb7b1067840a4b316f0d1f37be06",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/gzlicanyi/imap-smtp-email",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:305f974a13a93855551b935cee8f300bb33fc09fea230bca1ebdfbf4e6ff090c",
+      "stratum": "code_credential",
+      "repo": "nimoqup046-collab/agora-test01",
+      "bundle_root": ".claude/skills/apify-lead-generation",
+      "commit": "466264adef50ed4b6255b45b1132717751b4a5e0"
+    },
+    {
+      "digest": "sha256:3c92690d46367d9e8ad26b0b18cecf1c0d484c7afb1566accc864ae0b8e13615",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/hhhh124hhhh/ai-video-gen-tools",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:44dc5ba88ae073765fcb425f1b1162f2e0b6dd5a54eef2914e8e4165a5e26c94",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/bertxtrella/aluvia-brave-search",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:45ee14dae05c43ecbcf0e681932547a46f1ad84a90ce04052e9d264950f328eb",
+      "stratum": "code_credential",
+      "repo": "tinh2/skills-hub-registry",
+      "bundle_root": "build/editorial-app-craft",
+      "commit": "e5e3c5145f5ddba5a27e6eba5c1d3f03f91c1ccf"
+    },
+    {
+      "digest": "sha256:59d82d19795547cc3324efd108e3174f6e43fdeed2f12e135a5d656090e247f5",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/misirov/clawdstrike-test",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:680f5762d8f5c52bc39671d49ecf8b8775ac901b24b70f4d766df2e714726615",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/clawd21/ui-test",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:6f99b0dfbab21395d50959d729ba0872c9cc1266488729b25066f7a1568c0e54",
+      "stratum": "code_credential",
+      "repo": "MrGr33n98/advini-hub",
+      "bundle_root": ".antigravity/skills/last30days",
+      "commit": "4cadf9fc9a46b5507b93b8ea0cae2a7fc592057c"
+    },
+    {
+      "digest": "sha256:70c4b9117151282d5ea53f88ad51a35d0540ef9e66a992ec1a159507d7426ec8",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/bluesyparty-src/bitskins",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:779461b16d3f6b51e77aa945569f7adb5d922d289b9512506980971b906bb620",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/svkozak/sfsymbol-generator",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:829a64b26029d64cbaf5c921e45cdd3a81ce97f47276ef361f67454ac1f01565",
+      "stratum": "code_credential",
+      "repo": "nimoqup046-collab/agora-test01",
+      "bundle_root": ".claude/skills/whatsapp-cloud-api",
+      "commit": "466264adef50ed4b6255b45b1132717751b4a5e0"
+    },
+    {
+      "digest": "sha256:83bd4813fbac462518dc778215703e7f793f15043962492562952291ea47990e",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/azaidi94/claude-code-usage",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:892439c41c622ebbde3109ed41af755718d714abbae2ea6f35df42cce64d9eb0",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/koba42corp/chia-walletconnect",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:945675caab06d9c409b4059a79760494b3db8ae392053661f699bcb00fc541c2",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/shirtlessfounder/moltmarkets-trading",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:951ccce72a841d7a6429fa6c3259a86695fdf01448ebda25e248cfeb525c7529",
+      "stratum": "code_credential",
+      "repo": "DangQuangSE/team-development-skills",
+      "bundle_root": ".agents/skills/playwright-skill",
+      "commit": "8dd009c711a23e0279db07a8f1828fad8ca205b7"
+    },
+    {
+      "digest": "sha256:a0cb8397398be73a6c60e9a9018ceabac32c633b968abb10c2fbc07ed6d44d45",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/adarshmishra07/claw-control",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:a16353d6dd93eed0442ddfacbd45f8664923c0b761ddcc7f536f9e03c654d4d9",
+      "stratum": "code_credential",
+      "repo": "jcasnellie69/homelab-config",
+      "bundle_root": ".recycle/.trae/skills/acquire-codebase-knowledge",
+      "commit": "08ec956743c554f7f37c97fffd968b31560b09c5"
+    },
+    {
+      "digest": "sha256:a5b139cc8972fe6c644f14488854ef7f2e9b2b3adce00f7cfec98bb50617d132",
+      "stratum": "code_credential",
+      "repo": "JoshuaShepherd/my-skills",
+      "bundle_root": "claude/assets/scientific-schematics",
+      "commit": "2d57049bb5f975448f3f534c8b70cc4dc1045a65"
+    },
+    {
+      "digest": "sha256:ac71a41f9cbfe05d07aaa490ce570ded47c902e7313301e337231809a0572988",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/alirezarezvani/senior-devops",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:ae4e55fd770fbfd754b9afa95c136610425a61ef680befdfa8473ac6b3317291",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/mrshorrid/openclaw-social-scheduler",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:ae773ed97dda2e86e1370e78fd95a15415d94930eae05724ce6b1742abfd97b1",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/rhanbourinajd/ai-video-gen",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:aeea623b97b5f2cc927516b7cfec093d8cfda65f23528a5f84cafb7579999feb",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/odrobnik/withings-family",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:b3d2bb7517edb5086f5f4ae48cae0e83226162dd595a0bbcf62b0fdeac8463cb",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/amir-ag/clawhub-skill-scanner",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:b84d45e6d63db0a1f6f1396d765ac9e56165d2e213c25834b0011dd2e2a385f2",
+      "stratum": "code_credential",
+      "repo": "n2g7/agent-skills",
+      "bundle_root": "telegram",
+      "commit": "976d5c43f5721c59769a395e535499c217d4bb37"
+    },
+    {
+      "digest": "sha256:bc5dc20f16f98cd4018dd4becffeafed9dab88439d3b48a18ff93a0419e18a34",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/xiaowenzhou/dify-kb-search",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:c5f94d9128ccdd15daf379757d5fb598ba2d72c5a4417234f570c1c7ff7bcde0",
+      "stratum": "code_credential",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/Common/remotion-de-skills/remotion",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:ccfb4b755df14269f27c92db395b6e058ea7cfa7e9470221fbcbc50dedd76e08",
+      "stratum": "code_credential",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/Common/baoyu-skills/baoyu-image-gen",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:de3d428e3e41f25eb137225640ad1406640738b32b5d5d11eccab4bed10b2abc",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/robertoono/knowbster",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:de995644b8cfa4c5d591e339173327a613204b997066271ba483981e935d2cee",
+      "stratum": "code_credential",
+      "repo": "Sunwood-ai-labs/SourceSage",
+      "bundle_root": ".",
+      "commit": "c10b14234239de6248a0347bf9051507e8b2eb2a"
+    },
+    {
+      "digest": "sha256:df36f97e6f63362840568966e3cc2b69de0537ed27e7b5d847150a79f81562e7",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/paulpreibisch/agentvibesclawdbot",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:e68d800696a2645c308bdbd3309a4e37f5dfa3b73ed3bdb7d018c959f7cff579",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/extraterrest/alibaba-cloud-model-setup",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:e73e779bc23d26a3c9413ea08f436f301152c8c57e4dc285ad838a36c3b94450",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/jimmystacks/agent-sentinel",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:f8be48948cef15d15a228798086435e0a9781313d2fc35ea66662bfca83622d2",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/cpppppp7/fluxa-agent-wallet",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:f968c87d6f6b87a996211c347f8889cbb2980c226078ebbd51ee67af61a04451",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/capgoblin/credex-protocol",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:fa142535eb61ce3c26fdec3242870600ea758263d736a9f25e1458d45d607196",
+      "stratum": "code_credential",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/lachlanglasgow/project-tree",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:064d797389de6a767cb2255655f2b3df9a1283f63a612e01f1b8e8aeff9e0444",
+      "stratum": "code_other_marker",
+      "repo": "nimoqup046-collab/agora-test01",
+      "bundle_root": ".claude/skills/cc-skill-strategic-compact",
+      "commit": "466264adef50ed4b6255b45b1132717751b4a5e0"
+    },
+    {
+      "digest": "sha256:1ad8387f8eec9a71b94b542df8fb2ec2905c7cecff45ea777dcfe41771b39047",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dvjn/no-nonsense-tasks",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:1ee183f8acad3c1a6fe724fee578389f87baabdb3cb382481f7ec4457046dcf6",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/felmonon/trust-protocol",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:200de253b71ec2531211e742c07031f1fec4acaea12389cead6c8d8d9cda3019",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dylanbaker24/linkedin-monitor",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:2f86f6e03e171f2d797951eafa653971e2dd2ec3e4e9149dede00050444437f9",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/eid33552-maker/groq-orpheus-tts",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:4f31016dcc81254e27adc0f6122076c7116f26f6c9559fd50d55c3e7d992ff80",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/gostlightai/agent-step-sequencer",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:798c1aaaa57e1feb4a330428c2db1c9cd9472fe56fe76d4e72fe88730fa06be8",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/bguidolim/omnisearch",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:7f586b352a3e424372345e00bb03f64138961288da58e270d8326ca05ede8a7a",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/jiasenl/clawdbot-skill-homebridge",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:81a65b47f64ecf1e565ab06d3750091f10cc9dc4802110227f39918cd7bfa8f2",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/ide-rea/baidu-scholar-search-skill",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:8d302e6b296c0d3be0e203f830342a185a0513409515f58ec6b14b28362b492e",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/levi-law/forkzoo",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:8ee863ada836c248b876828a60d44b184ee42e9a63497243cf497ab336cc8ad5",
+      "stratum": "code_other_marker",
+      "repo": "nimoqup046-collab/agora-test01",
+      "bundle_root": ".claude/skills/CLI-Anything/codex-skill",
+      "commit": "466264adef50ed4b6255b45b1132717751b4a5e0"
+    },
+    {
+      "digest": "sha256:9de18b483b6411e79d98e7074517b59b76e3465a8328e2160a7fbaccb30acebd",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/falderebet/dirigera-control",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:9e4e2c3f3ca83615bd88c240a2dd4b883e7abd058a3d07fe5f022687809432cc",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/lxgicstudios/bundle-analyzer",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:b9024f26ae3cdf6266213b24f3431699b40d697f0c4513f6733542e236c93b45",
+      "stratum": "code_other_marker",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/Common/anthropics-skill/slack-gif-creator",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:d80bf9624a6f7c3a695ff1e00f2d88742c81d99c1486b4c8ac0e008a85e19ba8",
+      "stratum": "code_other_marker",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/zskyx/detect-injection",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:005f5cd3ade2428b17226f21394103ed07edacc96b4e733c65ca3c029459c6db",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dacptn/deep-framework",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:00e6500b45063fe44a39b642d643ff3645cbaa3c8f1f01500727cd77709cf956",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/sebastianffx/user-cognitive-profiles",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:023a5f4e41e2c121bca52c5bb043cf03844391cf8590f960781f7416dddc94d4",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dev-jslee/moltbook-validator",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:0a95dd57e41cd7ac6502bea686fd71229ab7bec3f5b360e2351ba9940de8bad3",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/staratheris/staratheris-arya-model-router",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:0ef5d07c5114c1b66f69c21bfd976d3191d86b913500db54fb32390c0a6f608b",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/opsun/deep-scraper",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:13bb5b87992baa4af2ea30059ac6b39ed4c3e4f666a60d290bc7f744c51fe013",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/kunoiiv/proof-of-quality",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:15041814b3ace6113b464612aa6cf1225391aaf56b512f6319203ab72c81604a",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/sichengchen/ohio-state-api",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:167b30b30a2f2f38b7a39aa320564b41717cbadeaab72264773ed1a2aefdbfe7",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/liam8/crypto-market-data",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:1ba88d628cc5d4aa2a7400e7d1b2d9f9f1b7375ff2d3004517cc21349a755410",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/atlaspa/openclaw-signet",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:1d0d1d8a201b9e01a9d4d0aff3735ee85ffc152422a2020e75650e0ae32cfe8f",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/orlyjamie/test-skil",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:1f175052498df2f2d92eafb16d7b161606ecbae6958ea724c5a7b866457de10f",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/alirezarezvani/mdr-745-specialist",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:33a59816543f17338b439a0a46d2ef99ca5a4afd40903379e0bae05db1cd924a",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/michael-laffin/price-tracker",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:425eee85ba547baafd08e13af7192ffdc8aad1ad1cc42c5f7387e2134fa470b4",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/xqicxx/sync-memory-skills",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:4689b84804fbc51d6b68e483e59473217269384996768e40f4ec74689673d1bd",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/vishnubedi3/kimi-delegation-skill",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:4e8d0b9a24bb95f3337a687f7b47eb4c96d417a6d335a5675dd96481b53b7fe8",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/luluf0x/social-memory",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:6da617f7e070543b7f8b20100507a13b0593a91bf331435f80d0bc80ee10c256",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dbhurley/xkcd",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:6fdafd1ce2ee0344440f68aa918fc36d0d95fc6a587ca595276a8a68c14ada95",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/alphafactor/wechat",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:7269ce4df69d9b9c6d0cb815cf42c580b834a89808c97ad98ef7348dc2d311fe",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/jongartmann/crustafarian",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:76a194421a801c5dde01ac0c289de1b288cd81c9d206ce3a9f9fabf1ac29063f",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/hhhh124hhhh/google-imagen-3-portrait-photography",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:772c9632064e3000fe5aef426fe3d9e639de6eed1cc715bf5b3445372da7ccdd",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/xiongjjlj/feishu-docx-powerwrite",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:91b44aa7ec15dd4e4b16218d7e71227a58ee82d4a4bd8c3b7ae36348df146900",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/zoranjurcevic/podpoint",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:93277363936864518724cbe49a13242c483373a96a21f8c866929d76fce1eedc",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/noypearl/yahoo-data-fetcher",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:973fc8647f979a44e9f169b3859fe030efeac4386141a0cd731f8e601a623c10",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/kellyclaudeai/memory-system-v2",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:a330094d74712c81581f75dfc427ebfcec93f6daec36d3f6ab1b0f675b9e118c",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/afeef23/send-usd",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:a5bc89f52da2ec2e81f258c8e57c43aa6ce6f0350be069edc7c570ad7d2b127b",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/scccmsd/todo-skill",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:a846ccb19ba307c1943566b7df6efee25a62bbee01d186266176b072fda19db7",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/kesslerio/frontend-design-ultimate",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:acd35b2bfae5cbae7b534fc9b8519f5a6f87c2c43f5720058bf525fb2c83d53c",
+      "stratum": "code_clean",
+      "repo": "meltedinhex/analyst-ai-pack",
+      "bundle_root": "skills/hunting-unusual-outbound-connections",
+      "commit": "da7600a745bb4c3b487ab775b681c04e71e973d4"
+    },
+    {
+      "digest": "sha256:b4f1b8b5ea64ab91ac1ce71a77e8c8c5b9d6120f22c1b39d1ea925fdbd27accc",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/didelco/pvpc-spain",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:b7892b94166a029b465956d0743225ff2e349389c89c2847f711c273421d18b8",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/timverhoogt/ollama-local",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:c85ba6933c82a864eefc528ab0db33809db937e23a1c9dc2ab4af52af865fe91",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/atlaspa/openclaw-egress-pro",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:ca61d882745c97641809b10344347398ff8dd8f89bd9df2dae2abe7c723af46b",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/orlyjamie/clean-skill-1",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:d0d03fe1a78474d3ed4f74517480dd63911720492a45c707931cdf082f004a7b",
+      "stratum": "code_clean",
+      "repo": "n2g7/agent-skills",
+      "bundle_root": "remotion-best-practices",
+      "commit": "976d5c43f5721c59769a395e535499c217d4bb37"
+    },
+    {
+      "digest": "sha256:d0f057df5cdfc6a02de8c0005583f4ec30b9c7535dea6e032fcb9f74a04e872c",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/cnyezi/a-stock-analysis",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:d3619d49312d04367e4be3db5f796326de30800b3681f357d889103aa4ff6d99",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/dilate7/moltunes",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:dce0562bda28dd790cd815d40d344f810c74bdbe1813877e5f9789131e788bb0",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/bobot-agent/usage-export",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:e779fb11d9454f9fafaec2be47a48a0deeffd0fe16e3b142edf592ba2d6eb712",
+      "stratum": "code_clean",
+      "repo": "MrGr33n98/advini-hub",
+      "bundle_root": ".antigravity/skills/database-design",
+      "commit": "4cadf9fc9a46b5507b93b8ea0cae2a7fc592057c"
+    },
+    {
+      "digest": "sha256:e93eb3fcac93288402b8b3ed94c82283dbf3bb3e4f761e35adb8fda36df1dbc5",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/sampple-korea/mersoom-ai-client",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:eea8d87c65cfe3470a4f1ccbafcd2703500aa366dc11397f334dfb8f7c1e2b2c",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/artur-zhdan/undetectable-ai",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:fe7395a548acd2e57fc290d476dba035de04a0c89bbe80e1caeee0fffb643dee",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/hhhh124hhhh/sora-2-futuristic-tech-showcase",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:ffe61b9a8ad3f1ecaa707ff92f1136ff36a84710b146ecb68eaf58ab47fcd564",
+      "stratum": "code_clean",
+      "repo": "kbarbel640-del/skills",
+      "bundle_root": "skills/cnqso/calorie-counter",
+      "commit": "7f57c1b6749e40d3530c6d95e356ecb2f1007a29"
+    },
+    {
+      "digest": "sha256:0c28e6cfcaae5982f5ab3afa9a0097903e0d44754191ec439f0f7831a0a21323",
+      "stratum": "prose_only",
+      "repo": "jorcan/automejora_agentes",
+      "bundle_root": "active_skills/pricing_strategy",
+      "commit": "6cd7923a48095f3a1418526e9999f3453c2d9bcb"
+    },
+    {
+      "digest": "sha256:0c8e5dbf778c854581aa5db7aa613be39d8cd1f73656ce2b92ab801b5dfd18af",
+      "stratum": "prose_only",
+      "repo": "sethmblack/paks-skills",
+      "bundle_root": "persona-bundles/ali-wong",
+      "commit": "a97079093e4f129351c6321df005dd656bb48374"
+    },
+    {
+      "digest": "sha256:21eb4a7e1808ac69c9d796955e63fed330b49fab2b7507c9debf3d7829587d92",
+      "stratum": "prose_only",
+      "repo": "Lord1Egypt/awesome-skill-forge",
+      "bundle_root": "community/clawhub/s/startup-guide",
+      "commit": "4aa004da461d820f4ea5499e58eb8d196cf99016"
+    },
+    {
+      "digest": "sha256:3ca4f20ffacb32dd0b3625f594d212f4935f0eecb6bbbc7316b188440a981bd3",
+      "stratum": "prose_only",
+      "repo": "ComposioHQ/awesome-claude-skills",
+      "bundle_root": "composio-skills/googlebigquery-automation",
+      "commit": "be2a406907dbc61b73e6827ded415c96139d13a2"
+    },
+    {
+      "digest": "sha256:468d26598854e70fe01e44a5baa247d1b981f79238a6720125b362f71f458642",
+      "stratum": "prose_only",
+      "repo": "hefarica/arbitragex-v2",
+      "bundle_root": ".agents/skills/arbx-m-m003-applied-conventional-commits-atomic-splits-in-arbitragex-v2",
+      "commit": "3db4136d63bb072b5dee2a28d2ab53b7bebb8374"
+    },
+    {
+      "digest": "sha256:5ac1d611653a7ace246743c2276c8de5dd9622bde67f12a2c2fd18884c53eb37",
+      "stratum": "prose_only",
+      "repo": "n2g7/agent-skills",
+      "bundle_root": "azure-servicebus-py",
+      "commit": "976d5c43f5721c59769a395e535499c217d4bb37"
+    },
+    {
+      "digest": "sha256:61b9dda78fff840414f36064e2160326eaccc682d34fdb1f3334c17c86cf146a",
+      "stratum": "prose_only",
+      "repo": "MrGr33n98/advini-hub",
+      "bundle_root": ".antigravity/skills/pci-compliance",
+      "commit": "4cadf9fc9a46b5507b93b8ea0cae2a7fc592057c"
+    },
+    {
+      "digest": "sha256:7005811c77759d366fd8866e2a290db58b19da45782dd04fbbf5dad6d56ea266",
+      "stratum": "prose_only",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/ConvSkill/english_gpt3.5_8/realistic-novel-writing-for-sensitive-topics",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:8c95836389fe0b7e46636517fa34fd41be99a81f1392ceb7d36b4333cc889eff",
+      "stratum": "prose_only",
+      "repo": "bsoc-bitbyte/BattleGround-Mobile-Jabalpur",
+      "bundle_root": ".gemini/skills/gameobject-component-list-all",
+      "commit": "e309afecd889f2d79485b97fc24e83ad270111f5"
+    },
+    {
+      "digest": "sha256:c6c283a8778de12eae85c0ef05276789763b67599d62dd1ea66f781e55bb749a",
+      "stratum": "prose_only",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/Users/chinese_gpt3.5_8_GLM4.7/react-canvas-高性能虚拟表格开发",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:e2d800c07d6d3bbd07f02131bc919529c4af0225e6c205c39b843f19b1c2478d",
+      "stratum": "prose_only",
+      "repo": "MrGr33n98/advini-hub",
+      "bundle_root": ".antigravity/skills/google-calendar-automation",
+      "commit": "4cadf9fc9a46b5507b93b8ea0cae2a7fc592057c"
+    },
+    {
+      "digest": "sha256:e310928c25fe087d4ddd5c6c322cd16463a121d342b54b3d8852d9a66692155b",
+      "stratum": "prose_only",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/ConvSkill/english_gpt4_8/modifica-ea-mt4-per-chiusura-trade-alternativa-bollinger-vs-rsi",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:e73112d07a4c207dd87c8aaaed687ffce544ad83fc49df5869fdb2a8ecd3fe5f",
+      "stratum": "prose_only",
+      "repo": "Lord1Egypt/awesome-skill-forge",
+      "bundle_root": "community/skills_sh/s/skills-sh_aj-geddes_useful-ai-prompts_anomaly-detection",
+      "commit": "4aa004da461d820f4ea5499e58eb8d196cf99016"
+    },
+    {
+      "digest": "sha256:f64ddd03ac57076e09b1601b7a2491343a7103678b5d576a97d3cba0f704cd91",
+      "stratum": "prose_only",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/ConvSkill/english_gpt4_8_GLM4.7/c-priority-event-queue-implementation",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    },
+    {
+      "digest": "sha256:f6b5dcc51cbdd055f02a62727d39741c451264a34fb6a278b661aabe0ff2951f",
+      "stratum": "prose_only",
+      "repo": "ECNU-ICALK/AutoSkill",
+      "bundle_root": "SkillBank/ConvSkill/chinese_gpt4_8/模板语言多样化重写",
+      "commit": "94c47ca488d4ba4117d20272e66d49b9877e68cf"
+    }
+  ]
+}

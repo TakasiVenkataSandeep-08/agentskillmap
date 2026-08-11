@@ -41,7 +41,7 @@ pub struct Measurements {
 }
 
 /// Structural facts, all exact.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Structure {
     /// Files in the bundle.
     pub files: u64,
@@ -107,7 +107,7 @@ pub struct Lexical {
 }
 
 /// Repository and frontmatter facts, all exact.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Governance {
     /// A LICENSE file exists in the bundle.
     pub has_license: bool,

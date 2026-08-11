@@ -11,7 +11,17 @@
   (#match? @_cmd "^(cat|less|more|head|tail|source|\.|read|grep|awk|sed|cp|mv)$")) @site
 
 ; Redirected input: `while read -r line; do ... done < ~/.aws/credentials`
+;
+; The `"<"` is load-bearing and was missing. tree-sitter-bash uses one
+; `file_redirect` node for every direction — `<`, `>`, `>>` all parse to the same
+; shape with the same `destination` field — so an unconstrained pattern here made
+; a rule called `credential-read` fire on `cat > .env`, which *writes* one. The
+; T3 labelling pass found it on a real bundle: a setup script generating a .env
+; from user input, which is one of the most common things a skill does.
+;
+; The operator is an anonymous node, so it is matched as a literal.
 (file_redirect
+  "<"
   destination: [(word) (string)] @path) @site
 
 ; Computed target — captured deliberately so the engine emits

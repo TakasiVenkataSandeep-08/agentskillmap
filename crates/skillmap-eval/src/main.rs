@@ -12,7 +12,7 @@
     reason = "this is the command-line entry point; stdout is its interface"
 )]
 
-use skillmap_eval::{baseline_path, metrics, Baseline};
+use skillmap_eval::{baseline_path, corpus, metrics, Baseline};
 use std::path::{Path, PathBuf};
 
 fn main() -> std::process::ExitCode {
@@ -61,15 +61,10 @@ fn main() -> std::process::ExitCode {
         }
     }
 
-    // The corpus suite and the headline metric both need T3. Saying so on every
-    // run is the point: a number nobody measured must never look measured.
-    println!(
-        "\ncorpus suite:      NOT RUN — no labeled corpus exists (T3 has not been\n\
-         \x20                  harvested). There is therefore no held-out split, no\n\
-         \x20                  precision/recall against ground truth, and no\n\
-         \x20                  false-positive rate on a benign stratum, which\n\
-         \x20                  docs/05-eval.md names as the headline metric."
-    );
+    // The corpus suite. It runs where the labels and the archive both exist,
+    // and says which one is missing where they do not — a fresh clone has
+    // neither, and "no labels here" must not read as "nothing to measure".
+    print!("\n{}", corpus_section(&root));
 
     let path = baseline_path(&root);
     if bless {
@@ -135,4 +130,52 @@ fn write(path: &Path, body: &str) -> Result<(), std::io::Error> {
 /// The repository root, relative to this crate.
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
+}
+
+/// The corpus-suite section of the report.
+///
+/// Three outcomes, and keeping them distinct is the whole job. Labels present
+/// and archive present: real numbers. Labels present, archive absent: the labels
+/// name bundles this machine does not have, which is the normal state of a fresh
+/// clone and is not a measurement of anything. No labels: the suite has never
+/// been run here.
+///
+/// A single "corpus suite: 0 findings" line would collapse all three into the
+/// most flattering one.
+fn corpus_section(root: &Path) -> String {
+    let labels_path = root.join("corpus").join("labels.toml");
+    let labels = match corpus::Labels::load(&labels_path) {
+        Ok(labels) => labels,
+        Err(corpus::Error::Absent(_)) => {
+            return "corpus suite:      NOT RUN — corpus/labels.toml does not exist.\n\
+                    \x20                  There is therefore no ground truth, no held-out\n\
+                    \x20                  split, and no precision, recall or benign-stratum\n\
+                    \x20                  false-positive rate — which docs/05-eval.md names\n\
+                    \x20                  as the headline metric.\n"
+                .to_owned();
+        }
+        Err(error) => return format!("corpus suite:      ERROR — {error}\n"),
+    };
+
+    // How much of the draw has been labelled at all. Read from the sample rather
+    // than assumed, so "we labelled eleven" and "the sample is a hundred and
+    // thirty" cannot drift apart.
+    let sample_size = std::fs::read_to_string(root.join("corpus").join("sample.json"))
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|value| {
+            value
+                .get("selected")
+                .and_then(serde_json::Value::as_array)
+                .map(Vec::len)
+        })
+        .unwrap_or(0);
+
+    let rules = skillmap_rules::load(root);
+    corpus::render(&corpus::run(
+        &labels,
+        &root.join("corpus"),
+        &rules,
+        sample_size,
+    ))
 }

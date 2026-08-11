@@ -20,7 +20,7 @@
 use skillmap_corpus::{
     archive::Archive,
     github::{CodeSearch, GitFetcher, GitHub, Named, CODE_SEARCH_QUERY},
-    report, Error, HarvestOptions, Provenance, RepoRef, Source, SourceReport,
+    report, sample, Error, HarvestOptions, Provenance, RepoRef, Source, SourceReport,
 };
 use std::path::PathBuf;
 
@@ -46,6 +46,15 @@ fn main() -> std::process::ExitCode {
 
 fn run() -> Result<(), Error> {
     let options = parse_args();
+
+    // Before the archive is opened, and before anything says the word "network":
+    // sampling reads `index.json` and writes `sample.json`, and touches nothing
+    // else. It is the one subcommand here that a reviewer can run on a laptop
+    // with no token.
+    if options.sample {
+        return draw_sample(&options);
+    }
+
     let archive = Archive::open(&options.corpus_dir)?;
 
     // Checked before the banner: an offline rebuild makes no network request, and
@@ -179,10 +188,67 @@ fn rebuild_offline(options: &HarvestOptions, archive: &Archive) -> Result<(), Er
     Ok(())
 }
 
+/// `--sample` — draw the stratified labelling sample from an existing index.
+///
+/// Writes `corpus/sample.json`, which is **committed**. Re-drawing it is
+/// therefore a visible diff rather than something that happens quietly when the
+/// corpus is re-harvested, which is what stops a re-harvest from orphaning every
+/// label (`docs/05-eval.md`: the split is fixed by seed and never tuned against).
+fn draw_sample(options: &HarvestOptions) -> Result<(), Error> {
+    let index_path = options.corpus_dir.join("index.json");
+    let text = std::fs::read_to_string(&index_path).map_err(|source| Error::Io {
+        path: index_path.clone(),
+        source,
+    })?;
+    let index: skillmap_corpus::Index =
+        serde_json::from_str(&text).map_err(|source| Error::Parse {
+            context: index_path.display().to_string(),
+            message: source.to_string(),
+        })?;
+
+    let sample = sample::draw(
+        &index.snapshot,
+        &options.seed,
+        &index.records,
+        &sample::default_sizes(),
+    );
+
+    eprintln!("population and draw, per stratum:");
+    for stratum in sample::Stratum::ALL {
+        let name = stratum.as_str();
+        let population = sample.population.get(name).copied().unwrap_or(0);
+        let drawn = sample
+            .selected
+            .iter()
+            .filter(|selection| selection.stratum == stratum)
+            .count();
+        eprintln!("  {name:<18} {drawn:>4} of {population:>6}");
+    }
+
+    let out = options.corpus_dir.join("sample.json");
+    let rendered = serde_json::to_string_pretty(&sample).map_err(|source| Error::Parse {
+        context: out.display().to_string(),
+        message: source.to_string(),
+    })? + "\n";
+    std::fs::write(&out, rendered).map_err(|source| Error::Io {
+        path: out.clone(),
+        source,
+    })?;
+
+    println!(
+        "wrote {} — {} bundles from snapshot {}, seed `{}`",
+        out.display(),
+        sample.selected.len(),
+        sample.snapshot,
+        sample.seed
+    );
+    Ok(())
+}
+
 /// Minimal argument parsing.
 ///
-/// No `clap`: three options do not justify a dependency in the one crate whose
-/// dependency tree is already the hardest to defend.
+/// No `clap`: a handful of options do not justify a dependency in the one crate
+/// whose dependency tree is already the hardest to defend.
 fn parse_args() -> HarvestOptions {
     let mut options = HarvestOptions::default();
     let mut args = std::env::args().skip(1);
@@ -200,6 +266,12 @@ fn parse_args() -> HarvestOptions {
                 }
             }
             "--offline" => options.offline = true,
+            "--sample" => options.sample = true,
+            "--seed" => {
+                if let Some(value) = args.next() {
+                    options.seed = value;
+                }
+            }
             "--snapshot" => {
                 if let Some(value) = args.next() {
                     options.snapshot = value;
@@ -211,9 +283,12 @@ fn parse_args() -> HarvestOptions {
                      USAGE:\n    skillmap-corpus [--corpus-dir DIR] [--limit N] [--snapshot LABEL] [--offline]\n\n\
                      OPTIONS:\n    \
                      --corpus-dir DIR   where to write raw/, index.json, report.md (default: corpus)\n    \
-                     --offline          rebuild the report from the local archive: no token,
-                       \n                       no network, nothing cloned; needs a previous run
-    \n                     --limit N          maximum repositories per source (default: 200)\n    \
+                     --sample           draw the labelling sample into sample.json; reads\n    \
+                     \x20                  index.json only, no token, no network\n    \
+                     --seed SEED        seed for --sample (default: skillmap-labels-1)\n    \
+                     --offline          rebuild the report from the local archive: no token,\n    \
+                     \x20                  no network, nothing cloned; needs a previous run\n    \
+                     --limit N          maximum repositories per source (default: 200)\n    \
                      --snapshot LABEL   label for this snapshot, e.g. 2026-08 (default: unlabelled)\n\n\
                      ENVIRONMENT:\n    \
                      GITHUB_TOKEN       required; no scopes needed for public data\n\n\

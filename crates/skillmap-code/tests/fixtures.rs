@@ -534,3 +534,46 @@ fn analysis_is_deterministic_across_runs() {
         render(analyze(&[file], &rules))
     );
 }
+
+#[test]
+fn a_shell_redirect_fires_on_input_and_not_on_output() {
+    // Found by the T3 labelling pass, on a real bundle: `sh.credential-read.dotfile`
+    // reported a *write* as a read, because tree-sitter-bash parses `<`, `>` and
+    // `>>` to one `file_redirect` node and the query did not say which it wanted.
+    //
+    // The negative fixture covers the write. This covers the read, and the two
+    // together are what make the `"<"` in the query load-bearing: without this
+    // test, deleting that whole pattern would leave the suite green.
+    let rules = rules();
+
+    let fires = |source: &str| {
+        !analyze(
+            &[SourceFile {
+                path: "run.sh",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .is_empty()
+    };
+
+    // `~/.aws/credentials`, not `~/.netrc`: the prefix list carries `.netrc`
+    // without a tilde, so `~/.netrc` matches no prefix. The first version of
+    // this test used it and failed for a reason that had nothing to do with
+    // redirects — a test can fail for the wrong reason and still look like it
+    // proved something.
+    assert!(
+        fires("cat < ~/.aws/credentials\n"),
+        "an input redirect from a credential path must be reported"
+    );
+    assert!(
+        !fires("cat > ~/.aws/credentials\n"),
+        "an output redirect writes the file; `credential-read` must not claim it"
+    );
+    assert!(
+        !fires("printf x >> ~/.aws/credentials\n"),
+        "an appending redirect is also a write"
+    );
+}

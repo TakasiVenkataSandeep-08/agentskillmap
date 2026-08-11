@@ -119,13 +119,44 @@ documented path reaches — the disclosure-delta shape, and the starting list fo
 carry no provenance, so they are **upper bounds** and never appear in a manifest. `corpus/report.md`
 labels every one.
 
-### What is not measured yet
+### Measured against ground truth — provisionally
 
-`docs/05-eval.md` names the false-positive rate on a benign stratum as the headline metric,
-and requires precision and recall **per capability term**. None of those exist here, because
-the corpus is measured but **not labelled** — there is no ground truth to score against, so
-there is no held-out split and no precision, recall, or false-positive rate. Publishing the
-base rates above as though they were quality metrics would be exactly that overstatement.
+The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
+stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
+each bundle's source without consulting skillmap's output. **7 bundles are labelled and
+scored, 4 were too large to read, and 119 are not yet labelled** — and unlabelled is reported
+as unlabelled, never folded into a denominator as though it had been checked.
+
+At n=7 the intervals are wider than the estimates, which is the honest reading and the reason
+every rate below carries one:
+
+| Metric | Result |
+|---|---|
+| `fs.read.credential` precision | 1/1 (100%, 95% CI 20.7–100%) |
+| `fs.read.credential` recall | 1/2 (50%, 95% CI 9.5–90.5%) |
+| False positives, `code_clean` (headline) | 0/4 (0%, **95% CI 0–49%**) |
+| Bundles with any `unresolved` entry | 6/7 (85.7%, 95% CI 48.7–97.4%) |
+| Real disclosure delta, any stratum | 0/7 |
+
+**These are not yet quality numbers.** A 95% upper bound of 49% on the headline metric means
+the sample cannot distinguish a good scanner from a bad one. They are published anyway,
+because the alternative — publishing nothing while the tool ships — is what the numbers exist
+to prevent. The labels are **single-annotator and unreviewed**; inter-annotator agreement is
+unmeasured.
+
+**What seven bundles already found.** Two real rule defects, which cancelled out at the
+bundle level to look like a correct detection:
+
+- `sh.credential-read.dotfile` reported `cat > .env` — *writing* a credential file — as
+  reading one. tree-sitter-bash parses `<`, `>` and `>>` to one `file_redirect` node and the
+  query never said which it wanted. **Fixed**, in the query, with fixtures both ways.
+- The JavaScript rule misses `require('dotenv').config({ path: '../.env' })`, which is how a
+  large share of Node skills read credentials. Open, in `docs/00-tasks.md`.
+
+And one labelling error: a bundle first labelled clean actually runs `grep -q "^${var}=" .env`,
+which reads the file. The scanner was right and the label was wrong. It is corrected in place
+with the reasoning kept, because it is the most concrete evidence available that a
+single-annotator corpus is a weak one.
 
 What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
 pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and

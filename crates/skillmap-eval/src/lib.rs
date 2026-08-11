@@ -27,6 +27,7 @@
 //! says so everywhere the number appears.
 
 pub mod cases;
+pub mod corpus;
 pub mod metrics;
 
 /// Manifest assembly, which now lives in `skillmap-scan`.

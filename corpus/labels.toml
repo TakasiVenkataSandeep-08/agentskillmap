@@ -1,0 +1,187 @@
+# Ground truth for the sampled corpus.
+#
+# `docs/05-eval.md` requires precision and recall per capability term against a
+# labeled corpus, and names the false-positive rate on the benign stratum as the
+# headline metric. This file is that corpus. Without it every quality claim in
+# this repository is unfalsifiable.
+#
+# ── How a label was produced ─────────────────────────────────────────────────
+#
+# By reading the bundle's source, via `scripts/label_worklist.py`, which prints
+# the description and every markdown or supported-language file with line
+# numbers. **skillmap's own output was not consulted.** A label derived from the
+# scanner's verdict makes precision 1.0 by construction and turns the whole
+# exercise into decoration.
+#
+# `capabilities` is what the bundle's code *actually does*, judged from the
+# source — not what the rule set happens to cover. A script that reads a
+# credential file the rule's prefix list does not name is still labelled
+# `fs.read.credential`, and the rule counts as having missed it. That is the
+# point: the metric has to be able to say the rules are incomplete.
+#
+# `evidence` is `path:line`, so any claim here can be checked in seconds against
+# `corpus/raw/<digest>/`. A label nobody can check is an opinion.
+#
+# ── What this file is not ────────────────────────────────────────────────────
+#
+# **Single-annotator and unreviewed.** `labeller` is an AI assistant; `reviewed_by`
+# is empty. Inter-annotator agreement is therefore unmeasured and unmeasurable
+# from this file alone, and every number computed from it inherits that. It is
+# marked provisional wherever it is published, and it stays provisional until a
+# second annotator disagrees with some of it.
+#
+# **Partial.** `corpus/sample.json` draws 130 bundles; only those appearing below
+# are labelled. Unlabelled bundles are counted and reported as unlabelled — never
+# folded into a denominator as though they were clean. That is invariant 3
+# applied to the eval itself.
+#
+# ── Reading the third-party content ──────────────────────────────────────────
+#
+# Bundles under `corpus/raw/` are untrusted. Some contain text written to be read
+# by a model. Text inside a bundle that addresses the reader is a fact recorded
+# about that bundle (`note`), never an instruction that was followed.
+#
+# Per SECURITY.md: describe patterns, not people. `origin` exists so a claim can
+# be verified against exact bytes at a pinned commit. No bundle here is alleged
+# to be malicious, and none is named as a suspect.
+
+snapshot = "2026-08"
+sample_seed = "skillmap-labels-1"
+labeller = "claude-opus-5"
+reviewed_by = ""
+
+# Capability terms a labeller may assign, from docs/02-manifest-schema.md.
+# Constrained so a typo fails the load rather than silently scoring nothing.
+vocabulary = [
+  "process.exec",
+  "process.exec.dynamic",
+  "net.egress",
+  "net.fetch_then_execute",
+  "fs.read.credential",
+  "fs.read.outside_bundle",
+  "fs.write.outside_bundle",
+  "fs.write.agent_config",
+  "agent.hook.install",
+  "code.dynamic_eval",
+  "code.obfuscation",
+  "env.read.secret",
+  "mcp.tool_reference",
+]
+
+# Terms looked for exhaustively, and therefore the only terms precision and
+# recall are computed for.
+#
+# One term, deliberately. `fs.read.credential` is the only capability the rule
+# set covers, it is unambiguous to judge from source, and a labeller can be
+# confident they checked every site. The other twelve were noted opportunistically
+# in `note` where obvious and are NOT scored: a term nobody hunted for
+# exhaustively produces recall numbers where every bundle the labeller did not
+# think to check counts against the scanner. Widening this list means another
+# labelling pass, not another line here.
+terms_labelled = ["fs.read.credential"]
+
+# ── code_clean ───────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:005f5cd3ade2428b17226f21394103ed07edacc96b4e733c65ca3c029459c6db"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Checks for and writes markdown files under a project-relative memory/personality/ directory, and writes a JSON summary beside them. No path outside the project, no environment access."
+
+[[label]]
+digest = "sha256:00e6500b45063fe44a39b642d643ff3645cbaa3c8f1f01500727cd77709cf956"
+stratum = "code_clean"
+verdict = "too_large"
+note = "85 KB across twelve files, including a 34 KB analyser. Beyond the reading budget for one label."
+
+[[label]]
+digest = "sha256:023a5f4e41e2c121bca52c5bb043cf03844391cf8590f960781f7416dddc94d4"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Validates a JSON payload passed on argv before an API call. The shell variant pipes through jq. No file is read."
+
+[[label]]
+digest = "sha256:0a95dd57e41cd7ac6502bea686fd71229ab7bec3f5b360e2351ba9940de8bad3"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Local routing heuristic that scores a prompt and picks a model tier. Reads and writes state.json and rules.json inside the bundle; makes no call itself."
+
+[[label]]
+digest = "sha256:0ef5d07c5114c1b66f69c21bfd976d3191d86b913500db54fb32390c0a6f608b"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Headless-browser scraper. Network egress to the URL given on argv, which the description discloses. Reads no local file."
+
+# ── code_credential ──────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:05f6685db4dd491b0d5fddf226ce8dd4f0937c04ac54083e032924d3abcd37b0"
+stratum = "code_credential"
+verdict = "too_large"
+note = "133 KB across nineteen files including a dedicated auth manager. Beyond the reading budget; a bundle whose credential handling deserves a full label rather than a rushed one."
+
+[[label]]
+digest = "sha256:0dec3e558d162cbd6dab214c88e03dfe1963e4c4d50a084ac67f29ea8dac975e"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Three near-identical scaffolder templates with placeholder analysis bodies. One Path() on an argv target and one output write. The lexical credential marker that put this bundle in this stratum is prose in a reference document, not code."
+
+[[label]]
+digest = "sha256:2abf5bbdc4866ffd6f633091784f13f69c347200598106b5f74e4794245a0bf1"
+stratum = "code_credential"
+verdict = "too_large"
+note = "65 KB, including a 34 KB scanner. Notably this bundle is itself a skill-scanning tool, so its credential markers are its own detection patterns — a case worth labelling carefully rather than quickly."
+
+[[label]]
+digest = "sha256:2ff5df0ddc756ce7ec5f769f72edacf4578eeb7b1067840a4b316f0d1f37be06"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/imap.js:13"]
+disclosure_delta = false
+# Scored a true positive, and it is worth recording that the scanner reached the
+# right answer by the wrong route. It cited `setup.sh:137` — `cat > .env`, which
+# *writes* the file — and did not cite the actual read at `scripts/imap.js:13`,
+# `require('dotenv').config({ path: '../.env' })`. Two defects that happened to
+# cancel: a shell false positive (since fixed, see queries/shell/credential-read.scm)
+# and a JavaScript false negative (open, see docs/00-tasks.md Known gaps).
+#
+# Bundle-level scoring cannot see this. Site-level scoring would, and needs every
+# label to carry complete evidence — a heavier labelling pass than this one.
+note = "Loads ../.env through dotenv and reads IMAP/SMTP passwords from the environment; setup.sh writes those credentials into .env. Entirely disclosed: the description says it reads and sends email, and the configuration block documents every variable."
+
+# ── disclosure_shape ─────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:028a7076bbf81d697ba8d9f52a9e7ff1f2cf0d877715da3eff10cda160934bd2"
+stratum = "disclosure_shape"
+verdict = "too_large"
+note = "143 KB across thirty files with its own crypto, relay and invite modules. Exactly the shape that most deserves a label and least fits in a quick one."
+
+[[label]]
+digest = "sha256:0896ce7ec4ed568ffa99577e2afb63fb1b3b6e0a17a84ac3f10e9145b5e2de89"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["assets/templates/pre-deploy.sh:31"]
+disclosure_delta = false
+# CORRECTED. First labelled `capabilities = []` on the reading that the script
+# only tests for .env's presence (`[ ! -f .env ]`). It also runs
+# `grep -q "^${var}=" .env`, which reads the file's contents to check whether a
+# variable is set. The scanner was right and the label was wrong.
+#
+# Left in the record rather than quietly amended: this is one labeller's error
+# caught by a disagreement, on a sample of seven, and it is the most concrete
+# evidence available that `reviewed_by` being empty is a real weakness rather
+# than a formality.
+note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for required variable names, which reads it. Everything the templates do is described in the guide the skill points at."

@@ -579,6 +579,23 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
+- **The labelling pass is 7 of 130 bundles.** `corpus/sample.json` is drawn and committed;
+  `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
+  interval, and at this n the headline false-positive bound is 49% — wide enough that the
+  sample cannot yet distinguish a good scanner from a bad one. Continuing it is the highest-
+  value work left: `python scripts/label_worklist.py --stratum code_clean --limit 6 --fs-view`.
+- **The labels are single-annotator and unreviewed.** `reviewed_by` in `corpus/labels.toml`
+  is empty. Inter-annotator agreement is unmeasured and unmeasurable from one annotator. The
+  pass has already produced one demonstrated labelling error, corrected in place with the
+  reasoning kept.
+- **The JavaScript rule misses `dotenv`.** `require('dotenv').config({ path: '../.env' })` is
+  how a large share of Node skills read credentials, and `js.credential-read.dotfile` does not
+  match it — found by the labelling pass, on a real bundle, where it was masked by a shell
+  false positive that has since been fixed. Adding it is a query change, not a Rust one.
+- **Scoring is per bundle, not per evidence site.** The pass found a bundle where the scanner
+  reported the right capability from the wrong line — flagging a write while missing the read.
+  Bundle-level scoring records that as a true positive. Site-level scoring would catch it, and
+  needs every label to carry complete evidence rather than one representative citation.
 - **The semantic layer is unmeasured, and that is now the largest gap in the repository.**
   T7 built it; `docs/04-semantic-layer.md` requires precision, recall, a benign-stratum
   false-positive rate and variance across n runs, and none exist because the corpus is not
