@@ -61,7 +61,6 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 #
 #   policy.toml         docs/00-tasks.md "Known gaps" — T8 input, unspecified
 #   skillmap.lock     docs/00-tasks.md "Known gaps" — T8 input, one-line spec
-#   rules/languages.toml  docs/00-tasks.md "Known gaps" — T4 input
 #   run-meta.json       AGENTS.md invariant 2 — where run metadata goes instead
 #                       of the manifest; nothing writes it until a CLI exists
 #   npm/                ARCHITECTURE.md target layout; built at release (T9)
@@ -69,7 +68,6 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 KNOWN_GAP_EXACT = {
     "policy.toml",
     "skillmap.lock",
-    "rules/languages.toml",
     "run-meta.json",
 }
 KNOWN_GAP_PREFIXES = ("corpus/", "npm/")
@@ -96,7 +94,6 @@ EXTERNAL_CONVENTIONS = {
 # below retires when its task begins — the same self-retiring rule as
 # KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
 #
-#   skillmap-rules, skillmap-code       T4
 #   skillmap-instr                      T5
 #   skillmap-eval                       T6
 #   skillmap-semantic                   T7
@@ -104,12 +101,10 @@ EXTERNAL_CONVENTIONS = {
 #   skillmap-cli                        T9
 #
 # Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2),
-# skillmap-corpus (T3).
+# skillmap-corpus (T3), skillmap-rules and skillmap-code (T4).
 PLANNED_CRATES = {
     f"crates/{name}"
     for name in (
-        "skillmap-rules",
-        "skillmap-code",
         "skillmap-instr",
         "skillmap-eval",
         "skillmap-semantic",

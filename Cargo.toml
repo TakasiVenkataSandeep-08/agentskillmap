@@ -10,6 +10,8 @@ members = [
     "crates/skillmap-resolve",
     "crates/skillmap-parse",
     "crates/skillmap-corpus",
+    "crates/skillmap-rules",
+    "crates/skillmap-code",
 ]
 
 [workspace.package]

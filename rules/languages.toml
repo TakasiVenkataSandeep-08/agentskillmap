@@ -1,0 +1,22 @@
+# Extension → grammar mapping, and the per-language data the engine needs.
+#
+# Invariant 7 says detection lives in data, not Rust. That extends to
+# reachability: the engine knows *roles* (`def.name`, `call.name`,
+# `call.dynamic`), never node types, so teaching it that Python spells a
+# function `function_definition` and Ruby spells it `method` is a query file,
+# not a `match` arm.
+#
+# Adding a language is three steps (docs/03-rules-authoring.md):
+#   1. add the tree-sitter grammar dependency to skillmap-rules
+#   2. register the grammar name in that crate's GRAMMARS table
+#   3. add a section here
+#
+# A file whose extension appears in no section gets an `unresolved` entry with
+# reason `unsupported_language`. That is correct and honest, not a gap.
+
+[python]
+extensions = ["py", "pyi"]
+reachability = "queries/python/_reachability.scm"
+# Files that execute on their own when a bundle is used. Data rather than code
+# because the conventions differ per ecosystem and contributors know theirs.
+entry_basenames = ["main.py", "__main__.py", "run.py", "cli.py"]

@@ -116,9 +116,9 @@ Decisions worth recording:
   exfiltration payload. Discovery against the real convention is tested in a scratch
   directory instead.
 
-Still open, tracked below: plugin-wrapped bundles (`.claude/plugins`), a second resolver
-(chosen by T3 data, per this task's own note), and `unsupported_language` entries, which
-belong to T4 where the rule engine knows which grammars exist.
+Still open, tracked below: plugin-wrapped bundles (`.claude/plugins`) and a second resolver,
+chosen by T3 data per this task's own note. `unsupported_language` was the third item here and
+is now emitted by T4's code plane.
 
 ---
 
@@ -195,6 +195,44 @@ The toolchain pin moved to a current stable in this task: `ureq` pulls `url` →
 **Done when:** every rule's fixtures pass, `unsupported_language` is emitted for everything
 unported, and the adversarial "sink in dead code" case reports `present` rather than
 `observed`.
+
+**Status: the engine is done. Language breadth is still gated on T3.**
+
+All three clauses hold, each with a test: the reference triple's fixtures pass, an unported
+language produces `unsupported_language` rather than silence, and the credential read inside
+`collect()` — which nothing calls — reports `present`. A companion test asserts the same sink
+reports `observed` once something calls it, so the dead-code result cannot be passing because
+`present` is returned unconditionally.
+
+**Only Python is ported, and that is the part T3 decides.** This task says to port rules "for
+the languages T3 showed actually matter, in that order", and T3 has not been run. Python was
+built because the reference rule triple already contracts for it; picking the next language
+without the corpus data would be exactly the ambition-over-evidence move the build order
+exists to prevent.
+
+Decisions worth recording:
+
+- **Reachability is data-driven too.** Invariant 7 would be half-honoured if sinks were data
+  but the engine still hardcoded what a function definition looks like. `queries/<lang>/_reachability.scm`
+  supplies four roles — `def.name`, `def.span`, `call.name`, `call.dynamic` — and the engine
+  knows nothing else. Adding a language is a grammar dependency, a registry line, and two
+  query files.
+- **`present` and `unresolved` are different claims.** `present` says the analysis looked and
+  found no caller. `unresolved` says a computed callee blocked it from being able to say.
+  Collapsing them would be the silent-drop failure invariant 3 exists to prevent, so a file
+  containing `globals()[name]()` reports `unresolved` for anything not statically reached
+  rather than confidently reporting `present`.
+- **A file nothing documents never reports `observed`.** Reachability reuses T2's load phase:
+  `unreferenced` means nothing established that those bytes run, so the strongest claim
+  available is `present` even for a module-level sink.
+- **The `[match]` filter is what makes the negative fixture pass**, not the query. `negative.py`
+  contains a real `open()` call; it is rejected because `templates/default.toml` matches no
+  credential prefix. That is the designed division of labour — extend the TOML list, never
+  narrow the query.
+- **`expected.json` is now generated, not hand-written.** Re-bless with
+  `SKILLMAP_BLESS=1 cargo test -p skillmap-code`; this becomes `skillmap rules bless` at T9.
+  A second test asserts the specific claims the docs make about that fixture, so blessing
+  cannot quietly record a wrong answer.
 
 ---
 
@@ -283,11 +321,13 @@ front of; each is a thing this repository currently claims or implies but does n
   exit-code semantics depend on what the diff turns out to need.
 - **`skillmap.lock` is specified in one sentence.** Enough to build against at T8, not
   enough for a third party to write a compatible reader. Expand when the diff exists.
-- **`rules/languages.toml` does not exist.** The extension → grammar mapping described in
-  `docs/03-rules-authoring.md`. A T4 input.
-- **The taxonomy has thirteen terms and the repository has one rule.** Invariant 12 forbids
-  shipping a term no rule detects, so v1.0 either grows rules to cover the taxonomy or the
-  taxonomy shrinks to match the rules. T4 decides which, from T3's data — not from ambition.
+- **The taxonomy has thirteen terms and the repository has one rule.** T4 built the engine
+  that runs them; it deliberately did not grow coverage, because which capabilities matter is
+  what T3 is for. Invariant 12 forbids shipping a term no rule detects, so v1.0 either grows
+  rules to cover the taxonomy or the taxonomy shrinks to match the rules — decided from the
+  corpus, not from ambition.
+- **Only Python has a grammar.** Every other language reports `unsupported_language`. That is
+  honest, and thin. T3's corpus decides which grammar comes next, in what order.
 - **Plugin-wrapped bundles are not discovered.** `BundleKind::Plugin` exists in the schema
   because the manifest format has to be able to describe them, but the `claude-code` resolver
   does not walk `.claude/plugins` and never returns that kind. Returning it from a code path
@@ -295,9 +335,6 @@ front of; each is a thing this repository currently claims or implies but does n
   common plugin wrappers actually are before a walker is written for them.
 - **Only one resolver exists.** T2's own note defers the second to whatever T3's data shows
   matters, rather than guessing between Cursor, Codex, and Windsurf.
-- **`unsupported_language` is never emitted yet.** Every file is unanalyzed for capabilities
-  at this stage, so attaching that reason to all of them would mean nothing. It becomes real
-  in T4, where the rule engine knows which grammars are wired up.
 - **`cargo deny` is configured but never runs.** `deny.toml` has existed since T0 and no CI
   job invokes it, so the supply-chain gate `SECURITY.md` promises is currently aspirational.
   This matters more since T3: `ureq` brought rustls and `ring` into the tree, whose licences

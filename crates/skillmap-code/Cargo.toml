@@ -1,0 +1,20 @@
+[package]
+name = "skillmap-code"
+description = "The code plane: tree-sitter query execution, capture-to-finding mapping, and reachability. Tier `proven`."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+skillmap-core = { path = "../skillmap-core" }
+skillmap-rules = { path = "../skillmap-rules" }
+tree-sitter.workspace = true
+streaming-iterator = "0.1"
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

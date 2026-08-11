@@ -20,11 +20,17 @@ fixtures/python/credential-read/
     expected.json                        # canonical manifest fragment
 ```
 
-`skillmap rules validate` checks that all three exist, that the query compiles against the
-grammar, that captures and roles line up **in both directions** (see below), and that both
-fixtures produce their expected outcome. It will run in CI once the engine exists (task T4);
-neither `rules validate` nor `rules bless` is implemented yet. A rule missing a negative fixture is
-rejected — that is an untested false-positive generator (invariant 8).
+Validation checks that all three exist, that the query compiles against the grammar, that
+captures and roles line up **in both directions** (see below), and that both fixtures produce
+their expected outcome. A rule missing a negative fixture is rejected — that is an untested
+false-positive generator (invariant 8).
+
+All of that runs today, in `skillmap-rules` and in `skillmap-code`'s fixture suite: every rule
+under `rules/` is discovered and exercised against its own fixtures on every `cargo test`, so
+adding a rule adds coverage automatically. What does not exist yet is the **CLI wrapper** —
+`skillmap rules validate` and `skillmap rules bless` become subcommands at task T9, when there
+is a binary to hang them on. Until then, blessing a fixture is
+`SKILLMAP_BLESS=1 cargo test -p skillmap-code`.
 
 ## Capture roles — the engine's whole vocabulary
 

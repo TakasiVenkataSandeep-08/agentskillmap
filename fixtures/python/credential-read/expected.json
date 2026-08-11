@@ -1,20 +1,39 @@
 {
-  "note": "Manifest fragment. Byte offsets are filled in by `skillmap rules bless` once the engine exists; do not hand-maintain them.",
+  "negative": {
+    "capabilities": [],
+    "unresolved": []
+  },
+  "note": "Generated. Re-bless with `SKILLMAP_BLESS=1 cargo test -p skillmap-code` (this becomes `skillmap rules bless` at T9) and read the diff. Byte offsets are never hand-maintained.",
   "positive": {
     "capabilities": [
       {
         "capability": "fs.read.credential",
-        "reachability": "present",
-        "detail": { "paths": ["~/.aws/credentials"] },
-        "evidence": [{ "file": "positive.py", "rule_id": "py.credential-read.dotfile" }]
+        "detail": {
+          "paths": [
+            "~/.aws/credentials"
+          ]
+        },
+        "evidence": [
+          {
+            "end_byte": 101,
+            "file": "positive.py",
+            "rule_id": "py.credential-read.dotfile",
+            "snippet_sha256": "sha256:bf1311b21d390553a60f05800eb8b0024e861ff904dba6d6b0bb8ee79ee35eec",
+            "start_byte": 75,
+            "start_line": 5
+          }
+        ],
+        "reachability": "present"
       }
     ],
     "unresolved": [
-      { "reason": "computed_target", "file": "positive.py" }
+      {
+        "end_byte": 245,
+        "file": "positive.py",
+        "reason": "computed_target",
+        "start_byte": 233,
+        "start_line": 10
+      }
     ]
-  },
-  "negative": {
-    "capabilities": [],
-    "unresolved": []
   }
 }

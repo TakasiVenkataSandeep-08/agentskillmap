@@ -1,9 +1,8 @@
 # Contributing to skillmap
 
-This repository is **pre-alpha**. Nothing runs yet — there is no `skillmap` binary, no
-`cargo` workspace member outside what `docs/00-tasks.md` has already unlocked, and the
-commands referenced below (`skillmap rules validate`, `skillmap rules bless`) do not
-exist yet. `docs/00-tasks.md` is the source of truth for what is being built, in what order,
+This repository is **pre-alpha**. There is no `skillmap` binary yet — the CLI is task T9, so
+the commands named below as `skillmap rules validate` and `skillmap rules bless` are today
+`cargo test -p skillmap-code`. The engine underneath them is real and runs on every commit. `docs/00-tasks.md` is the source of truth for what is being built, in what order,
 and what "done" means for each stage. Do not start a task whose predecessor's acceptance
 criteria are unmet — the ordering is load-bearing, not a suggestion (see `AGENTS.md`, build
 order).
@@ -35,10 +34,9 @@ coverage cannot be allowed to require Rust. This section is what backs that bet.
 read a tree-sitter query and edit a TOML file, you can add a rule — no crate ever needs to
 change.
 
-The engine itself doesn't exist yet (`skillmap-rules` and `skillmap-code` are task **T4**
-in `docs/00-tasks.md`), so a rule PR today can't be run against a live scanner. What it can
-do, and what reviewers will check, is match the shape of the one rule this repository
-already ships as its contract: `rules/python/credential-read.toml`,
+The engine exists as of task **T4**, so a rule PR is run against a live scanner: `cargo test
+-p skillmap-code` discovers every rule under `rules/` and exercises it against its own
+fixtures. Match the shape of the one rule this repository ships as its contract: `rules/python/credential-read.toml`,
 `queries/python/credential-read.scm`, and `fixtures/python/credential-read/`. Everything
 below walks through that triple. Copy it.
 
@@ -140,17 +138,20 @@ grep in disguise.
 
 ### 5. Bless and validate
 
-`skillmap rules bless` will fill in the byte offsets in `expected.json` once the engine
-exists — those offsets are not something you hand-write, and `expected.json` in the
-reference triple says so explicitly rather than pretending to be complete. `skillmap rules
-validate` will then check that the query compiles, that captures and roles line up in both
-directions, and that both fixtures produce their expected outcome.
+Blessing fills in the byte offsets in `expected.json` — those are generated, never
+hand-written. Validation then checks that the query compiles, that captures and roles line up
+in both directions, and that both fixtures produce their expected outcome.
 
-**Neither command exists yet.** The engine that runs them is task **T4** in
-`docs/00-tasks.md`. Until T4 lands, a rule PR is reviewed by hand against the same checklist
-those commands will eventually automate (see below) — write the triple as if the tooling
-existed, because it will, and your rule will be validated against exactly this contract the
-day it does.
+**The engine exists (task T4); the CLI wrapper does not yet (task T9).** So today:
+
+```bash
+cargo test -p skillmap-code                      # validate every rule against its fixtures
+SKILLMAP_BLESS=1 cargo test -p skillmap-code     # regenerate expected.json, then read the diff
+```
+
+These become `skillmap rules validate` and `skillmap rules bless` when there is a binary to
+hang them on. The checks are the same either way, and they run on every `cargo test` — a rule
+whose fixtures do not behave as claimed fails CI now, not eventually.
 
 ---
 

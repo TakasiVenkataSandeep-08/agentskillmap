@@ -61,8 +61,8 @@ skillmap/
 │   ├── skillmap-core/        # types, manifest, canonical ser, capability taxonomy  [T1, exists]
 │   ├── skillmap-resolve/     # Resolver trait + per-agent discovery conventions  [T2, exists]
 │   ├── skillmap-parse/       # bundle parse, frontmatter, inventory, reference graph  [T2, exists]
-│   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine
-│   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`
+│   ├── skillmap-rules/       # rule loading, validation, tree-sitter query engine  [T4, exists]
+│   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`  [T4, exists]
 │   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`
 │   ├── skillmap-semantic/    # quarantined model pass                → tier `advisory`
 │   ├── skillmap-policy/      # policy.toml, allowlists, exit codes
