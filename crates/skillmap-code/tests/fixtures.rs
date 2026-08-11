@@ -37,18 +37,25 @@ fn rules() -> RuleSet {
 
 /// Every code-plane fixture directory: `fixtures/<lang>/<rule>/`.
 ///
-/// Two directories are deliberately excluded. `fixtures/bundles/` is T2's
-/// whole-bundle corpus, not a rule fixture. `fixtures/markdown/` belongs to the
-/// **instruction plane** — those rules are tier `pattern`, this crate only
-/// executes tier `proven`, and asserting here that a markdown positive "produces
-/// a finding" would be asserting that the code plane does something invariant 5
-/// forbids it from doing. `skillmap-instr`'s own suite covers them.
+/// Three directories are deliberately excluded, each for its own reason:
+///
+/// - `fixtures/bundles/` is T2's whole-bundle corpus, not a rule fixture.
+/// - `fixtures/markdown/` belongs to the **instruction plane** — those rules are
+///   tier `pattern`, this crate only executes tier `proven`, and asserting here
+///   that a markdown positive "produces a finding" would be asserting that the
+///   code plane does something invariant 5 forbids. `skillmap-instr` covers them.
+/// - `fixtures/adversarial/` is T6's red-team suite: whole bundles with declared
+///   expectations, three of which are deliberately not runnable yet.
+///   `skillmap-eval` owns them, and it knows which are pending.
 fn fixture_dirs() -> Vec<PathBuf> {
     let mut found = Vec::new();
     let root = repo_root().join("fixtures");
     for language in std::fs::read_dir(&root).unwrap().flatten() {
         if !language.path().is_dir()
-            || matches!(language.file_name().to_str(), Some("bundles" | "markdown"))
+            || matches!(
+                language.file_name().to_str(),
+                Some("bundles" | "markdown" | "adversarial")
+            )
         {
             continue;
         }

@@ -1,0 +1,11 @@
+description = "A payload in a file nothing links to must be flagged `unreferenced` in the inventory."
+
+[[expect]]
+kind = "load_phase"
+path = "scripts/payload.py"
+phase = "unreferenced"
+
+[[expect]]
+kind = "load_phase"
+path = "scripts/format.py"
+phase = "reference"

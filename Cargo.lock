@@ -534,6 +534,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "skillmap-eval"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "skillmap-code",
+ "skillmap-core",
+ "skillmap-instr",
+ "skillmap-parse",
+ "skillmap-resolve",
+ "skillmap-rules",
+ "toml",
+]
+
+[[package]]
 name = "skillmap-instr"
 version = "0.1.0"
 dependencies = [

@@ -303,6 +303,53 @@ See `docs/05-eval.md`. Three suites: fixture, corpus, adversarial. Per-capabilit
 **Done when:** CI fails on a seeded regression, and the README carries published numbers
 with the corpus version that produced them.
 
+**Status: the gate is done. The published numbers are not, and cannot be until T3 runs.**
+
+Clause one holds. `cargo run -p skillmap-eval` runs on both CI platforms and exits non-zero
+on three separate regressions, each seeded by its own test:
+
+- a case that used to pass now fails;
+- **coverage shrank** — a case was deleted;
+- **a case fell back to pending** — it was silenced without being deleted.
+
+The last two matter more than the first. Both make the suite *greener* while checking less,
+and a gate that only counted failures would wave both through. Deleting a failing test is the
+easiest way to get a green build, so the baseline records how many cases executed and the gate
+treats a fall as a regression.
+
+Clause two is blocked. Published numbers must name the corpus version and commit that produced
+them, and there is no corpus. So there is no held-out split, no per-capability precision or
+recall against ground truth, and no false-positive rate on a benign stratum — which
+`docs/05-eval.md` names as *the headline metric*. `eval/baseline.json` carries
+`corpus_snapshot: null` and a note saying what it is not, and a test fails if that field is
+ever populated without a harvest behind it. The README carries no numbers rather than
+fixture-only numbers dressed up as measurements.
+
+**All eight adversarial cases from `docs/05-eval.md` are declared; five run.** The three that
+cannot are `obfuscated-exec` (needs a `code.obfuscation` rule), `injection-in-reference`
+(needs T7), and `capability-added-in-update` (needs T8). They are present as real bundles with
+declared expectations and marked pending with a reason, not omitted — a suite that silently
+covered five of eight would be the same false comfort invariant 3 rejects, one level up.
+
+Decisions worth recording:
+
+- **Adversarial cases are data.** Each is `fixtures/adversarial/<id>/` — a real bundle plus an
+  `expect.toml`. Adding a red-team case is a directory; nobody should have to edit Rust to
+  attack the scanner, for the same reason nobody should have to edit Rust to add a rule.
+- **The quiet cases are asserted directly.** `docs/05-eval.md` says the last two matter as much
+  as the rest, so `documented-credential-path` and `legitimate-deploy` have their own test
+  rather than being folded into an aggregate that could hide them.
+- **Invariant 1 is checked mechanically.** The `no_verdict` expectation scans the serialized
+  manifest for verdict language and for floats. It found one bug immediately: a naive textual
+  float scan flagged `"version": "0.1.0"`, so the check parses the JSON and asks whether a
+  *number* is fractional. Only the parser can answer that question.
+- **The tolerance is zero, deliberately.** `docs/05-eval.md` allows a declared tolerance, but a
+  tolerance is only meaningful over a statistical corpus. On a deterministic fixture suite it
+  would just be permission to break one case.
+- **`skillmap-eval` is where the three planes are first assembled** into one manifest, because
+  eval is the first thing that needs a whole one. T9's CLI lifts that function; a crate whose
+  only job is to call three others, written before there is a second caller, would be a stub.
+
 ---
 
 ## T7 — `skillmap-semantic`: the quarantined pass

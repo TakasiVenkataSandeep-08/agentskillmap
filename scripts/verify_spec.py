@@ -94,18 +94,16 @@ EXTERNAL_CONVENTIONS = {
 # below retires when its task begins — the same self-retiring rule as
 # KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
 #
-#   skillmap-eval                       T6
 #   skillmap-semantic                   T7
 #   skillmap-policy, skillmap-diff      T8
 #   skillmap-cli                        T9
 #
 # Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2),
 # skillmap-corpus (T3), skillmap-rules and skillmap-code (T4),
-# skillmap-instr (T5).
+# skillmap-instr (T5), skillmap-eval (T6).
 PLANNED_CRATES = {
     f"crates/{name}"
     for name in (
-        "skillmap-eval",
         "skillmap-semantic",
         "skillmap-policy",
         "skillmap-diff",

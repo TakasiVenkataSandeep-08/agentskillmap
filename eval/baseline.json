@@ -1,0 +1,14 @@
+{
+  "metrics": {
+    "adversarial_failed": 0,
+    "adversarial_passed": 5,
+    "fixtures_failed": 0,
+    "fixtures_passed": 4,
+    "pending": {
+      "capability-added-in-update": "needs T8 (skillmap-diff and skillmap.lock)",
+      "injection-in-reference": "needs T7 (the quarantined semantic pass)",
+      "obfuscated-exec": "needs a rule detecting `code.obfuscation`"
+    }
+  },
+  "note": "Fixture and adversarial suites only. These are NOT the published numbers docs/05-eval.md requires: there is no labeled corpus yet, so no precision, recall, or benign-stratum false-positive rate has been measured. Re-bless with `cargo run -p skillmap-eval -- --bless`."
+}

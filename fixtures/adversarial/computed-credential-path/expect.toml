@@ -1,0 +1,5 @@
+description = "Credential read via a computed path must report `unresolved: computed_target`, never silence."
+
+[[expect]]
+kind = "unresolved"
+reason = "computed_target"

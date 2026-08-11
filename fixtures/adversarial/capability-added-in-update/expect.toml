@@ -1,0 +1,6 @@
+description = "A capability that appears only in v1.1 must be reported as an escalation by the diff."
+requires = { task = "T8 (skillmap-diff and skillmap.lock)" }
+
+[[expect]]
+kind = "capability"
+capability = "fs.read.credential"

@@ -68,12 +68,14 @@ skillmap/
 │   ├── skillmap-policy/      # policy.toml, allowlists, exit codes
 │   ├── skillmap-diff/        # manifest delta
 │   ├── skillmap-corpus/      # research harvester (build step 1)  [T3, exists]
-│   ├── skillmap-eval/        # labeled corpus, metrics, CI gate
+│   ├── skillmap-eval/        # labeled corpus, metrics, CI gate  [T6, exists]
 │   └── skillmap-cli/         # bin: `skillmap`
 ├── rules/                      # TOML rule metadata (data, not code)
 ├── queries/                    # tree-sitter .scm queries
 ├── fixtures/                   # positive/negative + expected manifests
-│   └── bundles/                # whole-bundle corpus + blessed manifests (T2)
+│   ├── bundles/                # whole-bundle corpus + blessed manifests (T2)
+│   └── adversarial/            # red-team cases + declared expectations (T6)
+├── eval/                        # committed baseline the CI gate compares against
 ├── schema/                     # JSON Schema for the manifest
 ├── npm/                        # wrapper package + per-platform binaries
 └── .github/workflows/          # CI, release, and the published action

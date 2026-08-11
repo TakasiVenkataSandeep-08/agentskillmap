@@ -1,0 +1,5 @@
+description = "Injection inside a reference file produces `injection_attempt`, and the auditor is unaffected by it."
+requires = { task = "T7 (the quarantined semantic pass)" }
+
+[[expect]]
+kind = "no_verdict"

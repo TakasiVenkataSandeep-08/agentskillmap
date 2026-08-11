@@ -1,0 +1,6 @@
+description = "A sink inside a function nothing calls reports `present`, not `observed`."
+
+[[expect]]
+kind = "capability"
+capability = "fs.read.credential"
+reachability = "present"

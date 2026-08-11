@@ -1,0 +1,10 @@
+description = "Documentation that merely mentions ~/.aws/credentials must produce no finding."
+
+[[expect]]
+kind = "no_capability"
+
+[[expect]]
+kind = "no_instruction"
+
+[[expect]]
+kind = "no_verdict"

@@ -12,7 +12,9 @@
 #                                   allowlisted gap — no aspirational references left unverified)
 #                    It also owns the schema half of the type/schema drift gate: the golden
 #                    manifest the Rust types render must still validate against the schema.
-#   rust           - invariant 2  (the 1,000-shuffle determinism suite), run on ubuntu AND
+#   rust           - invariant 11 (the eval gate: a failing adversarial case, shrinking
+#                                   coverage, or a case regressing to pending fails the build)
+#                     invariant 2  (the 1,000-shuffle determinism suite), run on ubuntu AND
 #                                   windows because "byte-identical on any machine" is the
 #                                   claim, and a one-platform run does not test it
 #                     invariant 10 (clippy denies unwrap/expect/panic/indexing in library
@@ -88,6 +90,14 @@ jobs:
 
       - name: Doc tests
         run: cargo test --workspace --doc
+
+      # Invariant 11: eval is CI-gated. The harness exits non-zero on a failing
+      # case, on coverage shrinking, and on a case falling back to pending —
+      # the last two matter because both make the suite *greener* while checking
+      # less. Runs on both platforms because a rule that fires differently on
+      # Windows is a rule that is not deterministic.
+      - name: Eval gate
+        run: cargo run -p skillmap-eval
 
   line-endings:
     name: line-endings (${{ matrix.os }})
