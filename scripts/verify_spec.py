@@ -64,13 +64,19 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 #   run-meta.json       AGENTS.md invariant 2 — where run metadata goes instead
 #                       of the manifest; nothing writes it until a CLI exists
 #   npm/                ARCHITECTURE.md target layout; built at release (T9)
-#   corpus/             output of task T3, produced at runtime, never committed
 KNOWN_GAP_EXACT = {
     "policy.toml",
     "skillmap.lock",
     "run-meta.json",
 }
-KNOWN_GAP_PREFIXES = ("corpus/", "npm/")
+KNOWN_GAP_PREFIXES = ("npm/",)
+
+# Prefixes whose existence depends on whether the operator has run something,
+# not on whether the repository has grown into them. `corpus/` appears the moment
+# somebody runs the harvester and is absent on a fresh clone, so the self-retiring
+# rule below must NOT apply: it would pass in CI and fail on the machine of the
+# one person who actually ran the tool.
+RUNTIME_OUTPUT_PREFIXES = ("corpus/",)
 
 # Paths that describe the layout of a *scanned project*, not of this repository.
 # They will never exist here, so unlike KNOWN_GAP_EXACT they are not gaps waiting
@@ -370,7 +376,7 @@ def _is_known_gap(candidate: str) -> bool:
     # prefix "crates/". Match the bare directory name as well as anything under it.
     return any(
         candidate == prefix.rstrip("/") or candidate.startswith(prefix)
-        for prefix in KNOWN_GAP_PREFIXES
+        for prefix in KNOWN_GAP_PREFIXES + RUNTIME_OUTPUT_PREFIXES
     )
 
 

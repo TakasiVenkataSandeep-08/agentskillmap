@@ -50,7 +50,7 @@ pub enum Provenance {
     Baseline,
     /// A curated "awesome" list or marketplace listing.
     CuratedList,
-    /// GitHub code search for `path:**/SKILL.md`.
+    /// GitHub code search. The only source that reaches the ecosystem's tail.
     CodeSearch,
     /// Named explicitly by the operator.
     Explicit,
@@ -277,11 +277,34 @@ impl IndexRecord {
     }
 }
 
+/// What one source contributed, and the exact query that produced it.
+///
+/// Recorded because a source returning nothing is a fact about the *harvest*,
+/// not about the ecosystem, and the two are indistinguishable in a bundle count.
+/// The first real run of this tool sampled zero repositories from code search and
+/// said nothing about it: the report simply showed `0/0 (n/a)` in the tail column
+/// and every base rate silently described the curated head alone. That is the
+/// invariant 3 failure — silence where "we could not look" belonged — one level
+/// up from the manifest.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SourceReport {
+    /// Which population this source samples.
+    pub provenance: Provenance,
+    /// The exact query or slug list used, so the sampling method is reproducible.
+    pub query: String,
+    /// How many repositories it yielded.
+    pub repositories: u64,
+}
+
 /// The full result of a harvest.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Index {
     /// The snapshot label this corpus was gathered under.
     pub snapshot: String,
+    /// What each source contributed. A source yielding zero is reported here
+    /// rather than inferred from an empty column.
+    #[serde(default)]
+    pub sources: Vec<SourceReport>,
     /// One record per distinct bundle, sorted.
     pub records: Vec<IndexRecord>,
     /// Repositories that were reached but yielded no bundle, and why.

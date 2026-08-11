@@ -21,6 +21,18 @@ const API: &str = "https://api.github.com";
 /// Sent on every request. GitHub rejects API calls without one.
 const USER_AGENT: &str = concat!("skillmap-corpus/", env!("CARGO_PKG_VERSION"));
 
+/// The code-search query, in **legacy** syntax.
+///
+/// `/search/code` is the old index, not the `path:**/glob` search the github.com
+/// UI runs. The first real harvest used `path:**/SKILL.md`, which the endpoint
+/// accepted with a 200 and matched nothing — so the entire tail sample was empty
+/// and every base rate silently described the curated head alone. `filename:` is
+/// the qualifier this index actually supports.
+///
+/// Exposed rather than inlined so the report can print the exact query that
+/// produced a sample. A sampling method nobody can read is not reproducible.
+pub const CODE_SEARCH_QUERY: &str = "filename:SKILL.md";
+
 /// An authenticated GitHub REST client.
 pub struct GitHub {
     token: String,
@@ -132,7 +144,10 @@ impl Source for CodeSearch<'_> {
             if found.len() >= limit {
                 break;
             }
-            let url = format!("{API}/search/code?q=path%3A**%2FSKILL.md&per_page=100&page={page}");
+            let url = format!(
+                "{API}/search/code?q={}&per_page=100&page={page}",
+                urlencode(CODE_SEARCH_QUERY)
+            );
             let body = self.get_search(&url, page)?;
             let items = body
                 .get("items")
@@ -259,6 +274,22 @@ impl Fetcher for GitFetcher {
     }
 }
 
+/// Percent-encode a query string.
+///
+/// Hand-rolled rather than pulling a crate: the alphabet is tiny and known, and
+/// this is the one place the corpus builds a URL.
+fn urlencode(value: &str) -> String {
+    let mut out = String::with_capacity(value.len() * 3);
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~') {
+            out.push(byte as char);
+        } else {
+            out.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    out
+}
+
 /// Run one git invocation in `dir`.
 fn run_git(args: &[&str], dir: &Path, context: &str, create: bool) -> Result<(), Error> {
     if create {
@@ -297,6 +328,24 @@ fn run_git(args: &[&str], dir: &Path, context: &str, create: bool) -> Result<(),
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_code_search_query_uses_legacy_syntax() {
+        // `/search/code` is the legacy index. A `path:**/...` glob is accepted
+        // with a 200 and matches nothing, which is how the first harvest produced
+        // an empty tail without any error. `filename:` is what this index reads.
+        assert!(CODE_SEARCH_QUERY.contains("filename:"));
+        assert!(
+            !CODE_SEARCH_QUERY.contains("**"),
+            "the REST code search index does not support glob paths"
+        );
+    }
+
+    #[test]
+    fn queries_are_percent_encoded() {
+        assert_eq!(urlencode("filename:SKILL.md"), "filename%3ASKILL.md");
+        assert_eq!(urlencode("a b"), "a%20b");
+    }
 
     #[test]
     fn the_api_root_is_the_only_host_this_crate_contacts() {

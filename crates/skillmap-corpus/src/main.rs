@@ -19,8 +19,8 @@
 
 use skillmap_corpus::{
     archive::Archive,
-    github::{CodeSearch, GitFetcher, GitHub, Named},
-    report, Error, HarvestOptions, Provenance, RepoRef, Source,
+    github::{CodeSearch, GitFetcher, GitHub, Named, CODE_SEARCH_QUERY},
+    report, Error, HarvestOptions, Provenance, RepoRef, Source, SourceReport,
 };
 use std::path::PathBuf;
 
@@ -60,6 +60,11 @@ fn run() -> Result<(), Error> {
     let archive = Archive::open(&options.corpus_dir)?;
 
     let mut repos: Vec<RepoRef> = Vec::new();
+    // What each source yielded, recorded so the report can print it. A source
+    // returning nothing is a fact about the harvest, and the first real run
+    // sampled zero from code search without saying so anywhere.
+    let mut sources: Vec<SourceReport> = Vec::new();
+
     for (slugs, provenance) in [
         (BASELINE, Provenance::Baseline),
         (CURATED, Provenance::CuratedList),
@@ -69,18 +74,39 @@ fn run() -> Result<(), Error> {
             slugs.len(),
             provenance.as_str()
         );
-        repos.extend(
-            Named {
-                client: &client,
-                slugs: slugs.iter().map(|slug| (*slug).to_owned()).collect(),
-                provenance,
-            }
-            .repos(options.limit)?,
-        );
+        let found = Named {
+            client: &client,
+            slugs: slugs.iter().map(|slug| (*slug).to_owned()).collect(),
+            provenance,
+        }
+        .repos(options.limit)?;
+        sources.push(SourceReport {
+            provenance,
+            query: slugs.join(", "),
+            repositories: found.len() as u64,
+        });
+        repos.extend(found);
     }
 
-    eprintln!("searching code for path:**/SKILL.md (this is the only tail sample)");
-    repos.extend(CodeSearch { client: &client }.repos(options.limit)?);
+    eprintln!("searching code for `{CODE_SEARCH_QUERY}` (this is the only tail sample)");
+    let found = CodeSearch { client: &client }.repos(options.limit)?;
+    if found.is_empty() {
+        eprintln!(
+            "
+WARNING: code search returned zero repositories.
+             That is the only source that reaches the tail of the ecosystem, so this
+             corpus is entirely curated head and its base rates cannot be read as
+             ecosystem rates. The report says so too. Check the token is valid and
+             that `{CODE_SEARCH_QUERY}` still matches on the REST search index.
+"
+        );
+    }
+    sources.push(SourceReport {
+        provenance: Provenance::CodeSearch,
+        query: CODE_SEARCH_QUERY.to_owned(),
+        repositories: found.len() as u64,
+    });
+    repos.extend(found);
 
     // Deduplicate by slug, keeping the first (curated) provenance for anything
     // that turns up in both. Recording a curated repository as tail would
@@ -89,7 +115,8 @@ fn run() -> Result<(), Error> {
     repos.retain(|repo| seen.insert(repo.slug()));
 
     eprintln!("harvesting {} repositories\n", repos.len());
-    let index = report::harvest(&repos, &GitFetcher, &archive, &options.snapshot)?;
+    let index =
+        report::harvest_with_sources(&repos, &GitFetcher, &archive, &options.snapshot, sources)?;
 
     let json = report::index_json(&index)?;
     let markdown = report::report(&index);

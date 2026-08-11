@@ -51,6 +51,21 @@ pub fn harvest(
     archive: &Archive,
     snapshot: &str,
 ) -> Result<Index, Error> {
+    harvest_with_sources(repos, fetcher, archive, snapshot, Vec::new())
+}
+
+/// Harvest, recording what each source contributed.
+///
+/// # Errors
+///
+/// As [`harvest`].
+pub fn harvest_with_sources(
+    repos: &[RepoRef],
+    fetcher: &dyn Fetcher,
+    archive: &Archive,
+    snapshot: &str,
+    sources: Vec<crate::SourceReport>,
+) -> Result<Index, Error> {
     let mut ledger = archive.ledger();
     let mut records: Vec<IndexRecord> = Vec::new();
     let mut skipped: Vec<Skipped> = Vec::new();
@@ -165,6 +180,7 @@ pub fn harvest(
 
     Ok(Index {
         snapshot: snapshot.to_owned(),
+        sources,
         records,
         skipped,
     })
@@ -352,6 +368,50 @@ pub fn report(index: &Index) -> String {
         head.len(),
         tail.len()
     );
+    // What each source actually yielded. A source that returned nothing is a fact
+    // about the harvest, not about the ecosystem, and the two are
+    // indistinguishable in a bundle count.
+    if !index.sources.is_empty() {
+        let _ = writeln!(out, "\n### What each source yielded\n");
+        let _ = writeln!(out, "| Source | Query | Repositories |");
+        let _ = writeln!(out, "|---|---|---|");
+        for source in &index.sources {
+            let _ = writeln!(
+                out,
+                "| `{}` | `{}` | {} |",
+                source.provenance.as_str(),
+                source.query,
+                source.repositories
+            );
+        }
+
+        for source in index.sources.iter().filter(|s| s.repositories == 0) {
+            let _ = writeln!(
+                out,
+                "\n> **WARNING - the `{}` source returned zero repositories.** Every number below therefore describes only the sources that did return something. This is a fact about the harvest, not about the ecosystem: \"we could not look\" and \"we looked and found nothing\" are different statements, and a bundle count cannot tell them apart.{}",
+                source.provenance.as_str(),
+                if source.provenance.is_head() {
+                    ""
+                } else {
+                    " Because this is the only source that reaches the tail, the corpus is entirely curated head, and nothing below can be read as an ecosystem rate."
+                }
+            );
+        }
+    }
+
+    // Concentration. Deduplication by digest stops one bundle counting twice; it
+    // does nothing about one repository contributing hundreds of *distinct*
+    // generated bundles from a single template, which skews every rate here.
+    if let Some((repo, count)) = dominant_repository(&index.records) {
+        if total > 0 && count.saturating_mul(2) > total {
+            let _ = writeln!(
+                out,
+                "\n> **WARNING - {} of the sample comes from one repository** (`{repo}`). Deduplication by content digest does not help here: these are distinct bundles, usually generated from one template, so every rate below describes that template more than it describes the ecosystem. Treat the frontmatter-key and language tables in particular as statements about a single publisher.",
+                percent(count, total)
+            );
+        }
+    }
+
     let _ = writeln!(
         out,
         "\n### Structural versus lexical\n\n\
@@ -625,6 +685,18 @@ pub fn report(index: &Index) -> String {
     out
 }
 
+/// The repository contributing the most bundles, and how many.
+fn dominant_repository(records: &[IndexRecord]) -> Option<(String, u64)> {
+    let mut counts: BTreeMap<&str, u64> = BTreeMap::new();
+    for record in records {
+        *counts.entry(record.repo.as_str()).or_default() += 1;
+    }
+    counts
+        .into_iter()
+        .max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(a.0)))
+        .map(|(repo, count)| (repo.to_owned(), count))
+}
+
 /// Median of a sorted-on-the-fly slice of parts-per-million values.
 fn median_ppm(values: &[u64]) -> u64 {
     let mut sorted = values.to_vec();
@@ -701,6 +773,7 @@ mod tests {
         // The kill-gate case: the harvest found nothing. The report must say so
         // rather than panicking or printing a table of NaNs.
         let index = Index {
+            sources: Vec::new(),
             snapshot: "empty".to_owned(),
             records: Vec::new(),
             skipped: Vec::new(),
@@ -718,6 +791,7 @@ mod tests {
     #[test]
     fn the_report_states_bias_before_any_finding() {
         let index = Index {
+            sources: Vec::new(),
             snapshot: "s".to_owned(),
             records: Vec::new(),
             skipped: Vec::new(),
@@ -732,8 +806,117 @@ mod tests {
     }
 
     #[test]
+    fn a_source_that_returned_nothing_is_reported_loudly() {
+        // The defect the first real harvest exposed. Code search returned zero,
+        // the tail column rendered `0/0 (n/a)`, and every base rate silently
+        // described the curated head alone. A bundle count cannot distinguish
+        // "we could not look" from "we looked and found nothing" — so the source
+        // has to say which it was.
+        let index = Index {
+            sources: vec![
+                crate::SourceReport {
+                    provenance: Provenance::CuratedList,
+                    query: "acme/list".to_owned(),
+                    repositories: 1,
+                },
+                crate::SourceReport {
+                    provenance: Provenance::CodeSearch,
+                    query: "filename:SKILL.md".to_owned(),
+                    repositories: 0,
+                },
+            ],
+            snapshot: "s".to_owned(),
+            records: Vec::new(),
+            skipped: Vec::new(),
+        };
+        let text = report(&index);
+
+        assert!(text.contains("returned zero repositories"));
+        assert!(
+            text.contains("only source that reaches the tail"),
+            "a zero-yield tail source must say the corpus is head-only"
+        );
+        // And the query itself is printed, so the sampling method is reproducible.
+        assert!(text.contains("filename:SKILL.md"));
+    }
+
+    #[test]
+    fn one_repository_dominating_the_sample_is_reported_loudly() {
+        // Deduplication by digest does not help when one repository contributes
+        // hundreds of *distinct* bundles generated from a single template: every
+        // rate then describes that template, not the ecosystem.
+        let mut records = Vec::new();
+        for index in 0..9 {
+            records.push(record("vendor/catalog", &format!("skills/{index}")));
+        }
+        records.push(record("someone/else", "skills/one"));
+
+        let index = Index {
+            sources: Vec::new(),
+            snapshot: "s".to_owned(),
+            records,
+            skipped: Vec::new(),
+        };
+        let text = report(&index);
+        assert!(text.contains("comes from one repository"));
+        assert!(text.contains("vendor/catalog"));
+        assert!(
+            text.contains("9/10"),
+            "the share must carry its denominator"
+        );
+    }
+
+    #[test]
+    fn a_balanced_sample_gets_no_concentration_warning() {
+        let index = Index {
+            sources: Vec::new(),
+            snapshot: "s".to_owned(),
+            records: vec![
+                record("a/one", "skills/x"),
+                record("b/two", "skills/y"),
+                record("c/three", "skills/z"),
+            ],
+            skipped: Vec::new(),
+        };
+        assert!(!report(&index).contains("comes from one repository"));
+    }
+
+    /// A minimal index record for report tests.
+    fn record(repo: &str, root: &str) -> IndexRecord {
+        IndexRecord {
+            digest: format!("sha256:{repo}{root}"),
+            repo: repo.to_owned(),
+            commit: "0".repeat(40),
+            bundle_root: root.to_owned(),
+            provenance: Provenance::CuratedList,
+            stars: None,
+            measurements: Measurements {
+                structure: measure::Structure {
+                    files: 1,
+                    total_bytes: 100,
+                    reference_bytes: 0,
+                    unreferenced_bytes: 0,
+                    description_bytes: 10,
+                    has_unreferenced: false,
+                    has_scripts: false,
+                    languages: BTreeMap::new(),
+                    unresolved: BTreeMap::new(),
+                },
+                lexical: measure::Lexical::default(),
+                governance: measure::Governance {
+                    has_license: false,
+                    has_version: false,
+                    extra_frontmatter_keys: Vec::new(),
+                    frontmatter_parsed: true,
+                },
+            },
+        }
+    }
+
+    #[test]
     fn lexical_numbers_are_labelled_as_upper_bounds() {
         let index = Index {
+            sources: Vec::new(),
             snapshot: "s".to_owned(),
             records: Vec::new(),
             skipped: Vec::new(),
