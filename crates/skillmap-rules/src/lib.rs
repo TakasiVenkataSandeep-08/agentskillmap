@@ -34,6 +34,12 @@ use tree_sitter::{Language, Query};
 fn grammar(name: &str) -> Option<Language> {
     match name {
         "python" => Some(tree_sitter_python::LANGUAGE.into()),
+        "shell" => Some(tree_sitter_bash::LANGUAGE.into()),
+        "javascript" => Some(tree_sitter_javascript::LANGUAGE.into()),
+        // The typescript grammar, not the tsx one. `.tsx` needs its own section
+        // and its own grammar handle; claiming this one covers it would be a lie
+        // the parser would discover at the first JSX element.
+        "typescript" => Some(tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into()),
         // The *block* grammar. Its `inline` nodes are unparsed leaves, which is
         // exactly what the instruction plane wants: a whole sentence to run a
         // `#match?` over, with fenced code and headings still distinguishable so
@@ -622,8 +628,12 @@ mod tests {
             "the shipped rules must load without diagnostics: {:?}",
             set.diagnostics
         );
-        assert!(set.languages.contains_key("python"));
-        assert!(set.languages.contains_key("markdown"));
+        for language in ["python", "shell", "javascript", "typescript", "markdown"] {
+            assert!(
+                set.languages.contains_key(language),
+                "`{language}` must load; the corpus put it in the top four by usage"
+            );
+        }
 
         // Prose has no call graph; code does.
         assert!(set.languages["python"].reachability.is_some());

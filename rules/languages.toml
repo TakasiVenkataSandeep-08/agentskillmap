@@ -21,6 +21,28 @@ reachability = "queries/python/_reachability.scm"
 # because the conventions differ per ecosystem and contributors know theirs.
 entry_basenames = ["main.py", "__main__.py", "run.py", "cli.py"]
 
+# Corpus snapshot 2026-08 put these in the top four languages by bundle usage:
+# python 5.1%, shell 3.3%, javascript 2.4%, typescript 1.0%. That ordering is
+# the reason these four exist and ruby, go and rust do not — the list follows
+# the measurement, not preference.
+
+[shell]
+extensions = ["sh", "bash", "zsh"]
+reachability = "queries/shell/_reachability.scm"
+entry_basenames = ["run.sh", "main.sh", "install.sh", "setup.sh", "entrypoint.sh"]
+
+[javascript]
+extensions = ["js", "mjs", "cjs", "jsx"]
+reachability = "queries/javascript/_reachability.scm"
+entry_basenames = ["index.js", "main.js", "cli.js", "run.js"]
+
+[typescript]
+# `.tsx` is deliberately absent: it needs the tsx grammar, which is a separate
+# handle. Listing it here would parse JSX with a grammar that cannot read it.
+extensions = ["ts", "mts", "cts"]
+reachability = "queries/typescript/_reachability.scm"
+entry_basenames = ["index.ts", "main.ts", "cli.ts", "run.ts"]
+
 [markdown]
 extensions = ["md", "markdown"]
 # No `reachability` key: prose has no call graph. Instruction-plane findings are

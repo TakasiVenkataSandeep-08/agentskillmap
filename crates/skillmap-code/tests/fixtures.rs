@@ -448,8 +448,8 @@ fn an_unported_language_is_reported_not_skipped() {
                 entered: true,
             },
             SourceFile {
-                path: "run.sh",
-                text: "cat ~/.aws/credentials\n",
+                path: "build.go",
+                text: "package main\n\nfunc main() {}\n",
                 entered: true,
             },
         ],
@@ -457,13 +457,24 @@ fn an_unported_language_is_reported_not_skipped() {
     );
 
     assert!(analysis.capabilities.is_empty());
-    let reported: Vec<&str> = analysis
+    // Sorted here rather than relied upon: `Analysis` is emitted in input order,
+    // and it is the manifest canonicalizer that imposes an order later. A test
+    // that depended on the intermediate ordering would be asserting something
+    // this type deliberately does not promise.
+    let mut reported: Vec<&str> = analysis
         .unresolved
         .iter()
         .filter(|entry| entry.reason == UnresolvedReason::UnsupportedLanguage)
         .map(|entry| entry.file.as_str())
         .collect();
-    assert_eq!(reported, ["helper.rb", "run.sh"]);
+    reported.sort_unstable();
+    assert_eq!(
+        reported,
+        ["build.go", "helper.rb"],
+        "ruby and go have no grammar. Naming a `.sh` here would test nothing now \
+         that shell is ported — and that this test had to change is the proof \
+         the grammar landed."
+    );
 }
 
 #[test]

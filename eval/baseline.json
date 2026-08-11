@@ -3,7 +3,7 @@
     "adversarial_failed": 0,
     "adversarial_passed": 5,
     "fixtures_failed": 0,
-    "fixtures_passed": 4,
+    "fixtures_passed": 7,
     "pending": {
       "capability-added-in-update": "needs T8 (skillmap-diff and skillmap.lock)",
       "injection-in-reference": "needs T7 (the quarantined semantic pass)",

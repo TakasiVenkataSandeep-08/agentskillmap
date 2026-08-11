@@ -204,11 +204,15 @@ language produces `unsupported_language` rather than silence, and the credential
 reports `observed` once something calls it, so the dead-code result cannot be passing because
 `present` is returned unconditionally.
 
-**Only Python is ported, and that is the part T3 decides.** This task says to port rules "for
-the languages T3 showed actually matter, in that order", and T3 has not been run. Python was
-built because the reference rule triple already contracts for it; picking the next language
-without the corpus data would be exactly the ambition-over-evidence move the build order
-exists to prevent.
+**The language set now follows the corpus, as this task required.** T3's harvest ranked
+python 5.1%, shell 3.3%, javascript 2.4%, typescript 1.0% of bundles, and those four are
+exactly what is ported — each with a grammar, a reachability query, and a `credential-read`
+rule triple with both fixtures.
+
+Adding a grammar without a rule would have been a regression, not a no-op: a file whose
+language has a grammar is no longer reported as `unsupported_language`, so shell scripts
+would have gone from an honest "not analyzed" to silence. That is why each grammar landed
+with a rule rather than ahead of one.
 
 Decisions worth recording:
 
@@ -428,8 +432,11 @@ front of; each is a thing this repository currently claims or implies but does n
   what T3 is for. Invariant 12 forbids shipping a term no rule detects, so v1.0 either grows
   rules to cover the taxonomy or the taxonomy shrinks to match the rules — decided from the
   corpus, not from ambition.
-- **Only Python has a grammar.** Every other language reports `unsupported_language`. That is
-  honest, and thin. T3's corpus decides which grammar comes next, in what order.
+- **Four languages have grammars: python, shell, javascript, typescript.** That set is the
+  corpus ordering (5.1%, 3.3%, 2.4%, 1.0% of bundles), not a preference. Ruby, Go, Rust and
+  the rest still report `unsupported_language`, which is honest. `.tsx` is deliberately absent:
+  it needs the separate tsx grammar handle, and listing it under `typescript` would parse JSX
+  with a grammar that cannot read it.
 - **Plugin-wrapped bundles are not discovered.** `BundleKind::Plugin` exists in the schema
   because the manifest format has to be able to describe them, but the `claude-code` resolver
   does not walk `.claude/plugins` and never returns that kind. Returning it from a code path
