@@ -1,0 +1,85 @@
+# The GitHub Action wrapping `skillmap ci`.
+#
+# A composite action, not a Docker or JavaScript one, and not for style reasons:
+#
+#   - A Docker action would pull an image this repository does not yet publish
+#     reproducibly. T9 owns signed, byte-identical releases; shipping an action
+#     that pulls an unverified image would be a supply-chain smell in a
+#     supply-chain auditor.
+#   - A JavaScript action would add a node_modules tree to a project whose
+#     SECURITY.md promises a defensible dependency graph.
+#
+# So it builds from a pinned source checkout with the toolchain the repository
+# pins. That is slow and completely honest about what it is running. When T9
+# ships verified release binaries this action downloads one instead, and the
+# `ref` input becomes a version rather than a git ref.
+
+name: skillmap
+description: Fail a build when an installed agent skill gains capability it did not have.
+
+inputs:
+  project:
+    description: Project root to scan. Must contain .claude/skills.
+    required: false
+    default: "."
+  lock:
+    description: Path to skillmap.lock. Defaults to <project>/skillmap.lock.
+    required: false
+    default: ""
+  policy:
+    description: Path to policy.toml. Defaults to <project>/policy.toml. Absent means the policy check does not run.
+    required: false
+    default: ""
+  ref:
+    description: >-
+      Git ref of skillmap to build. Pin this to a tag. Leaving it at a branch
+      means the rules that decide whether your build passes can change without
+      a commit in your repository.
+    required: false
+    default: main
+
+outputs:
+  outcome:
+    description: "0 clean, 1 escalation, 2 policy violation, 3 both. See docs/06-policy-and-lock.md."
+    value: ${{ steps.check.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check out skillmap
+      uses: actions/checkout@v4
+      with:
+        repository: skillmap/skillmap
+        ref: ${{ inputs.ref }}
+        path: .skillmap-src
+
+    # No toolchain named here: rust-toolchain.toml in the checked-out source
+    # pins the exact version and rustup honours it. Naming one would create a
+    # second source of truth that drifts from the first.
+    - name: Build skillmap
+      shell: bash
+      working-directory: .skillmap-src
+      run: cargo build --release -p skillmap-cli
+
+    - name: Run the check
+      id: check
+      shell: bash
+      run: |
+        args=(ci --project "${{ inputs.project }}" --rules .skillmap-src)
+        [ -n "${{ inputs.lock }}" ] && args+=(--lock "${{ inputs.lock }}")
+        [ -n "${{ inputs.policy }}" ] && args+=(--policy "${{ inputs.policy }}")
+
+        set +e
+        .skillmap-src/target/release/skillmap "${args[@]}"
+        code=$?
+        set -e
+
+        echo "outcome=$code" >> "$GITHUB_OUTPUT"
+
+        # Exit 4 is "the check could not run" and must fail loudly rather than
+        # being reported as a finding — the whole point of giving it its own
+        # code is that a broken run never reads as a clean one.
+        if [ "$code" -eq 4 ]; then
+          echo "::error::skillmap could not run. See the output above."
+        fi
+        exit "$code"

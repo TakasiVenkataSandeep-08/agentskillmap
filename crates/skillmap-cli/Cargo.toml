@@ -1,0 +1,28 @@
+[package]
+name = "skillmap-cli"
+description = "The `skillmap` binary: scan, lock, and the CI check."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+skillmap-core.workspace = true
+skillmap-resolve.workspace = true
+skillmap-rules.workspace = true
+skillmap-scan.workspace = true
+skillmap-diff.workspace = true
+skillmap-policy.workspace = true
+
+# No argument-parsing crate. Three subcommands and four flags do not justify
+# clap's dependency tree in a project whose SECURITY.md promises a minimal one,
+# and hand-rolled parsing of this surface is thirty lines that cannot surprise
+# anybody. Revisit when the surface grows past what a reader can hold.
+
+[[bin]]
+name = "skillmap"
+path = "src/main.rs"
+
+[lints]
+workspace = true

@@ -72,6 +72,17 @@ pub enum Expectation {
         /// The signal name.
         signal: String,
     },
+    /// The bundle must gain this capability relative to the case's `lock.json`.
+    ///
+    /// The only expectation that is about a *pair* of states rather than one. It
+    /// needs a `lock.json` beside `expect.toml` standing in for the previous
+    /// release; a case declaring this without one fails rather than passing
+    /// vacuously, because "no lock, so nothing to compare, so no failures" is
+    /// exactly the silent-pass shape invariant 3 rejects.
+    Escalation {
+        /// The taxonomy term that must appear as newly added.
+        capability: String,
+    },
     /// No capability may be reported at all.
     NoCapability,
     /// No instruction signal may be reported at all.
@@ -114,6 +125,8 @@ pub struct Case {
     pub expect: Vec<Expectation>,
     /// Where the bundle lives.
     pub bundle: PathBuf,
+    /// The case directory, which is where a `lock.json` would sit.
+    pub dir: PathBuf,
 }
 
 /// What happened when a case ran.
@@ -169,6 +182,7 @@ pub fn load_cases(root: &Path) -> Vec<Case> {
             requires: file.requires,
             expect: file.expect,
             bundle: dir.join("bundle"),
+            dir,
         });
     }
 
@@ -192,7 +206,7 @@ pub fn run_adversarial_suite(root: &Path, rules: &RuleSet) -> Vec<Outcome> {
             }
 
             let failures = match pipeline::analyze(&case.bundle, rules) {
-                Ok(manifest) => check(&case.expect, &manifest),
+                Ok(manifest) => check(&case.expect, &manifest, &case.dir),
                 Err(error) => vec![format!("the bundle could not be analysed: {error}")],
             };
 
@@ -206,8 +220,73 @@ pub fn run_adversarial_suite(root: &Path, rules: &RuleSet) -> Vec<Outcome> {
         .collect()
 }
 
+/// Compare the analysed bundle against the case's `lock.json`.
+///
+/// This is the only expectation that needs T8's machinery, and it is the reason
+/// `capability-added-in-update` sat pending from T6 until now: the bundle on disk
+/// is v1.1, `lock.json` is what v1.0 recorded, and the case asserts that the
+/// difference between them is reported as *added* rather than merely present.
+fn check_escalation(capability: &str, manifest: &Manifest, dir: &Path) -> Vec<String> {
+    let path = dir.join("lock.json");
+    let Ok(text) = std::fs::read_to_string(&path) else {
+        return vec![format!(
+            "this case expects an escalation but there is no {}. With no previous \
+             state there is nothing to compare against, and a case that cannot \
+             fail is worse than no case at all.",
+            path.display()
+        )];
+    };
+
+    let lock = match skillmap_diff::Lock::from_json(&text) {
+        Ok(lock) => lock,
+        Err(error) => {
+            return vec![format!(
+                "{} is not a readable lock: {error}",
+                path.display()
+            )]
+        }
+    };
+
+    let delta = skillmap_diff::diff(&lock, std::slice::from_ref(manifest));
+    let added: Vec<&str> = delta
+        .escalations()
+        .iter()
+        .filter_map(|change| match change {
+            skillmap_diff::Change::CapabilityAdded { capability, .. } => Some(capability.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    if added.contains(&capability) {
+        return Vec::new();
+    }
+
+    // A root mismatch produces BundleAdded rather than CapabilityAdded, which
+    // looks like a detection failure and is not one. Say which it is.
+    if delta
+        .changes
+        .iter()
+        .any(|change| matches!(change, skillmap_diff::Change::BundleAdded { .. }))
+    {
+        return vec![format!(
+            "lock.json keys bundles {:?} but the scan produced `{}`; the diff sees \
+             an unrelated bundle rather than an update to this one",
+            lock.bundles.keys().collect::<Vec<_>>(),
+            manifest.target.root
+        )];
+    }
+
+    vec![format!(
+        "expected `{capability}` to be reported as newly added against lock.json; \
+         the diff reports {added:?}"
+    )]
+}
+
 /// Check every expectation against an analysed manifest.
-fn check(expectations: &[Expectation], manifest: &Manifest) -> Vec<String> {
+///
+/// `dir` is the case directory, needed only by [`Expectation::Escalation`],
+/// which compares the manifest against the `lock.json` sitting beside it.
+fn check(expectations: &[Expectation], manifest: &Manifest, dir: &Path) -> Vec<String> {
     let mut failures = Vec::new();
 
     for expectation in expectations {
@@ -274,6 +353,9 @@ fn check(expectations: &[Expectation], manifest: &Manifest) -> Vec<String> {
                 {
                     failures.push(format!("expected instruction signal `{signal}`"));
                 }
+            }
+            Expectation::Escalation { capability } => {
+                failures.extend(check_escalation(capability, manifest, dir));
             }
             Expectation::NoCapability => {
                 if !manifest.capabilities.is_empty() {
@@ -378,22 +460,15 @@ pub fn run_fixture_suite(root: &Path, rules: &RuleSet) -> Vec<Outcome> {
     let mut outcomes = Vec::new();
     let fixtures = root.join("fixtures");
 
-    let Ok(languages) = std::fs::read_dir(&fixtures) else {
-        return outcomes;
-    };
+    // Driven by the languages the ruleset knows, not by whatever directories
+    // happen to sit under `fixtures/`. This was a blocklist — skip `bundles/` and
+    // `adversarial/` — until T8 added `fixtures/projects/`, whose two version
+    // directories were promptly read as languages with no rule fixtures and
+    // failed the suite. A blocklist has to be updated by whoever adds the next
+    // directory; asking the ruleset what a language is cannot fall out of date.
     let mut dirs: Vec<PathBuf> = Vec::new();
-    for language in languages.flatten() {
-        // `bundles/` is T2's whole-bundle corpus and `adversarial/` is the red
-        // team suite; neither is a per-rule fixture.
-        if !language.path().is_dir()
-            || matches!(
-                language.file_name().to_str(),
-                Some("bundles" | "adversarial")
-            )
-        {
-            continue;
-        }
-        if let Ok(rules_dir) = std::fs::read_dir(language.path()) {
+    for language in rules.languages.keys() {
+        if let Ok(rules_dir) = std::fs::read_dir(fixtures.join(language)) {
             dirs.extend(
                 rules_dir
                     .flatten()

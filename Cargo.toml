@@ -13,7 +13,11 @@ members = [
     "crates/skillmap-rules",
     "crates/skillmap-code",
     "crates/skillmap-instr",
+    "crates/skillmap-scan",
     "crates/skillmap-eval",
+    "crates/skillmap-diff",
+    "crates/skillmap-policy",
+    "crates/skillmap-cli",
 ]
 
 [workspace.package]
@@ -43,7 +47,11 @@ skillmap-rules = { path = "crates/skillmap-rules", version = "0.1.0" }
 skillmap-code = { path = "crates/skillmap-code", version = "0.1.0" }
 skillmap-instr = { path = "crates/skillmap-instr", version = "0.1.0" }
 skillmap-corpus = { path = "crates/skillmap-corpus", version = "0.1.0" }
+skillmap-scan = { path = "crates/skillmap-scan", version = "0.1.0" }
 skillmap-eval = { path = "crates/skillmap-eval", version = "0.1.0" }
+skillmap-diff = { path = "crates/skillmap-diff", version = "0.1.0" }
+skillmap-policy = { path = "crates/skillmap-policy", version = "0.1.0" }
+skillmap-cli = { path = "crates/skillmap-cli", version = "0.1.0" }
 
 # Deliberately small. Every dependency here is one this project would have to
 # defend in its own threat model — see SECURITY.md. `cargo deny check` gates

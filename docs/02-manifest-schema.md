@@ -300,3 +300,5 @@ manifest is regenerated on demand.
 The CI check is: recompute, compare to lock, fail on capability escalation, print the delta.
 That check — *"this skill gained credential access in the update you're about to merge"* —
 is the product. Everything above exists to make that line trustworthy.
+
+**Full format, `policy.toml`, and the exit codes: [`06-policy-and-lock.md`](06-policy-and-lock.md).**

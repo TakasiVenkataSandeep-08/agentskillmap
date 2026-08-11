@@ -1,11 +1,10 @@
 {
   "metrics": {
     "adversarial_failed": 0,
-    "adversarial_passed": 5,
+    "adversarial_passed": 6,
     "fixtures_failed": 0,
     "fixtures_passed": 7,
     "pending": {
-      "capability-added-in-update": "needs T8 (skillmap-diff and skillmap.lock)",
       "injection-in-reference": "needs T7 (the quarantined semantic pass)",
       "obfuscated-exec": "needs a rule detecting `code.obfuscation`"
     }

@@ -1,0 +1,10 @@
+{
+  "bundles": {
+    "bundle": {
+      "capabilities": [],
+      "content_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "resolver": "claude-code",
+      "schema_version": "1.0.0"
+    }
+  }
+}

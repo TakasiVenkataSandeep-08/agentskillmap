@@ -1,6 +1,6 @@
 [package]
-name = "skillmap-eval"
-description = "Eval harness: fixture, corpus and adversarial suites, per-capability metrics, and the CI regression gate."
+name = "skillmap-scan"
+description = "Assembles a manifest from all three planes: parse, code, instruction."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,15 +14,6 @@ skillmap-resolve.workspace = true
 skillmap-rules.workspace = true
 skillmap-code.workspace = true
 skillmap-instr.workspace = true
-skillmap-scan.workspace = true
-skillmap-diff.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-toml.workspace = true
-
-[[bin]]
-name = "skillmap-eval"
-path = "src/main.rs"
 
 [lints]
 workspace = true

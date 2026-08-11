@@ -37,29 +37,37 @@ fn rules() -> RuleSet {
 
 /// Every code-plane fixture directory: `fixtures/<lang>/<rule>/`.
 ///
-/// Three directories are deliberately excluded, each for its own reason:
+/// Derived from the rules themselves, not from a listing of `fixtures/`. This
+/// was a blocklist — skip `bundles/`, `markdown/`, `adversarial/` — until T8
+/// added `fixtures/projects/`, whose two version directories were promptly read
+/// as languages and failed for having no rule fixtures. A blocklist has to be
+/// updated by whoever adds the next directory; asking the ruleset which
+/// languages carry `proven` rules cannot fall out of date.
 ///
-/// - `fixtures/bundles/` is T2's whole-bundle corpus, not a rule fixture.
-/// - `fixtures/markdown/` belongs to the **instruction plane** — those rules are
-///   tier `pattern`, this crate only executes tier `proven`, and asserting here
-///   that a markdown positive "produces a finding" would be asserting that the
-///   code plane does something invariant 5 forbids. `skillmap-instr` covers them.
-/// - `fixtures/adversarial/` is T6's red-team suite: whole bundles with declared
-///   expectations, three of which are deliberately not runnable yet.
-///   `skillmap-eval` owns them, and it knows which are pending.
-fn fixture_dirs() -> Vec<PathBuf> {
-    let mut found = Vec::new();
+/// `markdown` drops out for free and for the right reason: its rules are tier
+/// `pattern`, this crate only executes tier `proven`, and asserting here that a
+/// markdown positive produces a finding would be asserting that the code plane
+/// does something invariant 5 forbids. `skillmap-instr` covers those.
+fn fixture_dirs(rules: &RuleSet) -> Vec<PathBuf> {
     let root = repo_root().join("fixtures");
-    for language in std::fs::read_dir(&root).unwrap().flatten() {
-        if !language.path().is_dir()
-            || matches!(
-                language.file_name().to_str(),
-                Some("bundles" | "markdown" | "adversarial")
-            )
-        {
-            continue;
-        }
-        for rule in std::fs::read_dir(language.path()).unwrap().flatten() {
+    let mut found = Vec::new();
+
+    let mut languages: Vec<&str> = rules
+        .rules
+        .iter()
+        .filter(|rule| matches!(rule.claim, skillmap_rules::Claim::Capability(_)))
+        .map(|rule| rule.language.as_str())
+        .collect();
+    languages.sort_unstable();
+    languages.dedup();
+
+    for language in languages {
+        let dir = root.join(language);
+        assert!(
+            dir.is_dir(),
+            "rules exist for `{language}` but {dir:?} does not: invariant 8"
+        );
+        for rule in std::fs::read_dir(dir).unwrap().flatten() {
             if rule.path().is_dir() {
                 found.push(rule.path());
             }
@@ -81,7 +89,7 @@ fn fixture_file(dir: &Path, stem: &str) -> Option<PathBuf> {
 fn every_rule_ships_both_fixtures() {
     // Invariant 8: a rule with no negative fixture is an untested false-positive
     // generator. This is what makes that statement enforced rather than hoped for.
-    let dirs = fixture_dirs();
+    let dirs = fixture_dirs(&rules());
     assert!(!dirs.is_empty(), "there must be at least one rule fixture");
 
     for dir in dirs {
@@ -101,7 +109,7 @@ fn every_rule_ships_both_fixtures() {
 fn positive_fixtures_fire_and_negative_fixtures_do_not() {
     let rules = rules();
 
-    for dir in fixture_dirs() {
+    for dir in fixture_dirs(&rules) {
         let positive = fixture_file(&dir, "positive").unwrap();
         let negative = fixture_file(&dir, "negative").unwrap();
 

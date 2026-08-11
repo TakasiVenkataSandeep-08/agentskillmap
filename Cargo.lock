@@ -501,6 +501,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
 
 [[package]]
+name = "skillmap-cli"
+version = "0.1.0"
+dependencies = [
+ "skillmap-core",
+ "skillmap-diff",
+ "skillmap-policy",
+ "skillmap-resolve",
+ "skillmap-rules",
+ "skillmap-scan",
+]
+
+[[package]]
 name = "skillmap-code"
 version = "0.1.0"
 dependencies = [
@@ -534,6 +546,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "skillmap-diff"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "skillmap-core",
+]
+
+[[package]]
 name = "skillmap-eval"
 version = "0.1.0"
 dependencies = [
@@ -541,10 +562,12 @@ dependencies = [
  "serde_json",
  "skillmap-code",
  "skillmap-core",
+ "skillmap-diff",
  "skillmap-instr",
  "skillmap-parse",
  "skillmap-resolve",
  "skillmap-rules",
+ "skillmap-scan",
  "toml",
 ]
 
@@ -568,6 +591,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "skillmap-policy"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "skillmap-core",
+ "skillmap-diff",
+ "toml",
+]
+
+[[package]]
 name = "skillmap-resolve"
 version = "0.1.0"
 dependencies = [
@@ -587,6 +620,18 @@ dependencies = [
  "tree-sitter-md",
  "tree-sitter-python",
  "tree-sitter-typescript",
+]
+
+[[package]]
+name = "skillmap-scan"
+version = "0.1.0"
+dependencies = [
+ "skillmap-code",
+ "skillmap-core",
+ "skillmap-instr",
+ "skillmap-parse",
+ "skillmap-resolve",
+ "skillmap-rules",
 ]
 
 [[package]]

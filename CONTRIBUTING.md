@@ -191,6 +191,9 @@ varies completely from one project to the next. The scanner's job stops at "here
 skill can do, and here is the evidence." Don't propose a PR that blurs that line; it will be
 rejected regardless of how good the detection underneath it is.
 
+The format, and the separate question `skillmap.lock` answers, are in
+[`docs/06-policy-and-lock.md`](docs/06-policy-and-lock.md).
+
 ## What gets a PR rejected regardless of merit
 
 - Any invariant violation in `AGENTS.md`. If a task seems to require breaking one, that's a

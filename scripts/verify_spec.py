@@ -60,14 +60,14 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 # Each entry needs a named reason, because an unexplained allowlist entry is
 # indistinguishable from a typo somebody gave up on:
 #
-#   policy.toml         docs/00-tasks.md "Known gaps" — T8 input, unspecified
-#   skillmap.lock     docs/00-tasks.md "Known gaps" — T8 input, one-line spec
 #   run-meta.json       AGENTS.md invariant 2 — where run metadata goes instead
-#                       of the manifest; nothing writes it until a CLI exists
+#                       of the manifest; the CLI does not write one yet
 #   npm/                ARCHITECTURE.md target layout; built at release (T9)
+#
+# Retired so far: policy.toml and skillmap.lock (T8 — specified in
+# docs/06-policy-and-lock.md, and this repository now commits both for its own
+# two skills, so references to them are checked against disk like anything else).
 KNOWN_GAP_EXACT = {
-    "policy.toml",
-    "skillmap.lock",
     "run-meta.json",
 }
 KNOWN_GAP_PREFIXES = ("npm/",)
@@ -102,20 +102,14 @@ EXTERNAL_CONVENTIONS = {
 # KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
 #
 #   skillmap-semantic                   T7
-#   skillmap-policy, skillmap-diff      T8
-#   skillmap-cli                        T9
 #
 # Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2),
 # skillmap-corpus (T3), skillmap-rules and skillmap-code (T4),
-# skillmap-instr (T5), skillmap-eval (T6).
+# skillmap-instr (T5), skillmap-eval (T6), skillmap-policy, skillmap-diff,
+# skillmap-scan and skillmap-cli (T8).
 PLANNED_CRATES = {
     f"crates/{name}"
-    for name in (
-        "skillmap-semantic",
-        "skillmap-policy",
-        "skillmap-diff",
-        "skillmap-cli",
-    )
+    for name in ("skillmap-semantic",)
 }
 
 # The canonical rendering the Rust types produce, blessed by

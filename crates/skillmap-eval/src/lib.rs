@@ -28,7 +28,12 @@
 
 pub mod cases;
 pub mod metrics;
-pub mod pipeline;
+
+/// Manifest assembly, which now lives in `skillmap-scan`.
+///
+/// Re-exported under the old path because `skillmap ci` needed the same
+/// function and a product binary must not depend on the test harness to get it.
+pub use skillmap_scan as pipeline;
 
 pub use cases::{Case, Expectation, Outcome, Requirement};
 pub use metrics::{Baseline, Metrics, Regression};

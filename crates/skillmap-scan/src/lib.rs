@@ -1,10 +1,13 @@
+#![warn(missing_docs)]
+
 //! Assembling a full manifest from all three planes.
 //!
-//! This is the first place the parser, the code plane and the instruction plane
-//! are wired together, because eval is the first thing that needs a whole
-//! manifest rather than one plane's output. **T9's CLI lifts this**; it lives
-//! here rather than in a crate of its own because a crate whose only job is to
-//! call three functions, written before there is a second caller, is a stub.
+//! This lived inside `skillmap-eval` until T8, with a note saying a crate whose
+//! only job is to call three functions, *written before there is a second
+//! caller*, would be a stub. T8 produced the second caller: `skillmap ci` has to
+//! scan a bundle before it can compare one, and a product binary reaching into
+//! the test harness for the ability to scan would have the dependency arrow
+//! backwards. So it moved, on the condition its own comment set.
 //!
 //! The assembly order is the one thing worth reading closely. Each plane is
 //! called separately and its output goes into its own field; nothing merges

@@ -391,6 +391,48 @@ without this and say so in the README.
 whose output a reviewer can act on in under ten seconds. **This is the product** — everything
 above exists to make this line trustworthy.
 
+Delivered. `fixtures/projects/v1.0` and `v1.1` are the pair; `crates/skillmap-cli/tests/escalation.rs`
+runs the real binary against them and asserts the exit code, every field of the report, and
+that the whole thing fits in eight lines. Format spec: `docs/06-policy-and-lock.md`.
+
+Decisions worth recording:
+
+- **Two questions, two exit codes.** *Is this capability new?* is the lock's question;
+  *is it allowed here at all?* is the policy's. A skill can hold a permitted capability it
+  did not have yesterday, and can hold a forbidden one it has held all along. Collapsing them
+  into one failure makes both unreadable, so escalation exits `1`, policy exits `2`, both
+  exits `3` — and `4` means the run did not happen.
+- **`4` is invariant 3 at the process boundary.** An empty ruleset produces a clean scan of
+  everything, which is the worst output this tool could emit. `skillmap` refuses to scan with
+  zero rules loaded rather than reporting a confident silence, and a missing lock is an error
+  rather than an empty baseline — treating absence as "no capabilities" would fail the first
+  run in every repository and teach people the check cries wolf.
+- **Absent `policy.toml` ≠ empty `policy.toml`.** Absent is no opinion, and the policy half
+  simply does not run (loudly, on stderr). Present-and-empty is the opinion "nothing is
+  permitted". Collapsing them costs dearly either way: permissive-by-default silently
+  approves everything, restrictive-by-default fails every repository's first run.
+- **The lock stores capability wire names, not the enum.** A lock outlives the binary that
+  wrote it. An older build that dropped unknown terms would silently rewrite the lock, and the
+  next run of a newer build would report the losses as fresh escalations.
+- **`skillmap-scan` was extracted, on the condition its own comment set.** Manifest assembly
+  lived in `skillmap-eval` from T6 with a note saying it would move once a second caller
+  existed. `skillmap ci` is that caller, and a product binary depending on the test harness
+  to scan would have the dependency arrow backwards.
+- **`skillmap-cli` exists a task early.** T9 owns distribution, not the binary: a check nobody
+  can run does not satisfy a "done when" measured in a reviewer's seconds. It has two
+  subcommands and hand-rolled flag parsing — clap's tree is not worth four flags in a project
+  whose SECURITY.md promises a small one.
+- **Rules are not embedded in the binary yet**, so `--rules` must point at a checkout. That is
+  invariant 7 working as designed everywhere except distribution; T9 packages them. Named in
+  Known gaps rather than papered over with a fallback that might find the wrong tree.
+- **skillmap gates skillmap.** CI runs `skillmap ci` against this repository's own two skills
+  with a committed `skillmap.lock` and `policy.toml`. The allowlist is empty, which is the
+  honest answer for two prose-only skills and a claim CI now enforces.
+- **Two fixture-discovery blocklists became rule-driven.** Adding `fixtures/projects/` made
+  both `skillmap-code`'s fixture test and the eval fixture suite read the version directories
+  as languages. Both now ask the ruleset what a language is, which cannot fall out of date the
+  way "skip these three directory names" did.
+
 ---
 
 ## T9 — distribution
@@ -422,11 +464,18 @@ The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of 
 Tracked here rather than left to be rediscovered. None is a blocker for the task it sits in
 front of; each is a thing this repository currently claims or implies but does not yet have.
 
-- **`policy.toml` has no format spec.** Referenced in `AGENTS.md` (invariant 1),
-  `docs/02-manifest-schema.md`, and T8. Writing it before T8 would be speculation, since the
-  exit-code semantics depend on what the diff turns out to need.
-- **`skillmap.lock` is specified in one sentence.** Enough to build against at T8, not
-  enough for a third party to write a compatible reader. Expand when the diff exists.
+- **~~`policy.toml` has no format spec.~~** Closed by T8: `docs/06-policy-and-lock.md`.
+- **~~`skillmap.lock` is specified in one sentence.~~** Closed by the same document — fields,
+  framing, escalation semantics, and why unknown capability terms round-trip.
+- **The rules tree is not embedded in the binary.** `skillmap ci` needs `--rules` pointing at
+  a checkout of this repository, because rules are data files (invariant 7) and a shipped
+  binary has no `rules/` beside it. T9 packages them. Deliberately not papered over with a
+  search up the directory tree: silently finding *a* rules directory is how a scan ends up
+  running the wrong rules and reporting clean.
+- **`skillmap ci` scans `Scope::Project` only.** Skills installed under the user's home
+  directory apply to every project and are not checked. Discovery already supports the scope;
+  what is missing is an answer to which lockfile they belong in, and guessing would produce a
+  lock that differs per machine — invariant 2's most obvious failure mode.
 - **The taxonomy has thirteen terms and the repository has one rule.** T4 built the engine
   that runs them; it deliberately did not grow coverage, because which capabilities matter is
   what T3 is for. Invariant 12 forbids shipping a term no rule detects, so v1.0 either grows

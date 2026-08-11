@@ -1,6 +1,21 @@
 description = "A capability that appears only in v1.1 must be reported as an escalation by the diff."
-requires = { task = "T8 (skillmap-diff and skillmap.lock)" }
+
+# `bundle/` is v1.1. `lock.json` beside this file is what v1.0 recorded: the same
+# bundle, no capabilities, a different content digest. The digest there is
+# synthetic — v1.0's bytes are not checked in, and inventing a plausible-looking
+# real one would be worse than an obviously fake string.
+#
+# It is keyed `bundle` because that is the directory name the eval harness scans,
+# and `target.root` is the bundle's own directory name relative to its discovery
+# root. Nothing about the lock format requires that name.
 
 [[expect]]
 kind = "capability"
+capability = "fs.read.credential"
+
+# The point of the case. The line above proves the scanner sees the credential
+# read; this one proves it can tell that yesterday it did not — which is the only
+# thing a reviewer looking at a version bump actually needs to know.
+[[expect]]
+kind = "escalation"
 capability = "fs.read.credential"

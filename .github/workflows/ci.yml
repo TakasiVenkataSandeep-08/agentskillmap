@@ -34,6 +34,10 @@
 #                                   promise aspirational — a supply-chain auditor with an
 #                                   ungated supply chain is the failure this project
 #                                   exists to describe in other people's repositories.)
+#
+# The `rust` job also runs `skillmap ci` against this repository's own two skills,
+# with the committed skillmap.lock and policy.toml. A tool that gates other
+# people's repositories and not its own is making a claim it has not tested.
 
 name: CI
 
@@ -105,6 +109,15 @@ jobs:
       # Windows is a rule that is not deterministic.
       - name: Eval gate
         run: cargo run -p skillmap-eval
+
+      # Dogfooding, and the only honest way to claim the check works. This
+      # repository ships two skills of its own; `skillmap ci` runs against them
+      # with the committed skillmap.lock and policy.toml, and a change to either
+      # skill that adds capability fails this build the same way it would fail
+      # anyone else's. The T8 acceptance fixtures are covered by
+      # `cargo test -p skillmap-cli` above; this covers the real thing.
+      - name: skillmap ci (on skillmap)
+        run: cargo run -p skillmap-cli -- ci
 
   line-endings:
     name: line-endings (${{ matrix.os }})

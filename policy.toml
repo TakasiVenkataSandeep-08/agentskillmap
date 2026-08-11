@@ -1,0 +1,13 @@
+# skillmap's policy for skillmap's own skills.
+#
+# This repository ships two skills (`.claude/skills/manifest-invariants` and
+# `rule-author`). Both are prose: no scripts, no capabilities. So the honest
+# allowlist is the empty one, and it is written out rather than omitted —
+# an absent policy.toml means "no opinion" and skips the check entirely, while
+# this file means "these skills may do nothing", which is a claim CI enforces.
+#
+# See docs/06-policy-and-lock.md. If a skill here ever needs to run something,
+# the capability goes in this file in the same commit, where a reviewer sees it.
+
+[allow]
+capabilities = []

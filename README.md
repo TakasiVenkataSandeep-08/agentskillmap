@@ -29,9 +29,33 @@ $ skillmap ci
 ✗ example-skill  capability escalation vs skillmap.lock
     + fs.read.credential   scripts/collect.py:17   py.credential-read.dotfile
       reads ~/.aws/credentials — added in this update
+    ~ content changed  bc0ce45d → 5b337214
+$ echo $?
+1
 ```
 
+That is a real run, against `fixtures/projects/v1.1` — a skill whose v1.0 read only project
+files and whose v1.1 also reads `~/.aws/credentials`. `crates/skillmap-cli/tests/escalation.rs`
+asserts every part of it, including that the report fits in eight lines.
+
 Everything else in this repository exists to make that line trustworthy.
+
+### Using it
+
+```bash
+skillmap lock    # record what the skills in this project can do today; commit it
+skillmap ci      # fail when that changes
+```
+
+Exit codes: `0` clean, `1` escalation vs the lock, `2` a capability `policy.toml` does not
+permit, `3` both, `4` the check could not run. `4` is separate on purpose — *"could not run"*
+must never read as *"ran and found nothing"*. Full format and semantics:
+[`docs/06-policy-and-lock.md`](docs/06-policy-and-lock.md). The GitHub Action is
+[`action.yml`](action.yml).
+
+skillmap ships two skills of its own, and CI runs `skillmap ci` against them on every push
+with the committed [`skillmap.lock`](skillmap.lock) and [`policy.toml`](policy.toml). A tool
+that gates other people's repositories and not its own is making an untested claim.
 
 ## Measured
 
@@ -74,17 +98,20 @@ the corpus is measured but **not labelled** — there is no ground truth to scor
 there is no held-out split and no precision, recall, or false-positive rate. Publishing the
 base rates above as though they were quality metrics would be exactly that overstatement.
 
-What is gated in CI today is the eval suite: 4 rule-fixture cases and 5 adversarial cases
-pass on every commit, and 3 further adversarial cases from `docs/05-eval.md` are declared and
-reported as pending rather than omitted — they need the semantic pass (T7), the diff (T8), and
-a `code.obfuscation` rule. The gate fails on a failing case, on coverage shrinking, and on a
+What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
+pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and
+reported as pending rather than omitted — they need the semantic pass (T7) and a
+`code.obfuscation` rule. The gate fails on a failing case, on coverage shrinking, and on a
 case regressing to pending. See `eval/baseline.json`.
 
 ## Status
 
-Pre-alpha. The scanner runs and the corpus is harvested; the CLI, policy, diff, and semantic
-layer are not built. Start with `docs/00-tasks.md`, which records what each task actually
-delivered and what it deliberately did not.
+Pre-alpha. The scanner runs, the corpus is harvested, and `skillmap lock` / `skillmap ci`
+work end to end. Not built: the semantic layer (T7), the labelling pass the quality metrics
+need, and distribution — there is no release, no npm package and no `cargo install`, so today
+the only way to run it is from a checkout. Four languages have rules (python, shell,
+javascript, typescript) and one capability term has coverage. Start with `docs/00-tasks.md`,
+which records what each task actually delivered and what it deliberately did not.
 
 ## For contributors
 
@@ -103,6 +130,7 @@ file, and two fixtures — no Rust required. See `docs/03-rules-authoring.md`.
 | `docs/03-rules-authoring.md` | How to add detection |
 | `docs/04-semantic-layer.md` | The quarantined model pass |
 | `docs/05-eval.md` | The falsifiable quality bar |
+| `docs/06-policy-and-lock.md` | `skillmap.lock`, `policy.toml`, and the exit codes |
 | `SECURITY.md` | Threat model and disclosure policy |
 | `CONTRIBUTING.md` | Contributor workflow — including adding a rule without writing Rust |
 

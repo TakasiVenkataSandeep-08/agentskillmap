@@ -65,16 +65,21 @@ skillmap/
 │   ├── skillmap-code/        # code plane: sinks + reachability      → tier `proven`  [T4, exists]
 │   ├── skillmap-instr/       # instruction plane: lexical patterns   → tier `pattern`  [T5, exists]
 │   ├── skillmap-semantic/    # quarantined model pass                → tier `advisory`
-│   ├── skillmap-policy/      # policy.toml, allowlists, exit codes
-│   ├── skillmap-diff/        # manifest delta
+│   ├── skillmap-scan/        # assembles one manifest from all three planes  [T8, exists]
+│   ├── skillmap-policy/      # policy.toml, allowlists, exit codes  [T8, exists]
+│   ├── skillmap-diff/        # skillmap.lock + capability escalation  [T8, exists]
 │   ├── skillmap-corpus/      # research harvester (build step 1)  [T3, exists]
 │   ├── skillmap-eval/        # labeled corpus, metrics, CI gate  [T6, exists]
-│   └── skillmap-cli/         # bin: `skillmap`
+│   └── skillmap-cli/         # bin: `skillmap` — lock, ci  [T8, exists]
 ├── rules/                      # TOML rule metadata (data, not code)
 ├── queries/                    # tree-sitter .scm queries
 ├── fixtures/                   # positive/negative + expected manifests
 │   ├── bundles/                # whole-bundle corpus + blessed manifests (T2)
-│   └── adversarial/            # red-team cases + declared expectations (T6)
+│   ├── adversarial/            # red-team cases + declared expectations (T6)
+│   └── projects/               # v1.0/v1.1 pair for the escalation check (T8)
+├── skillmap.lock               # this repo's own lock — skillmap gates skillmap
+├── policy.toml                 # …and its own allowlist, which is empty
+├── action.yml                  # the published GitHub Action wrapping `skillmap ci`
 ├── eval/                        # committed baseline the CI gate compares against
 ├── schema/                     # JSON Schema for the manifest
 ├── npm/                        # wrapper package + per-platform binaries
@@ -83,6 +88,12 @@ skillmap/
 
 Dependency direction is strictly downward: `core` depends on nothing internal; `cli` depends
 on everything; no crate depends on a sibling analysis plane.
+
+`skillmap-scan` is not in the original plan and was added at T8. Manifest assembly lived
+inside `skillmap-eval` from T6, with a note that a crate whose only job is to call three
+functions — written before a second caller exists — would be a stub. T8 produced the second
+caller: `skillmap ci` scans before it compares, and a product binary reaching into the test
+harness for the ability to scan would have the arrow backwards.
 
 The tree above is the **target**. `Cargo.toml`'s `members` list holds only crates that exist
 today; each is added when its task in `docs/00-tasks.md` begins. Twelve empty crates would be
