@@ -9,6 +9,7 @@ members = [
     "crates/skillmap-core",
     "crates/skillmap-resolve",
     "crates/skillmap-parse",
+    "crates/skillmap-corpus",
 ]
 
 [workspace.package]
@@ -17,9 +18,9 @@ edition = "2021"
 # Matches rust-toolchain.toml, and deliberately so: nothing in CI builds against
 # an older compiler, and an MSRV nobody tests is a claim the project cannot back
 # (invariant 12). Lowering it means adding a job that proves it, not editing this
-# line. The code would likely hold at 1.82 today — `Option::is_none_or` and lint
-# `reason =` are the newest things used — but "likely" is not what this field means.
-rust-version = "1.85"
+# line. It is a floor imposed by dependencies, not by this project's own code:
+# skillmap-corpus needs url -> idna -> icu_*, which require 1.86 or newer.
+rust-version = "1.97"
 license = "Apache-2.0"
 repository = "https://github.com/skillmap/skillmap"
 

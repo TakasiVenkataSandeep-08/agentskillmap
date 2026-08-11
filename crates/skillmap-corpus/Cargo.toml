@@ -1,0 +1,31 @@
+[package]
+name = "skillmap-corpus"
+description = "Research harvester: collects and measures real SKILL.md bundles. Not part of the scanning path."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+skillmap-core = { path = "../skillmap-core" }
+skillmap-parse = { path = "../skillmap-parse" }
+skillmap-resolve = { path = "../skillmap-resolve" }
+serde.workspace = true
+serde_json.workspace = true
+
+# The ONLY network dependency in this workspace, and the reason invariant 9 is
+# phrased as "no network at scan time" rather than "no network". `ureq` is
+# blocking and pure-Rust over rustls: no async runtime, no C TLS, roughly a
+# thirtieth of what reqwest would drag in. It is used for exactly one thing —
+# authenticated GETs against the GitHub REST API returning small JSON — because
+# bundle contents come down through `git clone --depth 1` instead, which reuses
+# the git the user already has rather than reimplementing a transfer in-process.
+ureq = "2"
+
+[[bin]]
+name = "skillmap-corpus"
+path = "src/main.rs"
+
+[lints]
+workspace = true

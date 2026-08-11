@@ -3,6 +3,9 @@
 
 # Corpus raw data (may be large)
 /corpus/raw/
+# The fetch ledger lives inside raw/ so one rule covers every non-published
+# corpus artifact. index.json and report.md are deliberately NOT ignored: they
+# are the published research output and belong in review.
 
 # Environment variables
 .env

@@ -32,6 +32,18 @@ require explicit opt-in:
 1. `--semantic` — one model API call per chunk. Nothing else.
 2. `skillmap corpus` — the research harvester, which fetches public repositories.
 
+**Where the network code actually lives.** Only `crates/skillmap-corpus` links an HTTP
+client, so the offline guarantee is a property of the dependency graph rather than of
+discipline: no crate on the scanning path can make a request, because none of them can
+reach a socket. The harvester contacts exactly one host, `api.github.com`, and does so only
+for authenticated GETs that return JSON. Bundle contents come down through `git clone`
+rather than an in-process transfer, which keeps the HTTP surface to a single verb and
+reuses a tool the operator already trusts.
+
+The client is `ureq`: blocking, pure-Rust over rustls, no async runtime. `reqwest` was
+rejected for the obvious reason — tokio, hyper, and roughly 130 transitive crates is not a
+tree this project can defend while auditing anyone else's.
+
 There is **no telemetry**. No analytics, no accounts, no phone-home, not even opt-in. A
 supply-chain tool with a supply-chain problem is worthless, and this project would have no
 standing to audit anyone else while shipping a beacon.

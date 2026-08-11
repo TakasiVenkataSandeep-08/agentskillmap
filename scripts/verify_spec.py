@@ -64,7 +64,7 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 #   rules/languages.toml  docs/00-tasks.md "Known gaps" — T4 input
 #   run-meta.json       AGENTS.md invariant 2 — where run metadata goes instead
 #                       of the manifest; nothing writes it until a CLI exists
-#   crates/, npm/       ARCHITECTURE.md target layout; members are added per task
+#   npm/                ARCHITECTURE.md target layout; built at release (T9)
 #   corpus/             output of task T3, produced at runtime, never committed
 KNOWN_GAP_EXACT = {
     "policy.toml",
@@ -96,7 +96,6 @@ EXTERNAL_CONVENTIONS = {
 # below retires when its task begins — the same self-retiring rule as
 # KNOWN_GAP_EXACT, enforced below, so this list cannot quietly outlive its reason.
 #
-#   skillmap-corpus                     T3
 #   skillmap-rules, skillmap-code       T4
 #   skillmap-instr                      T5
 #   skillmap-eval                       T6
@@ -104,11 +103,11 @@ EXTERNAL_CONVENTIONS = {
 #   skillmap-policy, skillmap-diff      T8
 #   skillmap-cli                        T9
 #
-# Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2).
+# Retired so far: skillmap-core (T1), skillmap-resolve and skillmap-parse (T2),
+# skillmap-corpus (T3).
 PLANNED_CRATES = {
     f"crates/{name}"
     for name in (
-        "skillmap-corpus",
         "skillmap-rules",
         "skillmap-code",
         "skillmap-instr",

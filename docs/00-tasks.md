@@ -137,6 +137,48 @@ format-scope decision rule (≥5% presence) has been applied to pick v1 resolver
 
 **This is the kill gate.** If the numbers are boring, publish the negative result and stop.
 
+**Status: the harvester is built and tested; the harvest itself has not been run.**
+
+The pipeline is complete — sources, fetch caching, content-addressed archive, measurement,
+`index.json`, `report.md` — and exercised end to end by tests that use a local `Fetcher`
+instead of the network. What has *not* happened is a real run: that needs a `GITHUB_TOKEN`
+and fetches thousands of third-party repositories, which is the operator's call to make and
+the operator's credentials to use, not something to do on their behalf.
+
+**So the kill-gate decision is still open.** No base rate in this repository has been
+measured against real bundles yet. To run it:
+
+```bash
+GITHUB_TOKEN=... cargo run -p skillmap-corpus -- --snapshot 2026-08
+```
+
+Decisions worth recording:
+
+- **`ureq` for search, `git clone` for contents.** The corpus crate is the only one in the
+  workspace that touches the network, which is why the HTTP dependency lives there alone. It
+  is used exclusively for authenticated GETs returning small JSON; the bulk transfer goes
+  through the git the operator already has. `reqwest` would have pulled tokio, hyper, and
+  roughly 130 crates into a supply-chain auditor's tree — the same tree refused for
+  `jsonschema` in T1.
+- **Lexical measurements are labelled as upper bounds and never become findings.** The
+  capability-surface counts are substring matches: they do not parse, establish no
+  reachability, and carry no provenance, so presenting them as tier-`proven` would blend an
+  assurance tier (invariant 5) and overstate what was established (invariant 4). They exist
+  to size the problem and to tell T4 which grammars to write first. `report.md` says all of
+  this above the table, not in a footnote.
+- **Rates are integer arithmetic; there are no floats anywhere.** Percentages are computed
+  in tenths and byte shares in parts-per-million, so `index.json` diffs cleanly between
+  snapshots and prints identically on every platform.
+- **The fetch cache is keyed on the pinned commit,** not on a branch name. Keyed on a branch
+  it would serve last month's contents as this month's, and the corpus would not be
+  reproducible — which is the one property that makes a published base rate checkable.
+- **Bundles are deduplicated by content digest.** The same bundle vendored into five
+  repositories is one row. Without that the base rates over-count whatever is most copied,
+  which is exactly the popular material.
+
+The toolchain pin moved to a current stable in this task: `ureq` pulls `url` → `idna` →
+`icu_*`, which require rustc 1.86 or newer.
+
 ---
 
 ## T4 — `skillmap-rules` + `skillmap-code`: the engine
@@ -256,6 +298,12 @@ front of; each is a thing this repository currently claims or implies but does n
 - **`unsupported_language` is never emitted yet.** Every file is unanalyzed for capabilities
   at this stage, so attaching that reason to all of them would mean nothing. It becomes real
   in T4, where the rule engine knows which grammars are wired up.
+- **`cargo deny` is configured but never runs.** `deny.toml` has existed since T0 and no CI
+  job invokes it, so the supply-chain gate `SECURITY.md` promises is currently aspirational.
+  This matters more since T3: `ureq` brought rustls and `ring` into the tree, whose licences
+  (ISC, and `ring`'s OpenSSL-derived terms) may not satisfy the current allowlist. Adding the
+  job is small; it is listed here rather than done silently because it will probably fail
+  first time and that failure needs a decision, not a rubber stamp.
 - **The frontmatter subset is unvalidated against real bundles.** The parser refuses anything
   outside the documented `SKILL.md` shape (see T2). Whether real skills stay inside it is a
   T3 measurement, not a guess — widening it before there is a denominator would be the wrong

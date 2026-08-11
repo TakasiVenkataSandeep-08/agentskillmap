@@ -67,7 +67,7 @@ skillmap/
 │   ├── skillmap-semantic/    # quarantined model pass                → tier `advisory`
 │   ├── skillmap-policy/      # policy.toml, allowlists, exit codes
 │   ├── skillmap-diff/        # manifest delta
-│   ├── skillmap-corpus/      # research harvester (build step 1)
+│   ├── skillmap-corpus/      # research harvester (build step 1)  [T3, exists]
 │   ├── skillmap-eval/        # labeled corpus, metrics, CI gate
 │   └── skillmap-cli/         # bin: `skillmap`
 ├── rules/                      # TOML rule metadata (data, not code)

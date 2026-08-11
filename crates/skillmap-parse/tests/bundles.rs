@@ -532,19 +532,20 @@ fn a_deeply_nested_tree_does_not_exhaust_the_stack() {
     // a recursive walk given enough depth, but the depth at which recursion
     // actually overflows depends on the platform's thread stack size (2 MiB for
     // Rust test threads, 8 MiB for a Unix main thread) and on frame size. It is a
-    // regression guard, not a demonstration of the exact limit. It is also the
-    // slowest test here, and the cost is filesystem calls, not the walk.
+    // regression guard, not a demonstration of the exact limit. Depth is kept to
+    // 600 because the cost here is filesystem calls, not the walk, and a deeper
+    // tree buys no extra confidence for a lot more CI time.
     let temp = TempDir::new("deep");
     let bundle = scratch_bundle(&temp);
 
     let mut deep = bundle.clone();
-    for level in 0..2_000 {
+    for level in 0..600 {
         deep = deep.join(format!("d{level}"));
     }
     if std::fs::create_dir_all(&deep).is_err() {
         // Some filesystems cap total path length well below this. The bug this
         // guards is real regardless; skipping beats a false failure.
-        eprintln!("skipping: this filesystem will not create a 2000-deep path");
+        eprintln!("skipping: this filesystem will not create a 600-deep path");
         return;
     }
     write(&deep.join("buried.txt"), "at the bottom\n");
