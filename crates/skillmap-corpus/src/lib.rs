@@ -226,6 +226,13 @@ pub struct HarvestOptions {
     pub corpus_dir: PathBuf,
     /// Maximum repositories to pull from each source.
     pub limit: usize,
+    /// Rebuild from the local archive without discovery, fetching, or a token.
+    ///
+    /// Re-measuring is the expensive-but-local half of a harvest, and it is the
+    /// half that changes when the parser changes. Coupling it to discovery meant
+    /// ~600 API calls and a token every time a report needed regenerating for a
+    /// reason that had nothing to do with the network.
+    pub offline: bool,
     /// A label for this corpus snapshot, e.g. `2026-08`.
     ///
     /// Deliberately operator-supplied rather than a wall-clock timestamp: the
@@ -240,6 +247,7 @@ impl Default for HarvestOptions {
         Self {
             corpus_dir: PathBuf::from("corpus"),
             limit: 200,
+            offline: false,
             snapshot: "unlabelled".to_owned(),
         }
     }

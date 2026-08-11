@@ -551,7 +551,7 @@ pub fn to_entries(
 #[cfg(test)]
 #[allow(
     clippy::indexing_slicing,
-    reason = "slicing a fixed test input at a known offset; a bad index is the               test failing. Invariant 10 bans this in library code only."
+    reason = "slicing a fixed test input at a known offset; a bad index is the test failing. Invariant 10 bans this in library code only."
 )]
 mod tests {
     use super::*;

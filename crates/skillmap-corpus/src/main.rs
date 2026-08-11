@@ -46,6 +46,13 @@ fn main() -> std::process::ExitCode {
 
 fn run() -> Result<(), Error> {
     let options = parse_args();
+    let archive = Archive::open(&options.corpus_dir)?;
+
+    // Checked before the banner: an offline rebuild makes no network request, and
+    // announcing one it will not make would be its own small lie.
+    if options.offline {
+        return rebuild_offline(&options, &archive);
+    }
 
     eprintln!(
         "skillmap-corpus: this command makes network requests to api.github.com \
@@ -57,7 +64,6 @@ fn run() -> Result<(), Error> {
     // Fail fast, before any work, with an explanation rather than a 403 later.
     let token = skillmap_corpus::github_token()?;
     let client = GitHub::new(token);
-    let archive = Archive::open(&options.corpus_dir)?;
 
     let mut repos: Vec<RepoRef> = Vec::new();
     // What each source yielded, recorded so the report can print it. A source
@@ -92,13 +98,12 @@ fn run() -> Result<(), Error> {
     let found = CodeSearch { client: &client }.repos(options.limit)?;
     if found.is_empty() {
         eprintln!(
-            "
-WARNING: code search returned zero repositories.
-             That is the only source that reaches the tail of the ecosystem, so this
-             corpus is entirely curated head and its base rates cannot be read as
-             ecosystem rates. The report says so too. Check the token is valid and
-             that `{CODE_SEARCH_QUERY}` still matches on the REST search index.
-"
+            "\nWARNING: code search returned zero repositories.\n\
+             That is the only source that reaches the tail of the ecosystem,\
+             so this corpus is entirely curated head and its base rates cannot\
+             be read as ecosystem rates. The report says so too. Check the\
+             token is valid and that `{CODE_SEARCH_QUERY}` still matches on\
+             the REST search index.\n"
         );
     }
     sources.push(SourceReport {
@@ -139,6 +144,41 @@ WARNING: code search returned zero repositories.
     Ok(())
 }
 
+/// Rebuild `index.json` and `report.md` from the local archive.
+///
+/// No token, no API, no clone. Everything measured is recomputed; the discovery
+/// facts are carried from the previous index, which is the only place they exist.
+fn rebuild_offline(options: &HarvestOptions, archive: &Archive) -> Result<(), Error> {
+    eprintln!(
+        "skillmap-corpus --offline: rebuilding from the local archive.\n\
+         No network requests, no token, nothing cloned.\n"
+    );
+
+    let index_path = options.corpus_dir.join("index.json");
+    let previous: skillmap_corpus::Index = std::fs::read_to_string(&index_path)
+        .ok()
+        .and_then(|text| serde_json::from_str(&text).ok())
+        .ok_or_else(|| Error::Parse {
+            context: index_path.display().to_string(),
+            message: "cannot read a previous index; `--offline` rebuilds an \
+                      existing harvest, so run once without it first"
+                .to_owned(),
+        })?;
+
+    eprintln!("re-measuring {} bundles\n", previous.records.len());
+    let index = report::remeasure(&previous, archive)?;
+
+    archive.write_outputs(&report::index_json(&index)?, &report::report(&index))?;
+    println!(
+        "{} bundles re-measured, {} skipped",
+        index.records.len(),
+        index.skipped.len()
+    );
+    println!("wrote {}/index.json", options.corpus_dir.display());
+    println!("wrote {}/report.md", options.corpus_dir.display());
+    Ok(())
+}
+
 /// Minimal argument parsing.
 ///
 /// No `clap`: three options do not justify a dependency in the one crate whose
@@ -159,6 +199,7 @@ fn parse_args() -> HarvestOptions {
                     options.limit = value;
                 }
             }
+            "--offline" => options.offline = true,
             "--snapshot" => {
                 if let Some(value) = args.next() {
                     options.snapshot = value;
@@ -167,10 +208,12 @@ fn parse_args() -> HarvestOptions {
             "--help" | "-h" => {
                 println!(
                     "skillmap-corpus — harvest and measure real SKILL.md bundles\n\n\
-                     USAGE:\n    skillmap-corpus [--corpus-dir DIR] [--limit N] [--snapshot LABEL]\n\n\
+                     USAGE:\n    skillmap-corpus [--corpus-dir DIR] [--limit N] [--snapshot LABEL] [--offline]\n\n\
                      OPTIONS:\n    \
                      --corpus-dir DIR   where to write raw/, index.json, report.md (default: corpus)\n    \
-                     --limit N          maximum repositories per source (default: 200)\n    \
+                     --offline          rebuild the report from the local archive: no token,
+                       \n                       no network, nothing cloned; needs a previous run
+    \n                     --limit N          maximum repositories per source (default: 200)\n    \
                      --snapshot LABEL   label for this snapshot, e.g. 2026-08 (default: unlabelled)\n\n\
                      ENVIRONMENT:\n    \
                      GITHUB_TOKEN       required; no scopes needed for public data\n\n\

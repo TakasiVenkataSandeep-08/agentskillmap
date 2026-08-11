@@ -19,7 +19,7 @@
 )]
 #![allow(
     clippy::integer_division,
-    reason = "percentages are integer arithmetic throughout this project; see the               note in skillmap-corpus::measure"
+    reason = "percentages are integer arithmetic throughout this project; see the note in skillmap-corpus::measure"
 )]
 
 use skillmap_parse::frontmatter;

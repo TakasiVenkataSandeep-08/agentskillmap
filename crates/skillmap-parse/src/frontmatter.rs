@@ -343,7 +343,7 @@ fn parse_value(
     if inline.starts_with('*') || inline.starts_with('&') {
         return Err(Error {
             line: number,
-            message: "YAML anchors and aliases are not supported: an alias exists to                       be expanded, and repeated expansion is the denial-of-service                       shape this parser refuses"
+            message: "YAML anchors and aliases are not supported: an alias exists to be expanded, and repeated expansion is the denial-of-service shape this parser refuses"
                 .to_owned(),
         });
     }
@@ -707,7 +707,7 @@ fn read_block_scalar(rows: &mut Rows, indent: usize, folded: bool) -> String {
     clippy::unwrap_used,
     clippy::panic,
     clippy::indexing_slicing,
-    reason = "a failed unwrap, panic, or index in a test is the test failing.               Invariant 10 bans these in library code, where hostile input is the               normal case; asserting on a parsed shape is not that."
+    reason = "a failed unwrap, panic, or index in a test is the test failing. Invariant 10 bans these in library code, where hostile input is the normal case; asserting on a parsed shape is not that."
 )]
 mod tests {
     use super::*;

@@ -14,7 +14,7 @@
 
 #![allow(
     clippy::integer_division,
-    reason = "see the note in `measure`: every rate here is integer arithmetic on               purpose, because this project has no floats and a percentage that               printed differently on two platforms would undermine the one thing               the report is for."
+    reason = "see the note in `measure`: every rate here is integer arithmetic on purpose, because this project has no floats and a percentage that printed differently on two platforms would undermine the one thing the report is for."
 )]
 
 use crate::measure::{lexical_hit, marker_names, Measurements};
@@ -211,6 +211,62 @@ pub fn harvest_with_sources(
     Ok(Index {
         snapshot: snapshot.to_owned(),
         sources,
+        records,
+        skipped,
+    })
+}
+
+/// Re-measure every bundle already in the archive, without touching the network.
+///
+/// Takes the discovery facts — repository, pinned commit, provenance, stars —
+/// from the previous index, because those are properties of the *harvest* and
+/// cannot be recovered from the archive. Everything measured is recomputed, so a
+/// parser or measurement change is reflected without re-cloning anything.
+///
+/// A bundle whose archive directory has gone missing is reported, not silently
+/// dropped: an index that quietly shrank would look like the ecosystem changed.
+///
+/// # Errors
+///
+/// [`Error`] only if the archive itself is unusable.
+pub fn remeasure(previous: &Index, archive: &Archive) -> Result<Index, Error> {
+    let mut records: Vec<IndexRecord> = Vec::new();
+    let mut skipped: Vec<Skipped> = previous.skipped.clone();
+
+    let total = previous.records.len();
+    for (position, record) in previous.records.iter().enumerate() {
+        if position % 2000 == 0 {
+            eprintln!("  re-measuring [{position}/{total}]");
+        }
+        let dir = archive.bundle_dir(&record.digest);
+        if !dir.is_dir() {
+            skipped.push(Skipped {
+                repo: record.repo.clone(),
+                reason: "archived bundle is missing from the archive".to_owned(),
+            });
+            continue;
+        }
+        match measure_archived(dir.as_path()) {
+            Ok(measurements) => records.push(IndexRecord {
+                measurements,
+                ..record.clone()
+            }),
+            Err(error) => skipped.push(Skipped {
+                repo: record.repo.clone(),
+                reason: format!("archived bundle could not be re-measured: {error}"),
+            }),
+        }
+    }
+
+    records.sort_by(|a, b| a.sort_key().cmp(&b.sort_key()));
+    skipped.sort_by(|a, b| (a.repo.as_str(), a.reason.as_str()).cmp(&(&b.repo, &b.reason)));
+
+    Ok(Index {
+        snapshot: previous.snapshot.clone(),
+        // Carried forward: these describe the harvest that fetched the archive,
+        // and an offline rebuild did not perform one. Reporting zero would claim
+        // the sources yielded nothing.
+        sources: previous.sources.clone(),
         records,
         skipped,
     })
@@ -710,7 +766,7 @@ pub fn report(index: &Index) -> String {
         let _ = writeln!(
             out,
             "
-Bundle names are deliberately omitted. These are facts about this              harvest — a clone that failed, a host antivirus that blocked a file —              not findings about the bundles, and `docs/01-corpus-scan.md` is              explicit that this report describes patterns rather than people."
+Bundle names are deliberately omitted. These are facts about this harvest — a clone that failed, a host antivirus that blocked a file — not findings about the bundles, and `docs/01-corpus-scan.md` is explicit that this report describes patterns rather than people."
         );
     }
 

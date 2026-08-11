@@ -21,7 +21,7 @@
 
 #![allow(
     clippy::integer_division,
-    reason = "integer division is the deliberate policy, not an oversight. This               project has no floats anywhere: they would print differently on               different platforms in an artifact that must be byte-identical, and               a rate expressed as a float is one edit away from being a score               (invariant 1). Shares are carried as parts-per-million and rates as               tenths of a percent, and the truncation is intended."
+    reason = "integer division is the deliberate policy, not an oversight. This project has no floats anywhere: they would print differently on different platforms in an artifact that must be byte-identical, and a rate expressed as a float is one edit away from being a score (invariant 1). Shares are carried as parts-per-million and rates as tenths of a percent, and the truncation is intended."
 )]
 
 use serde::{Deserialize, Serialize};

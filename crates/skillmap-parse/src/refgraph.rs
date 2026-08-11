@@ -217,7 +217,7 @@ const STOPWORDS: &[&str] = &[
 #[allow(
     clippy::unwrap_used,
     clippy::indexing_slicing,
-    reason = "a failed unwrap or out-of-bounds index in a test is the test failing,               which is the point. Invariant 10 bans these in library code, where               hostile input is the normal case and a crash is a DoS on somebody's CI."
+    reason = "a failed unwrap or out-of-bounds index in a test is the test failing, which is the point. Invariant 10 bans these in library code, where hostile input is the normal case and a crash is a DoS on somebody's CI."
 )]
 mod tests {
     use super::*;
