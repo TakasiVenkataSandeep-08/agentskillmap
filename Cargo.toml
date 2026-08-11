@@ -39,6 +39,13 @@ repository = "https://github.com/skillmap/skillmap"
 # workspace was quietly unpublishable, and would have stayed that way until T9's
 # release attempt failed on it.
 #
+# T9 note: these are now correct and the workspace still does not publish to
+# crates.io, for a different and more interesting reason. `skillmap-rules` embeds
+# `rules/` and `queries/` from the workspace root at build time, and Cargo
+# packages only files beneath a package's own directory. Distribution therefore
+# goes through release binaries, npm, Homebrew, and `cargo install --git`. See
+# docs/07-distribution.md for why the two obvious fixes are both worse.
+#
 # Declared here rather than in each member so a version bump is one edit.
 skillmap-core = { path = "crates/skillmap-core", version = "0.1.0" }
 skillmap-resolve = { path = "crates/skillmap-resolve", version = "0.1.0" }

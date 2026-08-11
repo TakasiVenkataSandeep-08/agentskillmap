@@ -65,7 +65,9 @@ runs:
       id: check
       shell: bash
       run: |
-        args=(ci --project "${{ inputs.project }}" --rules .skillmap-src)
+        # No --rules. The binary embeds its own rule data (T9), which is what
+        # makes it distributable at all — see docs/07-distribution.md.
+        args=(ci --project "${{ inputs.project }}")
         [ -n "${{ inputs.lock }}" ] && args+=(--lock "${{ inputs.lock }}")
         [ -n "${{ inputs.policy }}" ] && args+=(--policy "${{ inputs.policy }}")
 

@@ -145,6 +145,38 @@ jobs:
       - name: Verify no tracked text file contains CRLF
         run: python scripts/verify_spec.py --only line-endings
 
+  # The release path is shell, and shell fails at runtime. Two bugs in
+  # scripts/homebrew-formula.sh were found by running it rather than reading it —
+  # one of them emitted a complete, publishable formula with four empty sha256
+  # fields and exited 0. `bash -n` would not have caught that one, but it catches
+  # the class that turns a tagged release into a broken one at the worst moment,
+  # and it costs a second. The behavioural checks live in .github/workflows/release.yml,
+  # which runs the real thing before anything is published.
+  scripts:
+    name: scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax-check every shell script
+        run: |
+          found=0
+          for script in scripts/*.sh; do
+            found=1
+            echo "checking $script"
+            bash -n "$script"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "::error::no shell scripts found; this job is checking nothing"
+            exit 1
+          fi
+
+      # No shellcheck step yet, deliberately. It is preinstalled on this runner
+      # and would be a better gate than `bash -n`, but it could not be run before
+      # being committed here, and adding a gate whose first execution is on
+      # somebody else's push is how a repository acquires a red build it did not
+      # author. In docs/00-tasks.md's Known gaps.
+
   toolchain-pin:
     name: toolchain-pin
     runs-on: ubuntu-latest

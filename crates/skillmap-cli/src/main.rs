@@ -1,7 +1,7 @@
 //! `skillmap` — the binary.
 //!
-//! Two subcommands so far, and they are a pair: `lock` records what the skills in
-//! a project can do today, `ci` fails when that changes. Neither is useful alone.
+//! Three subcommands. `lock` records what the skills in a project can do today,
+//! `ci` fails when that changes, `scan` prints the manifest behind both.
 //!
 //! ```text
 //! $ skillmap ci
@@ -10,26 +10,22 @@
 //!       reads ~/.aws/credentials — added in this update
 //! ```
 //!
-//! `scan` (emit a manifest), the npm wrapper, and reproducible signed releases are
-//! T9. This binary exists at T8 because T8's acceptance test is *"a fixture skill
-//! that gains `fs.read.credential` in v1.1 causes a failing check"* — and a check
-//! nobody can run is not a check.
+//! # Rules come from inside the binary
+//!
+//! Rules are data (invariant 7), which through T8 meant `--rules` had to point
+//! at a checkout — fine for this repository's own CI and useless to everybody
+//! else. T9 bakes `rules/` and `queries/` in at build time. `--rules` survives as
+//! an override for developing against an edited tree, and `skillmap rules` prints
+//! what the running binary actually carries, because "which rules did this
+//! version have" is the first question anyone asks about a finding they disagree
+//! with.
 
 use skillmap_core::Manifest;
 use skillmap_policy::{Outcome, Policy};
 use skillmap_resolve::{ClaudeCode, Scope};
+use skillmap_rules::RuleSet;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-
-/// Where the rules tree is expected when `--rules` is not given.
-///
-/// Rules are data files, not compiled in, which is invariant 7 working as
-/// intended everywhere except distribution: a shipped binary has no `rules/`
-/// beside it. T9 packages them. Until then this defaults to the current
-/// directory and says so loudly when nothing loads, rather than scanning with an
-/// empty ruleset and reporting a clean result — which is the one failure mode
-/// this project cannot have.
-const DEFAULT_RULES: &str = ".";
 
 /// Default lockfile name, in the project root.
 const DEFAULT_LOCK: &str = "skillmap.lock";
@@ -50,7 +46,8 @@ fn main() -> ExitCode {
 /// Parsed command line.
 struct Args {
     project: PathBuf,
-    rules: PathBuf,
+    /// `None` means the rules baked into this binary.
+    rules: Option<PathBuf>,
     lock: PathBuf,
     policy: PathBuf,
 }
@@ -59,14 +56,19 @@ const USAGE: &str = "\
 skillmap — a supply-chain auditor for AI agent skills
 
 USAGE:
-    skillmap lock [OPTIONS]    write skillmap.lock from the skills in a project
-    skillmap ci   [OPTIONS]    fail if capabilities changed, or policy forbids them
+    skillmap lock  [OPTIONS]   write skillmap.lock from the skills in a project
+    skillmap ci    [OPTIONS]   fail if capabilities changed, or policy forbids them
+    skillmap scan  [OPTIONS]   print the capability manifest for each skill, as JSON
+    skillmap rules             list the rules this binary carries
+    skillmap version           print the version
 
 OPTIONS:
     --project <DIR>    project root to scan          [default: .]
-    --rules <DIR>      directory containing rules/   [default: .]
     --lock <FILE>      lockfile path                 [default: <project>/skillmap.lock]
     --policy <FILE>    policy path                   [default: <project>/policy.toml]
+    --rules <DIR>      load rules from a checkout instead of the ones built in.
+                       For developing against an edited rules tree; a release
+                       carries its own and needs no argument.
 
 EXIT CODES (ci):
     0  clean
@@ -78,6 +80,9 @@ EXIT CODES (ci):
 Exit 4 is separate on purpose: \"could not run\" must never read as \"ran and
 found nothing\".";
 
+/// Version of the binary, from the crate version.
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn run() -> Result<u8, String> {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let Some(command) = argv.first() else {
@@ -85,9 +90,16 @@ fn run() -> Result<u8, String> {
         return Err("no subcommand given".to_owned());
     };
 
-    if command == "--help" || command == "-h" || command == "help" {
-        println!("{USAGE}");
-        return Ok(0);
+    match command.as_str() {
+        "--help" | "-h" | "help" => {
+            println!("{USAGE}");
+            return Ok(0);
+        }
+        "--version" | "-V" | "version" => {
+            println!("skillmap {VERSION}");
+            return Ok(0);
+        }
+        _ => {}
     }
 
     let args = parse_args(argv.get(1..).unwrap_or_default())?;
@@ -95,6 +107,8 @@ fn run() -> Result<u8, String> {
     match command.as_str() {
         "lock" => write_lock(&args).map(|()| 0),
         "ci" => check(&args),
+        "scan" => emit_manifests(&args).map(|()| 0),
+        "rules" => list_rules(&args).map(|()| 0),
         other => Err(format!("unknown subcommand `{other}`\n\n{USAGE}")),
     }
 }
@@ -125,21 +139,26 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
 
     let project = project.unwrap_or_else(|| PathBuf::from("."));
     Ok(Args {
-        rules: rules.unwrap_or_else(|| PathBuf::from(DEFAULT_RULES)),
+        rules,
         lock: lock.unwrap_or_else(|| project.join(DEFAULT_LOCK)),
         policy: policy.unwrap_or_else(|| project.join(DEFAULT_POLICY)),
         project,
     })
 }
 
-/// Discover and scan every bundle in the project.
+/// Load rules, from `--rules` if given and from the binary otherwise.
 ///
-/// Rule-loading diagnostics and undiscoverable directories both go to stderr and
-/// neither is swallowed: a run that could not look at a bundle must not read the
-/// same as a run that looked and found nothing (invariant 3).
-fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
-    let rules = skillmap_rules::load(&args.rules);
-    for diagnostic in &rules.diagnostics {
+/// Diagnostics go to stderr either way, and an empty ruleset is fatal. A scanner
+/// that loaded nothing reports every project clean, which is the single worst
+/// output this tool can produce, so it refuses rather than producing a confident
+/// silence.
+fn rules(args: &Args) -> Result<RuleSet, String> {
+    let set = match &args.rules {
+        Some(dir) => skillmap_rules::load(dir),
+        None => skillmap_rules::embedded(),
+    };
+
+    for diagnostic in &set.diagnostics {
         eprintln!(
             "skillmap: rule diagnostic [{}] {}{}",
             diagnostic.code.as_str(),
@@ -151,14 +170,64 @@ fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
                 .unwrap_or_default()
         );
     }
-    if rules.rules.is_empty() {
-        return Err(format!(
-            "no rules loaded from {}/rules — every bundle would scan clean, which \
-             would be a lie. Pass --rules <dir> pointing at a checkout of this \
-             repository.",
-            args.rules.display()
-        ));
+
+    if set.rules.is_empty() {
+        return Err(match &args.rules {
+            Some(dir) => format!(
+                "no rules loaded from {}/rules — every bundle would scan clean, \
+                 which would be a lie. Drop --rules to use the ones built into \
+                 this binary.",
+                dir.display()
+            ),
+            None => "this binary carries no rules, which should be impossible — \
+                     the build refuses to produce one. Please report it."
+                .to_owned(),
+        });
     }
+    Ok(set)
+}
+
+/// `skillmap rules` — what this binary can detect.
+///
+/// Exists because the rules are no longer visible on disk beside the tool. The
+/// first question about a finding somebody disagrees with is which rule produced
+/// it and what that rule claims, and a released binary has to be able to answer
+/// that without a checkout.
+fn list_rules(args: &Args) -> Result<(), String> {
+    let set = rules(args)?;
+    println!("skillmap {VERSION} — {} rules", set.rules.len());
+    for rule in &set.rules {
+        let claim = match rule.claim {
+            skillmap_rules::Claim::Capability(term) => term.as_str(),
+            skillmap_rules::Claim::Instruction(signal) => signal.as_str(),
+        };
+        println!("  {:<32} {:<12} {claim}", rule.id, rule.language);
+    }
+    Ok(())
+}
+
+/// `skillmap scan` — the manifest, canonically serialized.
+///
+/// One JSON document per bundle, each rendered by the same canonicalizer the
+/// rest of the tool uses, so what this prints is byte-identical to what any other
+/// consumer would produce from the same bytes (invariant 2).
+fn emit_manifests(args: &Args) -> Result<(), String> {
+    for manifest in scan(args)? {
+        let json = manifest
+            .to_canonical_json()
+            .map_err(|error| format!("cannot serialize the manifest: {error}"))?;
+        print!("{json}");
+    }
+    Ok(())
+}
+
+/// Discover and scan every bundle in the project.
+///
+/// Rule-loading diagnostics and undiscoverable directories both go to stderr and
+/// neither is swallowed: a run that could not look at a bundle must not read the
+/// same as a run that looked and found nothing (invariant 3).
+fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
+    let rules = rules(args)?;
 
     let discovery = skillmap_resolve::discover(&ClaudeCode, &args.project, Scope::Project)
         .map_err(|error| format!("cannot discover skills: {error}"))?;

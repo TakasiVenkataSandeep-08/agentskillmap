@@ -20,10 +20,14 @@
 //! A new sink, a new language, or a new obfuscation trick all reduce to those
 //! four. Wanting a fifth is a design discussion, not a rule PR.
 
+pub mod source;
+
+pub use source::{Dir, Embedded, Source};
+
 use serde::Deserialize;
 use skillmap_core::{CapabilityTerm, DiagnosticCode, InstructionSignal};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tree_sitter::{Language, Query};
 
 /// Grammars compiled into this crate.
@@ -253,20 +257,33 @@ fn diagnostic(
 /// because one contributed rule has a typo is a scanner nobody can extend.
 #[must_use]
 pub fn load(root: &Path) -> RuleSet {
+    load_from(&Dir::new(root))
+}
+
+/// Load the rules baked into this binary.
+///
+/// What a released `skillmap` uses. Identical data and identical code path to
+/// [`load`] — see [`source`] for why that sameness is load-bearing.
+#[must_use]
+pub fn embedded() -> RuleSet {
+    load_from(&Embedded)
+}
+
+/// Load and validate every rule a [`Source`] offers.
+///
+/// Never fails as a whole: a rule that cannot be read, parsed, or validated
+/// becomes a diagnostic and the rest still load. A scanner that refuses to start
+/// because one contributed rule has a typo is a scanner nobody can extend.
+#[must_use]
+pub fn load_from(source: &dyn Source) -> RuleSet {
     let mut diagnostics = Vec::new();
-    let languages = load_languages(root, &mut diagnostics);
+    let languages = load_languages(source, &mut diagnostics);
     let mut rules = Vec::new();
 
-    for path in rule_files(&root.join("rules")) {
-        let relative = path
-            .strip_prefix(root)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .replace('\\', "/");
-
-        match load_rule(root, &path, &languages) {
+    for path in source.rule_files() {
+        match load_rule(source, &path, &languages) {
             Ok(rule) => rules.push(rule),
-            Err((code, note)) => diagnostics.push(diagnostic(code, Some(relative), note)),
+            Err((code, note)) => diagnostics.push(diagnostic(code, Some(path), note)),
         }
     }
 
@@ -305,19 +322,18 @@ pub fn load(root: &Path) -> RuleSet {
 
 /// Load and compile every language section.
 fn load_languages(
-    root: &Path,
+    source: &dyn Source,
     diagnostics: &mut Vec<skillmap_core::Diagnostic>,
 ) -> BTreeMap<String, LoadedLanguage> {
-    let path = root.join("rules").join("languages.toml");
     let mut loaded = BTreeMap::new();
 
-    let text = match std::fs::read_to_string(&path) {
+    let text = match source.read("rules/languages.toml") {
         Ok(text) => text,
         Err(error) => {
             diagnostics.push(diagnostic(
                 DiagnosticCode::RuleLoadError,
                 Some("rules/languages.toml".to_owned()),
-                format!("cannot read: {error}"),
+                format!("{error} ({})", source.origin()),
             ));
             return loaded;
         }
@@ -350,8 +366,8 @@ fn load_languages(
 
         let mut reachability = None;
         if let Some(relative) = config.reachability.clone() {
-            let source = match std::fs::read_to_string(root.join(&relative)) {
-                Ok(source) => source,
+            let query_source = match source.read(&relative) {
+                Ok(text) => text,
                 Err(error) => {
                     diagnostics.push(diagnostic(
                         DiagnosticCode::RuleLoadError,
@@ -361,7 +377,7 @@ fn load_languages(
                     continue;
                 }
             };
-            match Query::new(&grammar, &source) {
+            match Query::new(&grammar, &query_source) {
                 Ok(query) => reachability = Some(query),
                 Err(error) => {
                     diagnostics.push(diagnostic(
@@ -388,45 +404,15 @@ fn load_languages(
     loaded
 }
 
-/// Every `.toml` under `dir` except `languages.toml`, sorted.
-fn rule_files(dir: &Path) -> Vec<PathBuf> {
-    let mut found = Vec::new();
-    let mut work = vec![dir.to_path_buf()];
-
-    while let Some(current) = work.pop() {
-        let Ok(entries) = std::fs::read_dir(&current) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                work.push(path);
-            } else if path.extension().is_some_and(|ext| ext == "toml")
-                && path
-                    .file_name()
-                    .is_some_and(|name| name != "languages.toml")
-            {
-                found.push(path);
-            }
-        }
-    }
-
-    found.sort();
-    found
-}
-
 /// Load, validate, and compile one rule file.
 fn load_rule(
-    root: &Path,
-    path: &Path,
+    source: &dyn Source,
+    path: &str,
     languages: &BTreeMap<String, LoadedLanguage>,
 ) -> Result<CompiledRule, (DiagnosticCode, String)> {
-    let text = std::fs::read_to_string(path).map_err(|error| {
-        (
-            DiagnosticCode::RuleLoadError,
-            format!("cannot read: {error}"),
-        )
-    })?;
+    let text = source
+        .read(path)
+        .map_err(|error| (DiagnosticCode::RuleLoadError, error))?;
     let file: RuleFile = toml::from_str(&text).map_err(|error| {
         (
             DiagnosticCode::RuleLoadError,
@@ -485,7 +471,7 @@ fn load_rule(
         }
     };
 
-    let query_source = std::fs::read_to_string(root.join(&file.query)).map_err(|error| {
+    let query_source = source.read(&file.query).map_err(|error| {
         (
             DiagnosticCode::RuleLoadError,
             format!("cannot read query {}: {error}", file.query),
@@ -605,6 +591,7 @@ fn validate_captures(
 )]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     fn repo_root() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")

@@ -50,13 +50,27 @@ standing to audit anyone else while shipping a beacon.
 
 ## Our own supply chain
 
-- Reproducible builds. Two builds of the same tag from clean checkouts are byte-identical;
-  an unreproducible release is a release blocker.
-- Signed release artifacts, verifiable without trusting the download host.
-- No `postinstall` script in the npm package. Per-platform binaries ship as
-  `optionalDependencies`, so nothing executes at install time.
-- Minimal dependency tree. Every dependency is one this project would have to defend in the
-  threat model above.
+All four of these are enforced rather than promised. `docs/07-distribution.md` has the detail,
+including the two bugs that stood between the first three and being true.
+
+- **Reproducible builds.** Two builds of the same tag from clean checkouts are byte-identical.
+  `.github/workflows/release.yml` builds every tag twice, from two different directories, and
+  publishes nothing if they differ — an unreproducible release is a release blocker, and this
+  is where the block happens.
+- **No build path or username reaches a published binary.** `scripts/build-release.sh` remaps
+  the workspace and the Cargo registry, then **greps the finished binary** for both and
+  refuses to publish on a hit. The check is not redundant with the one above: the first
+  version of the remapping matched nothing, and byte-identity did not notice, because both
+  builds ran as the same user.
+- **Signed release artifacts, verifiable without trusting the download host.** Keyless
+  sigstore attestations bound to the release workflow:
+  `gh attestation verify skillmap-linux-x64.tar.gz --repo skillmap/skillmap`. Deliberately not
+  a long-lived key this project would have to store, rotate, and eventually mishandle.
+- **No `postinstall` script in the npm package.** Per-platform binaries ship as
+  `optionalDependencies`, so nothing executes at install time and nothing is downloaded
+  outside npm's own integrity checking.
+- **Minimal dependency tree.** Every dependency is one this project would have to defend in the
+  threat model above. `cargo deny` gates it on every push.
 
 ## Reporting
 

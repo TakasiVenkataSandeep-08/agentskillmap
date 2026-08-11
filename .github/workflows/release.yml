@@ -1,0 +1,239 @@
+# Release: build every platform reproducibly, prove it, then publish.
+#
+# The order of the jobs is the argument. `reproducible` runs before anything is
+# published and builds the same tag twice from two different directories on the
+# same runner; if the two binaries differ, nothing ships. That is T9's acceptance
+# criterion — *"two builds of the same tag from clean checkouts are
+# byte-identical"* — enforced rather than asserted.
+#
+# What that check is actually worth: it proves the build does not depend on where
+# it happened, which is what makes a third party's rebuild meaningful evidence.
+# Without it, "reproducible" is a word in a README, and the attestation below
+# only proves that *this* workflow produced these bytes, not that anybody else
+# could produce them too.
+#
+# Signing is GitHub's build provenance attestation (sigstore-backed, keyless).
+# Deliberately not a long-lived signing key: a key this project would have to
+# store, rotate, and eventually lose is a worse story than an attestation tied to
+# the workflow identity that can be verified with `gh attestation verify`.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build, without the leading v (dry run; publishes nothing)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  reproducible:
+    name: reproducible (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both linkers this project ships through. The MSVC one is the reason
+        # scripts/build-release.sh passes /Brepro at all: the first two builds of
+        # this repository differed in exactly the 24 bytes of the PE header's
+        # TimeDateStamp.
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Disable line-ending rewriting on checkout
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+        with:
+          path: build-one
+
+      # A second checkout at a different path, which is the whole point. Building
+      # twice in the same directory proves almost nothing; the failure mode being
+      # tested is an absolute path baked into the output.
+      - uses: actions/checkout@v4
+        with:
+          path: build-two-at-a-different-path
+
+      - name: Show toolchain
+        run: rustup show active-toolchain
+
+      - name: Build once
+        shell: bash
+        working-directory: build-one
+        run: bash scripts/build-release.sh
+
+      - name: Build again, elsewhere
+        shell: bash
+        working-directory: build-two-at-a-different-path
+        run: bash scripts/build-release.sh
+
+      - name: Compare
+        shell: bash
+        run: |
+          one=$(find build-one/dist -type f | head -1)
+          two=$(find build-two-at-a-different-path/dist -type f | head -1)
+          echo "one: $(sha256sum "$one")"
+          echo "two: $(sha256sum "$two")"
+          if ! cmp -s "$one" "$two"; then
+            echo "::error::builds from two directories are not byte-identical"
+            cmp -l "$one" "$two" | head -40
+            exit 1
+          fi
+          echo "byte-identical"
+
+  build:
+    name: build (${{ matrix.target }})
+    needs: reproducible
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Native runners rather than cross-compilation. A cross-built binary
+          # cannot be smoke-tested by the job that produced it, and "it links"
+          # is not the same claim as "it runs".
+          - { target: linux-x64,    runner: ubuntu-latest,    binary: skillmap }
+          - { target: linux-arm64,  runner: ubuntu-24.04-arm, binary: skillmap }
+          - { target: darwin-x64,   runner: macos-13,         binary: skillmap }
+          - { target: darwin-arm64, runner: macos-14,         binary: skillmap }
+          - { target: win32-x64,    runner: windows-latest,   binary: skillmap.exe }
+    steps:
+      - name: Disable line-ending rewriting on checkout
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      - name: Build
+        shell: bash
+        run: bash scripts/build-release.sh
+
+      # The binary carries its own rules (crates/skillmap-rules/build.rs), so
+      # this is a real end-to-end check and not a version banner: it scans a
+      # fixture project and must find the credential read. A release that shipped
+      # an empty ruleset would pass every other check in this file and report
+      # every project in the world clean.
+      - name: Smoke test
+        shell: bash
+        run: |
+          ./dist/${{ matrix.binary }} version
+          ./dist/${{ matrix.binary }} rules
+          ./dist/${{ matrix.binary }} scan --project fixtures/projects/v1.1 > scanned.json
+          grep -q 'fs.read.credential' scanned.json
+          grep -q 'py.credential-read.dotfile' scanned.json
+          echo "the shipped binary detects with its own embedded rules"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skillmap-${{ matrix.target }}
+          path: dist/${{ matrix.binary }}
+          if-no-files-found: error
+
+  publish:
+    name: publish
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      # download-artifact names each directory after the artifact; the npm
+      # packager wants them named by target.
+      - name: Arrange artifacts
+        run: |
+          mkdir -p dist
+          for dir in artifacts/skillmap-*; do
+            target="${dir#artifacts/skillmap-}"
+            mkdir -p "dist/$target"
+            cp "$dir"/* "dist/$target/"
+          done
+          find dist -type f | sort
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          # The tag and the crate version must agree, or `cargo install` and the
+          # npm package would ship different numbers for the same bytes.
+          crate=$(grep -m1 '^version' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$version" != "$crate" ]; then
+            echo "::error::tag says $version, Cargo.toml says $crate"
+            exit 1
+          fi
+
+      - name: Package archives and checksums
+        run: |
+          mkdir -p release
+          cd dist
+          for target in *; do
+            if [ "$target" = "win32-x64" ]; then
+              (cd "$target" && zip -q "../../release/skillmap-$target.zip" skillmap.exe)
+            else
+              chmod +x "$target/skillmap"
+              tar -czf "../release/skillmap-$target.tar.gz" -C "$target" skillmap
+            fi
+          done
+          cd ../release
+          sha256sum ./* > SHA256SUMS
+          cat SHA256SUMS
+
+      # Attests the archives, which are what people download. Verify with:
+      #   gh attestation verify skillmap-linux-x64.tar.gz --repo skillmap/skillmap
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release/skillmap-*
+
+      - name: Build npm packages
+        run: bash scripts/npm-packages.sh "${{ steps.version.outputs.version }}" dist npm-dist
+
+      # Attached to the release rather than pushed to a tap: the tap repository
+      # does not exist yet (docs/00-tasks.md, Known gaps). Generated from the
+      # checksums that were actually published, because a formula with a stale
+      # sha256 fails at install time with a hash mismatch — which reads to a user
+      # exactly like a compromised download.
+      - name: Generate the Homebrew formula
+        run: bash scripts/homebrew-formula.sh "${{ steps.version.outputs.version }}" release > release/skillmap.rb
+
+      - name: Create GitHub release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --generate-notes
+
+      # Publishing is last and gated on everything above. npm has no unpublish
+      # after 72 hours, so a bad publish is permanent in a way a bad GitHub
+      # release is not — it goes after the release, not before it.
+      - name: Publish to npm
+        if: github.event_name == 'push'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::notice::NPM_TOKEN is not set; skipping npm publish"
+            exit 0
+          fi
+          echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > ~/.npmrc
+          # Platform packages first. The wrapper's optionalDependencies pin exact
+          # versions, so publishing it first would leave a window where
+          # `npm install skillmap` resolves a wrapper whose binaries do not exist.
+          for package in npm-dist/@skillmap/*; do
+            npm publish "$package" --access public --provenance
+          done
+          npm publish npm-dist/skillmap --access public --provenance

@@ -43,8 +43,14 @@ Everything else in this repository exists to make that line trustworthy.
 ### Using it
 
 ```bash
+npm install --save-dev skillmap
+```
+
+```bash
 skillmap lock    # record what the skills in this project can do today; commit it
 skillmap ci      # fail when that changes
+skillmap scan    # print the capability manifest as JSON
+skillmap rules   # list what this build can detect
 ```
 
 Exit codes: `0` clean, `1` escalation vs the lock, `2` a capability `policy.toml` does not
@@ -56,6 +62,29 @@ must never read as *"ran and found nothing"*. Full format and semantics:
 skillmap ships two skills of its own, and CI runs `skillmap ci` against them on every push
 with the committed [`skillmap.lock`](skillmap.lock) and [`policy.toml`](policy.toml). A tool
 that gates other people's repositories and not its own is making an untested claim.
+
+### Installing it
+
+| Channel | Command |
+|---|---|
+| npm | `npm install --save-dev skillmap` |
+| GitHub Action | `uses: skillmap/skillmap@v1` — see [`action.yml`](action.yml) |
+| Homebrew | `brew install skillmap/skillmap/skillmap` — formula ships with each release; the tap repo does not exist yet |
+| Source | `cargo install --git https://github.com/skillmap/skillmap skillmap-cli` |
+
+**No `postinstall` script anywhere.** The npm package holds a Node shim and no binary; each
+platform's binary is its own package resolved through `optionalDependencies`, so the bytes
+arrive with the same integrity hashes as any other dependency. A postinstall that downloads
+a binary is arbitrary code fetching an arbitrary payload over a channel npm does not verify —
+which is a fair description of the thing this project exists to find in other people's
+repositories.
+
+**Builds are reproducible and the releases are attested.** Two builds of the same commit from
+different directories are byte-identical; the release workflow proves it before publishing
+anything, and refuses to publish a binary containing the path of the machine that built it.
+Verify a download with `gh attestation verify skillmap-linux-x64.tar.gz --repo skillmap/skillmap`,
+or rebuild the tag yourself and compare — [`docs/07-distribution.md`](docs/07-distribution.md)
+has the exact steps, and the two bugs that had to be fixed to make the claim true.
 
 ## Measured
 
@@ -106,12 +135,13 @@ case regressing to pending. See `eval/baseline.json`.
 
 ## Status
 
-Pre-alpha. The scanner runs, the corpus is harvested, and `skillmap lock` / `skillmap ci`
-work end to end. Not built: the semantic layer (T7), the labelling pass the quality metrics
-need, and distribution — there is no release, no npm package and no `cargo install`, so today
-the only way to run it is from a checkout. Four languages have rules (python, shell,
-javascript, typescript) and one capability term has coverage. Start with `docs/00-tasks.md`,
-which records what each task actually delivered and what it deliberately did not.
+Pre-alpha. The scanner runs, the corpus is harvested, `skillmap lock` / `skillmap ci` work
+end to end, and the binary ships with its own rules through a reproducible, attested release
+pipeline. Not built: the semantic layer (T7) and the labelling pass the quality metrics need.
+Four languages have rules (python, shell, javascript, typescript) and one capability term has
+coverage — thirteen terms are in the taxonomy, so most of what the manifest *can* describe,
+nothing yet detects. No version has been tagged. Start with `docs/00-tasks.md`, which records
+what each task actually delivered and what it deliberately did not.
 
 ## For contributors
 
@@ -131,6 +161,7 @@ file, and two fixtures — no Rust required. See `docs/03-rules-authoring.md`.
 | `docs/04-semantic-layer.md` | The quarantined model pass |
 | `docs/05-eval.md` | The falsifiable quality bar |
 | `docs/06-policy-and-lock.md` | `skillmap.lock`, `policy.toml`, and the exit codes |
+| `docs/07-distribution.md` | Embedded rules, reproducible builds, signing, install paths |
 | `SECURITY.md` | Threat model and disclosure policy |
 | `CONTRIBUTING.md` | Contributor workflow — including adding a rule without writing Rust |
 

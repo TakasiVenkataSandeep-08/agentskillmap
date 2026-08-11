@@ -1,0 +1,75 @@
+#!/usr/bin/env node
+"use strict";
+
+// The npm entry point. It finds the prebuilt binary for this platform and runs
+// it. That is the entire job, and everything it deliberately does not do is the
+// interesting part.
+//
+// There is NO postinstall script, here or in any platform package. A postinstall
+// that downloads a binary is arbitrary code fetching an arbitrary payload at
+// install time, over a channel npm does not verify — which is a fair description
+// of the threat this project exists to describe in other people's repositories.
+// Instead each platform's binary is published inside its own npm package with
+// `os` and `cpu` constraints, and npm's own optional-dependency resolution
+// installs exactly one of them. The bytes arrive the same way every other npm
+// dependency does, with the same integrity hashes in the lockfile.
+//
+// This file also never downloads, never writes outside its package, and never
+// reads configuration. It resolves a path and execs.
+
+const { spawnSync } = require("child_process");
+
+// npm's platform keys are already exactly what `process.platform` and
+// `process.arch` return, so the package name is a direct join with nothing to
+// get wrong in a mapping table.
+const target = `${process.platform}-${process.arch}`;
+const packageName = `@skillmap/${target}`;
+const binaryName = process.platform === "win32" ? "skillmap.exe" : "skillmap";
+
+function resolveBinary() {
+  try {
+    return require.resolve(`${packageName}/bin/${binaryName}`);
+  } catch (error) {
+    return null;
+  }
+}
+
+const binary = resolveBinary();
+
+if (binary === null) {
+  // Loud, specific, and it names both realistic causes. A wrapper that failed
+  // with "cannot find module" would send people looking in the wrong place, and
+  // the second cause below is common enough in CI to be worth naming: an
+  // install that skipped optional dependencies leaves this package installed and
+  // unable to run, which looks like a broken release rather than a flag.
+  process.stderr.write(
+    `skillmap: no prebuilt binary for ${target}.\n\n` +
+      `  - If your platform is not one of darwin-arm64, darwin-x64, linux-arm64,\n` +
+      `    linux-x64 or win32-x64, install from source instead:\n` +
+      `      cargo install --git https://github.com/skillmap/skillmap skillmap-cli\n\n` +
+      `  - If it is, this install skipped optional dependencies. npm ci\n` +
+      `    --omit=optional and --no-optional both do that, and the binary ships\n` +
+      `    as one. Reinstall without them.\n`
+  );
+  process.exit(4);
+}
+
+// Exit codes carry meaning here — 0 clean, 1 escalation, 2 policy violation,
+// 3 both, 4 could not run (docs/06-policy-and-lock.md) — so the wrapper must be
+// transparent to them. Collapsing them into 0/1 would silently break every CI
+// consumer that branches on which kind of failure it was.
+const result = spawnSync(binary, process.argv.slice(2), { stdio: "inherit" });
+
+if (result.error) {
+  process.stderr.write(`skillmap: cannot run ${binary}: ${result.error.message}\n`);
+  process.exit(4);
+}
+
+// A binary killed by a signal has no exit code. Reporting 0 there would turn a
+// crashed scan into a passing check.
+if (result.status === null) {
+  process.stderr.write(`skillmap: terminated by signal ${result.signal}\n`);
+  process.exit(4);
+}
+
+process.exit(result.status);

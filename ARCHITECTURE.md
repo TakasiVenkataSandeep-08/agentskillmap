@@ -80,6 +80,7 @@ skillmap/
 ├── skillmap.lock               # this repo's own lock — skillmap gates skillmap
 ├── policy.toml                 # …and its own allowlist, which is empty
 ├── action.yml                  # the published GitHub Action wrapping `skillmap ci`
+├── npm/skillmap/               # the wrapper package; platform packages are generated (T9)
 ├── eval/                        # committed baseline the CI gate compares against
 ├── schema/                     # JSON Schema for the manifest
 ├── npm/                        # wrapper package + per-platform binaries
@@ -182,6 +183,19 @@ execs. No `postinstall` download script — that is itself a supply-chain smell 
 indefensible in this project specifically.
 
 Also ship: `cargo install`, Homebrew tap, and a GitHub Action that wraps the CI subcommand.
+
+Built at T9. Two things the original sketch did not anticipate:
+
+**The binary carries its own rules.** Rules are data at the workspace root, so a shipped
+binary had nothing to load. `crates/skillmap-rules/build.rs` walks `rules/` and `queries/`
+and emits them as literals; `skillmap_rules::Source` gives the disk and embedded trees one
+code path so they cannot drift, and a test compares them byte for byte. Adding a rule is
+still a `.toml` and a `.scm` — invariant 7 is intact.
+
+**`cargo install` is `--git`, not crates.io.** Cargo packages only files beneath a package's
+own directory, so `skillmap-rules` cannot carry rule trees that live at the workspace root.
+Moving them into the crate would bury the contributor-facing surface; a synchronized copy is
+a second copy that drifts. `docs/07-distribution.md` states the gap rather than hiding it.
 
 ## Where this dies, and the hedge
 

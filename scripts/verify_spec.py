@@ -62,7 +62,11 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 #
 #   run-meta.json       AGENTS.md invariant 2 — where run metadata goes instead
 #                       of the manifest; the CLI does not write one yet
-#   npm/                ARCHITECTURE.md target layout; built at release (T9)
+#
+# Retired prefixes: npm/ (T9 — the wrapper package is committed; the per-platform
+# packages under it are generated at release time by scripts/npm-packages.sh and
+# are deliberately not in the tree, so prose names the generator rather than the
+# generated directories).
 #
 # Retired so far: policy.toml and skillmap.lock (T8 — specified in
 # docs/06-policy-and-lock.md, and this repository now commits both for its own
@@ -70,7 +74,7 @@ DOC_PATH = REPO_ROOT / "docs" / "02-manifest-schema.md"
 KNOWN_GAP_EXACT = {
     "run-meta.json",
 }
-KNOWN_GAP_PREFIXES = ("npm/",)
+KNOWN_GAP_PREFIXES = ()
 
 # Prefixes whose existence depends on whether the operator has run something,
 # not on whether the repository has grown into them. `corpus/` appears the moment

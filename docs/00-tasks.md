@@ -451,6 +451,47 @@ known, and verified by the byte-identity check below rather than assumed.
 
 **Done when:** two builds of the same tag from clean checkouts are byte-identical.
 
+Delivered, and verified rather than asserted: two copies of the tree at different absolute
+paths produce the same SHA-256, checked locally on Windows and gated in
+`.github/workflows/release.yml` on Windows and Linux before anything is published. Details and
+install paths: `docs/07-distribution.md`.
+
+Decisions worth recording:
+
+- **The binary embeds its own rules.** This was the gap that made T8's check undistributable,
+  and it is not in the bullets above because nobody noticed it until there was a binary to
+  ship. `crates/skillmap-rules/build.rs` walks `rules/` and `queries/` and emits them as
+  literals; `Source` gives the disk and embedded trees one code path, and
+  `tests/embedded.rs` compares them byte for byte. Adding a rule is still a `.toml` and a
+  `.scm` — the build script walks and has no list to update, so invariant 7 holds.
+- **A build that embeds no rules is refused by the build script.** Not warned about. A
+  scanner with no rules reports every project clean, silently, in the direction that looks
+  like good news.
+- **Two bugs stood between the claim and the truth, and only one was visible.** The first:
+  MSVC writes the wall clock into the PE header, which is exactly the 24 bytes by which the
+  first two builds differed. The second was worse — ninety-one registry paths carrying a
+  username sat in `.rodata` as panic locations, where `strip` does not reach, because the
+  remap flag was spelled `/c/Users/...` while rustc emits `C:\Users\...`. **Byte-identity
+  never caught it**, since both builds ran as the same user. `scripts/build-release.sh` now
+  greps the finished binary for the workspace, `CARGO_HOME` and `$HOME` in both spellings and
+  refuses to publish on a hit. The general lesson is the project's own: a check that can only
+  confirm what you expected is not a check.
+- **`scripts/homebrew-formula.sh` shipped a silent-failure bug in its first draft**, found by
+  running it: `exit 1` inside `$(…)` kills only the subshell, so a missing checksum produced
+  a complete, publishable formula with four empty `sha256` fields and exit code 0. Checksums
+  are now resolved before the template. A formula with a wrong hash fails at install with a
+  mismatch, which reads to a user exactly like a compromised download.
+- **Signing is a keyless attestation, not a key.** `actions/attest-build-provenance`,
+  verifiable with `gh attestation verify`. A signing key this project would have to store,
+  rotate and eventually mishandle is a worse story, and the attestation answers the question
+  people actually have — did this come from that repository's release workflow.
+- **`cargo install` is `--git`, not crates.io**, because Cargo packages only files beneath a
+  package's own directory and the rule trees live at the workspace root. Both fixes are worse
+  than the gap; the reasoning is in `docs/07-distribution.md` and the gap is listed below.
+- **The CLI grew `scan`, `rules` and `version`.** `rules` is the one that matters: the rules
+  are no longer visible on disk beside the tool, and "which rule produced this, and what does
+  it claim" is the first question anyone asks about a finding they disagree with.
+
 ---
 
 ## Cross-cutting, every task
@@ -467,11 +508,25 @@ front of; each is a thing this repository currently claims or implies but does n
 - **~~`policy.toml` has no format spec.~~** Closed by T8: `docs/06-policy-and-lock.md`.
 - **~~`skillmap.lock` is specified in one sentence.~~** Closed by the same document — fields,
   framing, escalation semantics, and why unknown capability terms round-trip.
-- **The rules tree is not embedded in the binary.** `skillmap ci` needs `--rules` pointing at
-  a checkout of this repository, because rules are data files (invariant 7) and a shipped
-  binary has no `rules/` beside it. T9 packages them. Deliberately not papered over with a
-  search up the directory tree: silently finding *a* rules directory is how a scan ends up
-  running the wrong rules and reporting clean.
+- **~~The rules tree is not embedded in the binary.~~** Closed by T9. `--rules` survives as an
+  override for developing against an edited tree.
+- **The Homebrew tap repository does not exist.** `scripts/homebrew-formula.sh` generates a
+  correct formula from the published checksums and the release workflow attaches it, but
+  `brew install skillmap/skillmap/skillmap` resolves through `skillmap/homebrew-skillmap`,
+  which has to be created before that command works.
+- **`cargo install skillmap-cli` from crates.io does not work**, and the build fails loudly
+  rather than producing a ruleless binary. Cargo packages only files beneath a package's own
+  directory, and `skillmap-rules` embeds `rules/` and `queries/` from the workspace root.
+  `cargo install --git` works. See `docs/07-distribution.md` for why moving the trees into the
+  crate, or committing a synchronized copy, are both worse than the gap.
+- **CI syntax-checks the release scripts but does not lint them.** `bash -n` catches parse
+  errors; shellcheck would catch more, including some of the class that produced T9's
+  silent-failure bug. It is preinstalled on the runners and was left out only because it could
+  not be run locally first, and a gate whose first execution is on somebody else's push is how
+  a repository acquires a red build it did not author.
+- **Reproducibility is verified within a runner, not across machines.** The release gate builds
+  the same commit twice from two directories and compares. Two independent machines agreeing
+  is the stronger claim and needs a second builder this project does not have.
 - **`skillmap ci` scans `Scope::Project` only.** Skills installed under the user's home
   directory apply to every project and are not checked. Discovery already supports the scope;
   what is missing is an answer to which lockfile they belong in, and guessing would produce a
