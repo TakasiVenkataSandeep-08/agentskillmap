@@ -101,6 +101,21 @@ pub struct Labels {
     /// recall — every bundle they did not think to check would count as a false
     /// negative against the scanner.
     pub terms_labelled: Vec<String>,
+    /// Terms a shipped rule detects that this labelling has **not** covered
+    /// exhaustively. Every entry is a published gap, not a placeholder.
+    ///
+    /// This exists so the gap has to be written down somewhere a reader will
+    /// see it. `tests/gate.rs` requires every rule's term to appear in either
+    /// this list or `terms_labelled`, which makes shipping detection nobody
+    /// measures a build failure rather than an oversight.
+    ///
+    /// The intended lifecycle is that a term moves *out* of here and into
+    /// `terms_labelled` when a labelling pass covers it — and, because
+    /// widening `terms_labelled` while a rule already fires would score every
+    /// genuine hit as a false positive, the pass comes first and the rule
+    /// second. Ordering is the whole safety property.
+    #[serde(default)]
+    pub terms_detected_unscored: Vec<String>,
     /// One entry per labelled bundle.
     #[serde(default, rename = "label")]
     pub labels: Vec<Label>,
@@ -124,6 +139,10 @@ pub enum Error {
     UnknownTerm(String),
     /// Two labels for one bundle.
     Duplicate(String),
+    /// A term claims to be both scored exhaustively and a known gap. The two
+    /// lists mean opposite things, so which one wins would decide silently
+    /// whether the term's recall is published or suppressed.
+    BothScoredAndUnscored(String),
 }
 
 impl std::fmt::Display for Error {
@@ -140,6 +159,11 @@ impl std::fmt::Display for Error {
             Self::Duplicate(digest) => {
                 write!(f, "{digest} is labelled twice; which one wins is arbitrary")
             }
+            Self::BothScoredAndUnscored(term) => write!(
+                f,
+                "`{term}` is in both terms_labelled and terms_detected_unscored; \
+                 it is either measured exhaustively or it is a gap, not both"
+            ),
         }
     }
 }
@@ -163,6 +187,16 @@ impl Labels {
         for term in &labels.terms_labelled {
             if !vocabulary.contains(term.as_str()) {
                 return Err(Error::UnknownTerm(term.clone()));
+            }
+        }
+
+        let scored: BTreeSet<&str> = labels.terms_labelled.iter().map(String::as_str).collect();
+        for term in &labels.terms_detected_unscored {
+            if !vocabulary.contains(term.as_str()) {
+                return Err(Error::UnknownTerm(term.clone()));
+            }
+            if scored.contains(term.as_str()) {
+                return Err(Error::BothScoredAndUnscored(term.clone()));
             }
         }
 
@@ -300,6 +334,19 @@ pub struct Report {
     pub unlabelled: usize,
     /// Per term, for terms in `terms_labelled` only.
     pub terms: Vec<TermScore>,
+    /// Terms a rule reported that no label covers, and how many bundles carry
+    /// each — the gap between what this tool detects and what it measures.
+    ///
+    /// Without this the gap is invisible in the most dangerous direction. A term
+    /// outside `terms_labelled` gets no row above: not a zero, not an error,
+    /// simply absent. Worse, `false_positive_rate` filters by scored term, so a
+    /// new rule could fire on every `code_clean` bundle and the headline would
+    /// still print `0/36` — a statement about credential rules that reads as a
+    /// statement about the tool.
+    ///
+    /// The module doc makes this argument one level out: unlabelled is not
+    /// clean. This is the same argument applied to the report itself.
+    pub unmeasured: BTreeMap<String, usize>,
     /// Per stratum: bundles where the scanner reported a term the label did not
     /// contain. On `code_clean` this is the headline metric.
     pub false_positive_rate: BTreeMap<String, Rate>,
@@ -410,6 +457,23 @@ pub fn run(
         });
     }
 
+    // Every term a rule actually reported that no label covers. Counted here
+    // rather than derived from the rule set, because a rule that exists and
+    // never fires is not the gap being described: the gap is a claim appearing
+    // in manifests with no ground truth behind it.
+    let mut unmeasured: BTreeMap<String, usize> = BTreeMap::new();
+    for (_, manifest) in &scanned {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for entry in &manifest.capabilities {
+            let term = entry.capability.as_str();
+            // Once per bundle, not once per evidence site — the denominator
+            // beside it is bundles.
+            if !scored_terms.contains(term) && seen.insert(term) {
+                *unmeasured.entry(term.to_owned()).or_insert(0) += 1;
+            }
+        }
+    }
+
     // Per stratum: did the scanner report any scored term the label did not
     // contain? Only scored terms count — a capability nobody labelled
     // exhaustively cannot be called a false positive.
@@ -460,6 +524,7 @@ pub fn run(
         unscoreable,
         unlabelled: sample_size.saturating_sub(labels.labels.len()),
         terms,
+        unmeasured,
         false_positive_rate: per_stratum
             .into_iter()
             .map(|(stratum, (hits, total))| (stratum, Rate::new(hits, total)))
@@ -611,9 +676,32 @@ pub fn render(report: &Report) -> String {
         );
     }
 
+    // Printed above the false-positive block, and for the same reason the
+    // no-description rate is printed above the delta: it is the line that
+    // qualifies the one below it. A reader who sees `code_clean 0/36` without
+    // this has been told the tool produced no false positives, when what was
+    // measured is that the scored terms did.
+    if report.unmeasured.is_empty() {
+        let _ = writeln!(
+            out,
+            "\n  reported but NOT SCORED: (none — every term a rule detects is scored)"
+        );
+    } else {
+        let _ = writeln!(
+            out,
+            "\n  reported but NOT SCORED — no precision or recall exists for these,\n\
+             \x20 and the false-positive rates below exclude them by construction:"
+        );
+        for (term, bundles) in &report.unmeasured {
+            let _ = writeln!(out, "    {term:<18} {bundles} bundle(s)");
+        }
+    }
+
+    let scored: Vec<&str> = report.terms.iter().map(|term| term.term.as_str()).collect();
     let _ = writeln!(
         out,
-        "\n  false-positive rate per stratum (code_clean is the headline):"
+        "\n  false-positive rate per stratum for [{}] (code_clean is the headline):",
+        scored.join(", ")
     );
     for (stratum, rate) in &report.false_positive_rate {
         let _ = writeln!(
@@ -693,6 +781,93 @@ pub fn render(report: &Report) -> String {
 )]
 mod tests {
     use super::*;
+
+    /// A report whose only difference from the real one is that a rule now
+    /// reports a term nobody labelled.
+    fn report_reporting(unmeasured: &[(&str, usize)]) -> Report {
+        Report {
+            snapshot: "2026-08".to_owned(),
+            labeller: "test".to_owned(),
+            reviewed_by: String::new(),
+            scored: 36,
+            unscoreable: 0,
+            unlabelled: 0,
+            terms: vec![TermScore {
+                term: "fs.read.credential".to_owned(),
+                true_positive: 11,
+                false_positive: 0,
+                false_negative: 7,
+                precision: Rate::new(11, 11),
+                recall: Rate::new(11, 18),
+            }],
+            unmeasured: unmeasured
+                .iter()
+                .map(|(term, count)| ((*term).to_owned(), *count))
+                .collect(),
+            false_positive_rate: [("code_clean".to_owned(), Rate::new(0, 36))]
+                .into_iter()
+                .collect(),
+            unresolved_rate: Rate::new(35, 36),
+            disclosure_delta: BTreeMap::new(),
+            no_description: BTreeMap::new(),
+            population: [("code_clean".to_owned(), 720)].into_iter().collect(),
+        }
+    }
+
+    #[test]
+    fn a_term_detected_but_unlabelled_cannot_hide_behind_a_zero_false_positive_rate() {
+        // The failure this exists to prevent: a rule for `net.egress` ships,
+        // fires on half the benign stratum, and the report still prints
+        // `code_clean 0/36` — because the false-positive rate only counts terms
+        // in `terms_labelled`. The number is not wrong; the reader's inference
+        // from it is, and the report is what licenses that inference.
+        let rendered = render(&report_reporting(&[("net.egress", 18)]));
+
+        assert!(
+            rendered.contains("NOT SCORED"),
+            "an unmeasured term must be named, not omitted:\n{rendered}"
+        );
+        assert!(
+            rendered.contains("net.egress") && rendered.contains("18 bundle(s)"),
+            "the term and its bundle count must both appear:\n{rendered}"
+        );
+
+        // And the qualification has to reach the number it qualifies: the
+        // false-positive header names the terms it actually covers, so
+        // `code_clean 0/36` cannot be read as a claim about the whole tool.
+        let fp_header = rendered
+            .lines()
+            .find(|line| line.contains("false-positive rate per stratum"))
+            .unwrap_or_default();
+        assert!(
+            fp_header.contains("fs.read.credential"),
+            "the false-positive header must name its scored terms, got: {fp_header:?}"
+        );
+        assert!(
+            !fp_header.contains("net.egress"),
+            "the unscored term must not appear to be covered: {fp_header:?}"
+        );
+
+        // Ordering is the whole point — a qualification printed after the
+        // number it qualifies has already been read too late.
+        let unscored_at = rendered.find("NOT SCORED");
+        let rate_at = rendered.find("false-positive rate per stratum");
+        assert!(
+            unscored_at < rate_at,
+            "the unmeasured block must print above the rates it qualifies"
+        );
+    }
+
+    #[test]
+    fn a_fully_measured_report_says_so_rather_than_printing_nothing() {
+        // Silence here would be indistinguishable from the section having been
+        // dropped, which is the same ambiguity `unresolved` exists to remove.
+        let rendered = render(&report_reporting(&[]));
+        assert!(
+            rendered.contains("every term a rule detects is scored"),
+            "an empty gap must be stated, not implied by absence:\n{rendered}"
+        );
+    }
 
     #[test]
     fn a_zero_count_does_not_produce_a_zero_width_interval() {

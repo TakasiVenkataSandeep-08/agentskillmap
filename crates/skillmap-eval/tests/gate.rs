@@ -188,6 +188,72 @@ fn the_baseline_does_not_claim_a_corpus_the_eval_did_not_use() {
 }
 
 #[test]
+fn every_term_a_rule_detects_is_either_scored_or_a_declared_gap() {
+    // Invariant 11 says precision and recall are published. It does not say what
+    // happens to a term that ships a rule and has no ground truth — and the
+    // honest answer, today, is *nothing*: `corpus::run` iterates
+    // `terms_labelled`, so an unlabelled term gets no row at all. Not a zero,
+    // not an error. Absent.
+    //
+    // That alone would be survivable if the false-positive rate covered it, but
+    // it does not either: the per-stratum rate counts only scored terms, so a
+    // new rule could fire on every benign bundle and `code_clean 0/36` would
+    // still print. The README's headline would silently narrow from a claim
+    // about the tool to a claim about credential rules.
+    //
+    // So the gap has to be declared. A term may be measured
+    // (`terms_labelled`) or admitted as unmeasured (`terms_detected_unscored`),
+    // and shipping a rule for a term in neither list fails here.
+    //
+    // This test needs `rules/` and `corpus/labels.toml` only — never
+    // `corpus/raw/`, which is gitignored and makes the corpus suite itself
+    // inert in CI. That is deliberate: it is the one part of the corpus
+    // machinery that can actually gate a build on every platform.
+    let rules = skillmap_rules::load(&repo_root());
+    assert!(rules.diagnostics.is_empty(), "{:?}", rules.diagnostics);
+
+    let labels = match skillmap_eval::corpus::Labels::load(&repo_root().join("corpus/labels.toml"))
+    {
+        Ok(labels) => labels,
+        // A fresh clone has the file, since it is committed. If it is genuinely
+        // absent there is nothing to check and nothing to claim.
+        Err(skillmap_eval::corpus::Error::Absent(_)) => return,
+        Err(error) => panic!("corpus/labels.toml is present and unusable: {error}"),
+    };
+
+    let mut undeclared: Vec<String> = Vec::new();
+    for rule in &rules.rules {
+        let skillmap_rules::Claim::Capability(term) = rule.claim else {
+            // Instruction signals are a separate plane with a separate
+            // vocabulary; the corpus labels capabilities.
+            continue;
+        };
+        let term = term.as_str();
+        let scored = labels.terms_labelled.iter().any(|have| have == term);
+        let declared = labels
+            .terms_detected_unscored
+            .iter()
+            .any(|have| have == term);
+        if !scored && !declared {
+            undeclared.push(format!("{} detects `{term}`", rule.id));
+        }
+    }
+    undeclared.sort_unstable();
+    undeclared.dedup();
+
+    assert!(
+        undeclared.is_empty(),
+        "these rules detect terms the corpus neither scores nor declares as a gap:\n  {}\n\n\
+         Add each term to `terms_labelled` in corpus/labels.toml if a labelling pass \
+         covered it exhaustively, or to `terms_detected_unscored` if it did not. Widening \
+         `terms_labelled` without relabelling is the worse of the two mistakes: every \
+         genuine detection would score as a false positive, because a label's empty \
+         `capabilities` array means \"not looked for\", not \"not present\".",
+        undeclared.join("\n  ")
+    );
+}
+
+#[test]
 fn the_baseline_is_canonical_json() {
     // It is diffed on every change, so it gets the same framing as the manifest.
     let text = std::fs::read_to_string(baseline_path(&repo_root())).unwrap();
