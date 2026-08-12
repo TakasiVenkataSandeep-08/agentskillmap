@@ -135,23 +135,37 @@ carries one:
 
 | Metric | Result |
 |---|---|
-| `fs.read.credential` precision | 11/11 (100%, 95% CI 74.1–100%) |
-| `fs.read.credential` recall | **11/18 (61.1%, 95% CI 38.6–79.7%)** |
+| `fs.read.credential` precision | 13/13 (100%, 95% CI 77.2–100%) |
+| `fs.read.credential` recall | **13/18 (72.2%, 95% CI 49.1–87.5%)** |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 11/11 and the false-positive rate is 0 across all four code strata** — 92 bundles,
+**Precision is 13/13 and the false-positive rate is 0 across all four code strata** — 92 bundles,
 not one spurious capability. The benign stratum's 95% upper bound is **9.6%**.
 
-**Recall is 61.1%**, up from 38.9% before the corpus was labelled. The labelling found why it
-was low: **every credential read in the corpus reaches its path by computation — not one uses a
-string literal**, and the rules were written against literals. Constant folding closed most of
-that gap, and closed it without costing a single false positive.
+**Recall is 72.2%**, from 38.9% before the corpus was labelled. The labelling found why it was
+low: **every credential read in the corpus reaches its path by computation — not one uses a
+string literal**, and the rules were written against literals. Constant folding took it to
+61.1%; a third matching mode and a widened `~/.config/` prefix took it to 72.2%. Neither cost
+a single false positive.
 
-The remaining misses are reported as `unresolved: computed_target` or resolve to paths the rule
-data does not name. A miss the reader can see is categorically different from one they cannot,
-and recall alone cannot tell them apart — which is why both are published.
+**Reading all five remaining misses changed what the backlog says.** They had been recorded as
+data gaps — paths the rule lists do not name — and only two of them are:
+
+- **Two are data, and deliberately left open.** One reads `<base>/.beanstalk/gateway.json`, one
+  `~/.fluxa-ai-wallet-mcp/config.json`. Adding those directory names would close both and catch
+  nothing else ever, since each string appears in exactly one bundle. Memorising the corpus
+  raises recall and lowers what the number means.
+- **Three are not data at all.** Two read a path passed in as a *function parameter*, and one
+  takes it from **argv**. The fold is per-expression by design, so the callee genuinely does
+  not know the path — and the argv case is not knowable by any static analysis at all. No list
+  of paths could have closed them; interprocedural dataflow is the open design question, and it
+  now has three examples behind it instead of none.
+
+All five report `unresolved: computed_target` on the exact line. A miss the reader can see is
+categorically different from one they cannot, and recall alone cannot tell them apart — which
+is why both are published.
 
 Every number carries the same caveat: the labels are **single-annotator and unreviewed**, so
 inter-annotator agreement is unmeasured and one person's judgement stands behind every row.
@@ -198,8 +212,9 @@ Three defects, one of them mine.
   library, dotenv hand-rolled twice in two languages, per-application directories under
   `~/.config`, agent config JSON, agent-managed `credentials/` directories, per-tool dotfile
   directories, and a token cache beside the script. The rules matched string literals, so they
-  matched almost none of it. **Constant folding took recall from 38.9% to 61.1% with zero new
-  false positives across 92 labelled bundles** — it resolves joins, home-directory lookups and
+  matched almost none of it. **Constant folding took recall from 38.9% to 61.1%, and matching
+  by containing directory took it to 72.2% — zero new false positives across 92 labelled
+  bundles at each step** — it resolves joins, home-directory lookups and
   single-assignment constants, and reports a *partially* resolved path by filename when the
   location is unknowable. Which filenames matter stays in `rules/*.toml`; invariant 7 is intact.
 
@@ -220,14 +235,20 @@ path or secret-bearing env var"; a keychain is neither, so the manifest has **no
 about it at all**. That is arguably the most direct route to stealing an agent's
 authentication.
 
-**More credential-read shapes, still uncovered: the agent's own config file, and per-skill
-config directories.** One bundle
-opens `~/.openclaw/openclaw.json` and parses it — and a *different* bundle in the same sample
-tells users to put their API key in exactly that file. A wallet skill reads its API key from
-`~/.config/solana-skill/config.json`. The prefix lists name `~/.aws`, `~/.ssh`, `.env` and
-nothing agent-shaped or `~/.config`-shaped. The taxonomy has `fs.write.agent_config` and no
-read counterpart at all. All open, because the path set should come from the corpus rather
-than from another guess.
+**Per-skill config directories: covered now, and the corpus decided the shape.** A wallet skill
+reads its API key from `~/.config/solana-skill/config.json`; another reads
+`~/.config/moltmarkets/credentials.json`. Widening `~/.config/gh/` to `~/.config/` catches both
+and, measured across all 92 labelled bundles, costs nothing — a prefix broad enough to worry
+about in the abstract and empirically quiet. A third bundle reads
+`~/.clawdbot/credentials/homebridge.json`, where the filename is named after the integration and
+the *directory* is the only knowable part; that needed a third matching mode, `path_contains`.
+
+**The agent's own config file is still uncovered, for a different reason than assumed.** One
+bundle opens `~/.openclaw/openclaw.json` and parses it — and a *different* bundle in the same
+sample tells users to put their API key in exactly that file. But it reaches that path from
+**argv**, so no prefix list would ever have caught it. What is actually missing is a term: the
+taxonomy has `fs.write.agent_config` and no read counterpart, and reading agent config to
+harvest the keys inside it is the more direct attack.
 
 Note what every one of these misses has in common: **the path is computed**, not a string
 literal. Real code builds credential paths from `homedir()` and constants. The rules were

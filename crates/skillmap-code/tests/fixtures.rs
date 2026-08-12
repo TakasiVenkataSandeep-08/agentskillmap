@@ -736,3 +736,79 @@ fn constant_folding_does_not_invent_credentials() {
         "a name assigned twice has no single value; folding must not pick one"
     );
 }
+
+#[test]
+fn a_credential_directory_is_matched_by_the_directory_and_not_by_the_filename() {
+    // The third matching mode, and the miss that motivated it. A real bundle
+    // reads `~/.clawdbot/credentials/homebridge.json`: the filename is named
+    // after the integration, so no list of filenames reaches it, and it sits
+    // under a home directory too broad for any prefix list to claim. The
+    // directory is the only knowable part.
+    //
+    // `path_suffixes` already carried `credentials`, which is why this needed a
+    // new mode rather than a new entry: that matches a path *ending* in
+    // `/credentials`, not a file filed inside one.
+    let rules = rules();
+
+    let fires = |source: &str| {
+        !analyze(
+            &[SourceFile {
+                path: "load.js",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .is_empty()
+    };
+
+    let read = |expr: &str| {
+        format!(
+            "const fs = require('fs');\n\
+             const os = require('os');\n\
+             const path = require('path');\n\
+             const p = {expr};\n\
+             fs.readFileSync(p, 'utf8');\n"
+        )
+    };
+
+    assert!(
+        fires(&read(
+            "path.join(os.homedir(), '.clawdbot', 'credentials', 'homebridge.json')"
+        )),
+        "a file inside a `credentials/` directory must be reported"
+    );
+
+    // Both ends bounded. An unbounded substring match would fire on all three
+    // of these, and the first is the one a real home directory would contain.
+    assert!(
+        !fires(&read(
+            "path.join(os.homedir(), 'my-credentials', 'notes.txt')"
+        )),
+        "`my-credentials` is not the component `credentials`"
+    );
+    assert!(
+        !fires(&read(
+            "path.join(os.homedir(), 'credentialsx', 'notes.txt')"
+        )),
+        "`credentialsx` is not the component `credentials`"
+    );
+
+    // And the mode must not resurrect what the prefix list deliberately does
+    // not claim: a path that resolves completely and matches nothing stays
+    // silent rather than becoming an unresolved entry.
+    let manifest = analyze(
+        &[SourceFile {
+            path: "load.js",
+            text: &read("path.join(os.homedir(), 'my-credentials', 'notes.txt')"),
+            entered: true,
+        }],
+        &rules,
+    );
+    assert!(
+        manifest.unresolved.is_empty(),
+        "a fully resolved non-match is not an analysis gap: {:?}",
+        manifest.unresolved
+    );
+}

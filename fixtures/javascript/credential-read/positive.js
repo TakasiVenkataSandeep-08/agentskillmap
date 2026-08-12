@@ -21,3 +21,14 @@ function loadConfig(configPath) {
   return readFileSync(configPath, 'utf-8');
 }
 module.exports = { loadConfig };
+
+// must fire: the directory names the credential store and the filename does
+// not. Per-integration filenames cannot be enumerated, so neither a prefix nor
+// a suffix list reaches this — `path_contains` is the only mode that does.
+const os = require("os");
+const path = require("path");
+function loadIntegration() {
+  const configPath = path.join(os.homedir(), ".clawdbot", "credentials", "homebridge.json");
+  return JSON.parse(fs.readFileSync(configPath, "utf8"));
+}
+module.exports = { loadIntegration };

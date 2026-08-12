@@ -124,6 +124,21 @@ pub struct MatchData {
     /// `production.env`.
     #[serde(default)]
     pub path_suffixes: Vec<String>,
+    /// Path **components** anywhere in the path: a directory with this name,
+    /// wherever it sits and whatever it contains.
+    ///
+    /// The third question a path can answer. `path_prefixes` asks where a file
+    /// is, `path_suffixes` asks what it is called, and neither reaches
+    /// `~/.clawdbot/credentials/homebridge.json` — where the signal is the
+    /// *directory* the file sits in and the filename is per-integration and
+    /// unguessable. Naming every file such a directory might hold is not
+    /// possible; naming the directory is.
+    ///
+    /// Matched at component boundaries on both sides, so `credentials` matches
+    /// `~/x/credentials/y` and not `~/my-credentials/y`. Multi-component
+    /// patterns work too: `.claude/skills` matches only those two adjacent.
+    #[serde(default)]
+    pub path_contains: Vec<String>,
 }
 
 /// Prose for humans reading a finding.

@@ -308,10 +308,22 @@ fn analyze_file(
             // what makes the reference negative fixture pass, since it opens a
             // real file that simply is not a credential path.
             // A fully known path — a literal, or one folding resolved completely —
-            // is matched by location **or** by name. Both questions are fair to
-            // ask of it: `~/.aws/` asks where it is, `.env` asks what it is called,
-            // and `~/.clawdbot/x/.env` answers the second even though it answers
-            // the first with "somewhere else".
+            // is matched by location, by name, **or** by a directory it sits in.
+            // All three questions are fair to ask of it: `~/.aws/` asks where it
+            // is, `.env` asks what it is called, `credentials` asks what holds
+            // it, and `~/.clawdbot/x/.env` answers the second even though it
+            // answers the first with "somewhere else".
+            let named = |value: &str| {
+                rule.match_data
+                    .path_suffixes
+                    .iter()
+                    .any(|pattern| fold::ends_with_component(value, pattern))
+                    || rule
+                        .match_data
+                        .path_contains
+                        .iter()
+                        .any(|pattern| fold::contains_component(value, pattern))
+            };
             let mut paths: Vec<String> = paths
                 .into_iter()
                 .filter(|value| {
@@ -319,25 +331,23 @@ fn analyze_file(
                         .path_prefixes
                         .iter()
                         .any(|pattern| value.starts_with(pattern))
-                        || rule
-                            .match_data
-                            .path_suffixes
-                            .iter()
-                            .any(|pattern| fold::ends_with_component(value, pattern))
+                        || named(value)
                 })
                 .collect();
-            // A partially resolved path can only be matched by name, at a
-            // component boundary — `.env` matches `<computed>/.env` and never
-            // `production.env`. Asking a prefix question of it would be asking
-            // about a location it does not know.
+            // A partially resolved path can be matched by name or by a directory
+            // *within the part that is known* — `.env` matches `<computed>/.env`
+            // and never `production.env`. Asking a prefix question of it would be
+            // asking about a location it does not know.
+            //
+            // Tested against the bare tail, before `<computed>/` is prepended: a
+            // pattern must never be able to match the marker. A `credentials/`
+            // directory sitting in the unknown head stays invisible, which is
+            // correct — nothing established it is there.
             paths.extend(
-                retain_matching(
-                    suffixed,
-                    &rule.match_data.path_suffixes,
-                    fold::ends_with_component,
-                )
-                .into_iter()
-                .map(|value| format!("{}/{value}", fold::UNKNOWN)),
+                suffixed
+                    .into_iter()
+                    .filter(|value| named(value))
+                    .map(|value| format!("{}/{value}", fold::UNKNOWN)),
             );
             let hosts = retain_matching(hosts, &rule.match_data.host_suffixes, |value, pattern| {
                 value.ends_with(pattern)
@@ -383,6 +393,7 @@ fn declares_filter(rule: &CompiledRule) -> bool {
     !rule.match_data.path_prefixes.is_empty()
         || !rule.match_data.host_suffixes.is_empty()
         || !rule.match_data.path_suffixes.is_empty()
+        || !rule.match_data.path_contains.is_empty()
 }
 
 /// Keep only literals satisfying at least one pattern.

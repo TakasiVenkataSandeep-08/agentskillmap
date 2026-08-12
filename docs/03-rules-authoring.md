@@ -61,12 +61,14 @@ Three outcomes, and a rule author only needs to know which pattern list catches 
 
 | Fold result | Example | Matched against |
 |---|---|---|
-| fully resolved | `Path.home() / ".aws" / "credentials"` | `path_prefixes` **and** `path_suffixes` |
-| tail only | `os.path.join(root, ".env")` | `path_suffixes` only |
+| fully resolved | `Path.home() / ".aws" / "credentials"` | `path_prefixes`, `path_suffixes` **and** `path_contains` |
+| tail only | `os.path.join(root, ".env")` | `path_suffixes` and `path_contains` |
 | unknown | `open(compute())` | nothing; becomes `unresolved` |
 
 A tail-only path knows *what the file is called* and not *where it is*, so asking a prefix
-question of it would be asking about a location it does not have.
+question of it would be asking about a location it does not have. It can still be asked what
+directory holds it, but only about the part that folded: a `credentials/` directory sitting in
+the unknown head stays invisible, because nothing established it is there.
 
 Two naming rules, both enforced by `rules validate`:
 
@@ -100,7 +102,7 @@ dynamic     = "@dynamic"               # optional; becomes unresolved: computed_
 [match]
 # "is this the file at this location" — matched with starts_with.
 path_prefixes = [
-  "~/.aws/", "~/.ssh/", "~/.config/gh/", "~/.kube/config",
+  "~/.aws/", "~/.ssh/", "~/.config/", "~/.kube/config",
   ".env", ".netrc", "~/.docker/config.json"
 ]
 # "is this a file with this name, wherever it lives" — matched at a component
@@ -110,6 +112,15 @@ path_prefixes = [
 # every entry a filename whose only conventional purpose is holding a secret:
 # "config.json" here would fire on most of the benign stratum.
 path_suffixes = [".env", ".netrc", "credentials.json", ".token"]
+# "is this file inside a directory called this" — matched at component boundaries
+# on both sides, so "credentials" matches "~/x/credentials/y" and never
+# "~/my-credentials/y". Multi-component patterns bind as a unit.
+#
+# The question the other two cannot ask. Reach for it when the *directory* is the
+# convention and the filename is not: ~/.clawdbot/credentials/homebridge.json is
+# named per integration, so no filename list reaches it, and it sits under a home
+# directory too broad for any prefix list to claim.
+path_contains = ["credentials"]
 
 [docs]
 summary = "Reads a path conventionally holding credentials."

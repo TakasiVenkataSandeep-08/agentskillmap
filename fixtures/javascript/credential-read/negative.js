@@ -12,3 +12,17 @@ function formatConfig() {
 }
 
 module.exports = { formatConfig, EXAMPLE_PATHS };
+
+// must NOT fire: `my-credentials` is not the component `credentials`. An
+// unbounded substring match would fire here, which is why contains_component
+// frames both sides with separators.
+//
+// This path resolves completely, so it is also silent in the stricter sense the
+// eval suite requires: nothing matched, and nothing was left unresolved either.
+const os = require("os");
+const path = require("path");
+function readNotes() {
+  const notes = path.join(os.homedir(), "my-credentials", "notes.txt");
+  return fs.readFileSync(notes, "utf8");
+}
+module.exports = { readNotes };

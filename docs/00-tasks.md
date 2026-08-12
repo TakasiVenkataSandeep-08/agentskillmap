@@ -593,12 +593,26 @@ front of; each is a thing this repository currently claims or implies but does n
   name and partially-resolved ones by name alone. Recall 38.9% to 61.1%, no new false
   positives. Which filenames count remains data (`[match] path_suffixes`), so invariant 7
   holds: nothing in the folder knows what a credential is.
-- **Seven credential reads are still missed, and each names a data gap rather than an engine
-  one.** The folded paths are correct; the rule data does not list them — per-application
-  directories under `~/.config`, agent config JSON, and an agent-managed `credentials/`
-  directory whose *directory* name is the signal rather than the filename. That last one needs
-  a third matching mode ("path contains this component") and is deliberately not built on one
-  example. `corpus/sample.json` is drawn and committed;
+- **~~Seven credential reads are still missed, and each names a data gap rather than an engine
+  one.~~** Half right, and the wrong half was load-bearing. Reading all seven sites showed
+  **four** data gaps and **three** engine limits, which is a different backlog than the one
+  this entry described. Two of the four are now closed by `path_contains` and a widened
+  `~/.config/` prefix — recall 11/18 → 13/18, precision 13/13, still zero false positives.
+  What remains is stated honestly below rather than folded into a single number:
+  - **Two data gaps left, both product-specific and deliberately not closed.** One reads
+    `<base>/.beanstalk/gateway.json`, one `~/.fluxa-ai-wallet-mcp/config.json`. Adding those
+    directory names would close them and catch nothing else ever: the strings appear in one
+    bundle each. Memorising the corpus raises recall and lowers the number's meaning, which is
+    the opposite of what the corpus is for. They wait for a second example.
+  - **Three are not data at all — the engine has no interprocedural dataflow.** Two read a
+    path passed in as a *function parameter* (`readFile(p)`, `load_json(path)`) and one takes
+    it from **argv**. The fold is per-expression by design, so the callee genuinely does not
+    know the path, and the argv one is not knowable by any static analysis. All three report
+    `unresolved: computed_target` on the exact line, which is the right answer; no list of
+    paths could ever have closed them. Whether to fold across a single-file call graph is a
+    real design question with real over-reach risk, and it is now backed by three examples
+    rather than none.
+  `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -632,15 +646,18 @@ front of; each is a thing this repository currently claims or implies but does n
   `load_dotenv()` rather than calling it. The rules added during this pass match the library
   call. Every credential-read shape found so far reaches its path by computation rather than by
   a string literal, and this one reaches the *mechanism* by reimplementation too.
-- **The credential-path prefix list does not cover agent config files.** The labelling pass
-  found a bundle reading `~/.openclaw/openclaw.json` and parsing it — and another bundle in the
-  same sample documents putting an API key in exactly that file. Also uncovered, with several
-  examples now: per-application directories under `~/.config` (`~/.config/solana-skill/config.json`,
-  `~/.config/moltmarkets/credentials.json`) and agent-managed credential directories
-  (`~/.clawdbot/credentials/homebridge.json`). Agent config is a credential
-  store in this ecosystem, and `rules/*/credential-read.toml` lists `~/.aws`, `~/.ssh`, `.env`
-  and friends but nothing agent-shaped. A data change, once the set of paths is decided from
-  the corpus rather than guessed.
+- **~~The credential-path prefix list does not cover agent config files.~~** Mostly closed, and
+  the two halves closed differently. Per-application directories under `~/.config`
+  (`~/.config/solana-skill/config.json`, `~/.config/moltmarkets/credentials.json`) are covered
+  by widening `~/.config/gh/` to `~/.config/`, which the corpus says costs nothing: zero false
+  positives across all four strata, 92 bundles. Agent-managed credential directories
+  (`~/.clawdbot/credentials/homebridge.json`) needed the third matching mode, since the
+  filename is per-integration and the directory is the only knowable part.
+  **Still open:** reading the agent's own config file to harvest the keys inside it. The one
+  corpus example (`~/.openclaw/openclaw.json`) takes its path from argv, so no prefix list
+  would have caught it either, and the term it wants is `fs.read.agent_config`, which does not
+  exist — see the entry below. Naming individual agent directories is held back for the same
+  reason as `.beanstalk`: one example each.
 - **The taxonomy has `fs.write.agent_config` and no read counterpart.** Writing agent config
   is covered; reading it to harvest the keys inside is the more direct attack and has no term.
   Adding one is a schema-version event, so it waits for evidence — the labelling pass is now

@@ -314,6 +314,28 @@ pub fn ends_with_component(value: &str, pattern: &str) -> bool {
         .is_some_and(|head| head.ends_with('/'))
 }
 
+/// Whether `pattern` appears in `value` as whole path component(s).
+///
+/// The question `ends_with_component` cannot ask. A credential directory is
+/// identified by its own name — `~/.clawdbot/credentials/homebridge.json` — and
+/// the filename inside it is per-integration, so matching by name would require
+/// enumerating files nobody can enumerate.
+///
+/// Both ends are bounded, so `credentials` matches `a/credentials/b` but not
+/// `a/my-credentials/b` or `a/credentialsx/b`. Trimming the separators off both
+/// sides before framing them means a pattern written as `credentials`,
+/// `/credentials` or `credentials/` behaves identically, and a multi-component
+/// pattern like `.claude/skills` is bounded as one unit rather than matching the
+/// two components separately.
+#[must_use]
+pub fn contains_component(value: &str, pattern: &str) -> bool {
+    let pattern = pattern.trim_matches('/');
+    if pattern.is_empty() {
+        return false;
+    }
+    format!("/{}/", value.trim_matches('/')).contains(&format!("/{pattern}/"))
+}
+
 #[cfg(test)]
 #[allow(
     clippy::unwrap_used,
@@ -339,6 +361,45 @@ mod tests {
             "my-credentials.json",
             "credentials.json"
         ));
+    }
+
+    #[test]
+    fn a_contained_component_is_bounded_at_both_ends() {
+        // The shape this exists for: the directory is the signal and the
+        // filename inside it is per-integration.
+        assert!(contains_component(
+            "~/.clawdbot/credentials/homebridge.json",
+            "credentials"
+        ));
+        assert!(contains_component("a/credentials/b", "credentials"));
+
+        // A trailing component counts as contained — `ends_with_component`
+        // would agree, and disagreeing would be a surprise with no upside.
+        assert!(contains_component("a/credentials", "credentials"));
+        assert!(contains_component("credentials", "credentials"));
+
+        // Both ends bounded. Left-unbounded is the interesting one: a raw
+        // `contains` would match every one of these.
+        assert!(!contains_component("a/my-credentials/b", "credentials"));
+        assert!(!contains_component("a/credentialsx/b", "credentials"));
+        assert!(!contains_component("a/xcredentials/b", "credentials"));
+
+        // Written with or without separators, the pattern behaves the same.
+        assert!(contains_component("a/credentials/b", "/credentials"));
+        assert!(contains_component("a/credentials/b", "credentials/"));
+
+        // Multi-component patterns bind as one unit, so the two components have
+        // to be adjacent and in order.
+        assert!(contains_component("~/.claude/skills/x", ".claude/skills"));
+        assert!(!contains_component(
+            "~/.claude/other/skills/x",
+            ".claude/skills"
+        ));
+
+        // An empty pattern would otherwise match everything, which is how a
+        // typo in a TOML list turns into a rule that fires on every path.
+        assert!(!contains_component("a/b", ""));
+        assert!(!contains_component("a/b", "/"));
     }
 
     #[test]
