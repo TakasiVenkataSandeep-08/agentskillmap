@@ -137,12 +137,33 @@ carries one:
 |---|---|
 | `fs.read.credential` precision | 13/13 (100%, 95% CI 77.2–100%) |
 | `fs.read.credential` recall | **13/18 (72.2%, 95% CI 49.1–87.5%)** |
+| `net.egress` recall | **0/43** — no rule exists yet |
+| `env.read.secret` recall | **0/26** — no rule exists yet |
+| `process.exec` recall | 0/5 — no rule exists yet |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
 **Precision is 13/13 and the false-positive rate is 0 across all four code strata** — 92 bundles,
 not one spurious capability. The benign stratum's 95% upper bound is **9.6%**.
+
+**Five more terms now have ground truth, and every one of them scores 0.** A second pass over
+all 92 bundles hunted for `net.egress`, `env.read.secret`, `process.exec`,
+`process.exec.dynamic` and `code.dynamic_eval`. The denominators are the finding:
+
+```
+  net.egress            43/92 bundles      env.read.secret      26/92
+  fs.read.credential    18/92              process.exec          5/92
+  process.exec.dynamic   3/92              code.dynamic_eval     1/92
+```
+
+**`net.egress` is in 47% of the labelled corpus — more than twice `fs.read.credential`, the
+one term this tool detects.** Recall against it is 0/43, and that zero is now a published
+number rather than an absence. The labelling deliberately landed *before* any rule for these
+terms: widening the scored set while a rule already fires would score every genuine detection
+as a false positive, because an empty `capabilities` array means "not looked for", not "not
+present". `crates/skillmap-eval/tests/gate.rs` makes shipping a rule for an unmeasured term a
+build failure.
 
 **Recall is 72.2%**, from 38.9% before the corpus was labelled. The labelling found why it was
 low: **every credential read in the corpus reaches its path by computation — not one uses a

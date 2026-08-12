@@ -114,9 +114,30 @@ VIEWS = {
         # python
         r"\brequests\.", r"\burllib\b", r"\bhttpx\b", r"\baiohttp\b", r"\bsocket\.",
         r"http\.client", r"\bwebsockets?\b",
+        # Bare callables, for `from urllib.request import urlopen` followed by
+        # `urlopen(req)`. Added mid-pass after a bundle showed two net sites that
+        # were both the import line, while the actual call three lines later
+        # matched nothing — the destructured-import blind spot, which has now
+        # appeared in a query, a rule and this filter. Trusting the site count
+        # would have labelled a real egress as "imported but never used".
+        r"\burlopen\s*\(", r"\burlretrieve\s*\(", r"\bRequest\s*\(",
+        r"\bcreate_connection\s*\(", r"\bClientSession\s*\(",
         # javascript / typescript
         r"\bfetch\s*\(", r"\baxios\b", r"XMLHttpRequest", r"\bWebSocket\b",
         r"\bhttps?\.(get|request)\b", r"node-fetch|got\(|undici",
+        # Protocol clients that open a socket without looking like HTTP. Added
+        # mid-pass on a mail skill whose only net hit was an IMAP library method
+        # coincidentally named `fetch`, while the actual connection — `new
+        # Imap({host, port, tls})` — matched nothing.
+        r"\bImap\s*\(|\bimaplib\b|\bsmtplib\b|\bnodemailer\b|createTransport",
+        r"\bpsycopg2?\b|\bpymongo\b|\bredis\.", r"\bboto3\b|\bparamiko\b",
+        # Vendor SDKs, which are the most common egress mechanism in this corpus
+        # and the least visible one: `new OpenAI({apiKey})` then
+        # `openai.chat.completions.create(...)` reaches a hosted API without the
+        # word http appearing anywhere. Three bundles read OPENAI_API_KEY and
+        # showed zero net sites until this was added.
+        r"\bfrom\s+['\"]openai['\"]|require\(['\"]openai['\"]\)|\bnew\s+OpenAI\b",
+        r"\bimport\s+openai\b|\banthropic\b|\bgoogleapis\b|\b@aws-sdk\b",
         # shell
         r"\b(curl|wget|nc|netcat|ssh|scp|rsync)\b", r"/dev/tcp/",
     ],
@@ -124,7 +145,12 @@ VIEWS = {
         r"\bsubprocess\b", r"\bos\.system\b", r"\bos\.popen\b", r"\bos\.exec",
         r"\bcommands\.getoutput\b", r"\bpty\.spawn\b",
         r"child_process", r"\bexecSync\b|\bspawnSync\b|\bexecFile\b|\bspawn\s*\(|\bexec\s*\(",
-        r"\bxargs\b", r"\$\(", r"`[^`]", r"^\s*(bash|sh|zsh)\s",
+        # `$(...)` covers shell command substitution. A bare backtick was here
+        # too and was removed during the pass: in .js/.ts it matches every
+        # template literal, so `console.log(`...`)` showed up as an exec site.
+        # A mechanism filter over-showing is the safe direction, but this one
+        # over-showed by roughly ten to one and buried the real sites.
+        r"\bxargs\b", r"\$\(", r"^\s*(bash|sh|zsh)\s",
     ],
     "eval": [
         r"\beval\s*\(", r"\bexec\s*\(", r"\bcompile\s*\(", r"__import__",

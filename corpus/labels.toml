@@ -43,6 +43,17 @@
 #   `subprocess.run(cmd)` where `cmd` is built, or `shell=True` with an
 #   interpolated string, is `process.exec.dynamic`. A bundle can carry both.
 #
+#   **`process.exec` is scoped to python/javascript/typescript. Shell is out of
+#   scope for it, and this is a limit of the term rather than of the pass.** In
+#   python, calling `subprocess` is a distinct act a reader learns something
+#   from. In shell, running a command is the language's only verb — `echo` is an
+#   exec — so a term that fires on every shell script carries no information and
+#   its recall would measure how many bundles ship a `.sh` file. Decided during
+#   the pass, on the first shell bundle, where `$(echo "$PAYLOAD" | jq -r ...)`
+#   would otherwise have been a true positive that told the reader nothing.
+#   `process.exec.dynamic` IS labelled for shell: `bash -c "$x"` and `$CMD args`
+#   are distinct acts there, not the ambient condition.
+#
 # `code.dynamic_eval` — a string becomes code. `json.loads` is not.
 #   `model.eval()` is not — that is a PyTorch mode switch and it is everywhere.
 #
@@ -116,14 +127,35 @@ vocabulary = [
 # Terms looked for exhaustively, and therefore the only terms precision and
 # recall are computed for.
 #
-# One term, deliberately. `fs.read.credential` is the only capability the rule
-# set covers, it is unambiguous to judge from source, and a labeller can be
-# confident they checked every site. The other twelve were noted opportunistically
-# in `note` where obvious and are NOT scored: a term nobody hunted for
-# exhaustively produces recall numbers where every bundle the labeller did not
-# think to check counts against the scanner. Widening this list means another
-# labelling pass, not another line here.
-terms_labelled = ["fs.read.credential"]
+# Six terms, after a second pass over all 92 labelled bundles that hunted for
+# five more. The bar for this list is "looked for exhaustively", NOT "has a
+# usable sample size" — those are different claims, and conflating them would
+# quietly suppress the terms where the answer is "we looked, and there is
+# almost nothing here", which is itself a finding.
+#
+#   net.egress            43     process.exec            5
+#   env.read.secret       26     process.exec.dynamic    3
+#   fs.read.credential    18     code.dynamic_eval       1
+#
+# The last two carry n < 5 and their intervals will be nearly the whole unit
+# range. That is the honest reading and the reason every rate here carries one:
+# `code.dynamic_eval` at 1/92 cannot distinguish a good detector from a bad one,
+# and the fixture and adversarial suites have to carry that term instead.
+#
+# Seven terms remain unscored and are still noted opportunistically in `note`:
+# the two outside_bundle terms need per-site path reasoning relative to the
+# bundle root, `net.fetch_then_execute` and `code.obfuscation` are chain
+# judgements connecting two sites, and `agent.hook.install`,
+# `fs.write.agent_config` and `mcp.tool_reference` are each too rare here to
+# support a rate. Widening this list again means another pass, not another line.
+terms_labelled = [
+  "fs.read.credential",
+  "net.egress",
+  "env.read.secret",
+  "process.exec",
+  "process.exec.dynamic",
+  "code.dynamic_eval",
+]
 
 # ── code_clean ───────────────────────────────────────────────────────────────
 
@@ -161,9 +193,9 @@ note = "Local routing heuristic that scores a prompt and picks a model tier. Rea
 digest = "sha256:0ef5d07c5114c1b66f69c21bfd976d3191d86b913500db54fb32390c0a6f608b"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Headless-browser scraper. Network egress to the URL given on argv, which the description discloses. Reads no local file."
+note = "Headless-browser scraper. Network egress to the URL given on argv, which the description discloses. Reads no local file. The egress is its own code: fetch() inside page.evaluate, pulling transcript XML."
 
 # ── code_credential ──────────────────────────────────────────────────────────
 
@@ -191,7 +223,7 @@ note = "65 KB, including a 34 KB scanner. Notably this bundle is itself a skill-
 digest = "sha256:2ff5df0ddc756ce7ec5f769f72edacf4578eeb7b1067840a4b316f0d1f37be06"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
 evidence = ["scripts/imap.js:13"]
 disclosure_delta = false
 # Scored a true positive, and it is worth recording that the scanner reached the
@@ -203,7 +235,7 @@ disclosure_delta = false
 #
 # Bundle-level scoring cannot see this. Site-level scoring would, and needs every
 # label to carry complete evidence — a heavier labelling pass than this one.
-note = "Loads ../.env through dotenv and reads IMAP/SMTP passwords from the environment; setup.sh writes those credentials into .env. Entirely disclosed: the description says it reads and sends email, and the configuration block documents every variable."
+note = "Loads ../.env through dotenv and reads IMAP/SMTP passwords from the environment; setup.sh writes those credentials into .env. Entirely disclosed: the description says it reads and sends email, and the configuration block documents every variable. Opens IMAP and SMTP sockets via the imap/nodemailer clients; reads IMAP_PASS and SMTP_PASS from the environment."
 
 # ── disclosure_shape ─────────────────────────────────────────────────────────
 
@@ -217,7 +249,7 @@ note = "143 KB across thirty files with its own crypto, relay and invite modules
 digest = "sha256:0896ce7ec4ed568ffa99577e2afb63fb1b3b6e0a17a84ac3f10e9145b5e2de89"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress"]
 evidence = ["assets/templates/pre-deploy.sh:31"]
 disclosure_delta = false
 # CORRECTED. First labelled `capabilities = []` on the reading that the script
@@ -229,7 +261,7 @@ disclosure_delta = false
 # caught by a disagreement, on a sample of seven, and it is the most concrete
 # evidence available that `reviewed_by` being empty is a real weakness rather
 # than a formality.
-note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for required variable names, which reads it. Everything the templates do is described in the guide the skill points at."
+note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for required variable names, which reads it. Everything the templates do is described in the guide the skill points at. curl against a configured health-check URL."
 
 # ── second batch ─────────────────────────────────────────────────────────────
 
@@ -251,7 +283,7 @@ note = "125 KB across twenty-five files, most of it a bundled MCP server. Beyond
 digest = "sha256:167b30b30a2f2f38b7a39aa320564b41717cbadeaab72264773ed1a2aefdbfe7"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress"]
 evidence = ["scripts/api_client.py:24"]
 disclosure_delta = false
 # A judgement call worth stating so a reviewer can disagree. The file is the
@@ -271,7 +303,7 @@ disclosure_delta = false
 # saying it saw a read whose path it could not resolve. That is invariant 3
 # working — a miss the reader can see is categorically different from a miss they
 # cannot, and a recall number alone cannot tell them apart.
-note = "Cryptocurrency market-data client. Caches an auth token in a .token file beside the script and reads it back on later runs; everything else is HTTP against a documented API."
+note = "Cryptocurrency market-data client. Caches an auth token in a .token file beside the script and reads it back on later runs; everything else is HTTP against a documented API. urllib.request.urlopen against a crypto market API; API_BASE_URL is a URL, not a secret."
 
 [[label]]
 digest = "sha256:1ba88d628cc5d4aa2a7400e7d1b2d9f9f1b7375ff2d3004517cc21349a755410"
@@ -301,9 +333,9 @@ note = "Regulatory gap analysis over in-memory data structures. An 18 KB script 
 digest = "sha256:11e471f09c28e053648405e3d7262492ebaebaa301f98d71dca4f5cb8dc2da8b"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Image-generation client. Reads an API token from the RECRAFT_API_TOKEN environment variable — which the description and frontmatter both declare — and opens only image files the caller names on argv. No credential file is read."
+note = "Image-generation client. Reads an API token from the RECRAFT_API_TOKEN environment variable — which the description and frontmatter both declare — and opens only image files the caller names on argv. No credential file is read. requests.get/post against the Recraft API; RECRAFT_API_TOKEN from the environment."
 
 # ── third batch ──────────────────────────────────────────────────────────────
 
@@ -319,7 +351,7 @@ note = "Writes and re-reads its own receipt JSON under ~/.openclaw/receipts, and
 digest = "sha256:305f974a13a93855551b935cee8f300bb33fc09fea230bca1ebdfbf4e6ff090c"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
 # A boundary case worth stating. The script reads APIFY_TOKEN from the
 # environment and never opens .env. What *does* read .env is the SKILL.md
@@ -331,13 +363,13 @@ disclosure_delta = false
 # a credential file to be read, by prose the instruction plane has no rule for.
 # That is a coverage gap between the two planes rather than a scanner error, and
 # it is recorded here because a label file is where such a thing becomes visible.
-note = "Runs Apify actors over HTTP with a token from the environment, and writes results to a file the caller names. The .env read happens in shell commands the SKILL.md instructs the agent to run, not in analysed code."
+note = "Runs Apify actors over HTTP with a token from the environment, and writes results to a file the caller names. The .env read happens in shell commands the SKILL.md instructs the agent to run, not in analysed code. fetch() against the Apify API; APIFY_TOKEN from the environment."
 
 [[label]]
 digest = "sha256:3c92690d46367d9e8ad26b0b18cecf1c0d484c7afb1566accc864ae0b8e13615"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "process.exec", "env.read.secret"]
 evidence = ["add_voiceover.py:13", "generate_video.py:16"]
 disclosure_delta = false
 # The second dotenv case in eleven labelled bundles, and the one that made the
@@ -349,7 +381,7 @@ disclosure_delta = false
 # `Path`, `os.environ` and friends but not `load_dotenv`, so this read was
 # invisible on the first pass. Widened — the filter is still by mechanism, since
 # "load environment from a file" describes the call whatever the file holds.
-note = "Video generation via hosted APIs. Calls load_dotenv() in two scripts, which reads .env from the working directory, then takes OPENAI_API_KEY and other keys from the environment. Shells out to ffmpeg."
+note = "Video generation via hosted APIs. Calls load_dotenv() in two scripts, which reads .env from the working directory, then takes OPENAI_API_KEY and other keys from the environment. Shells out to ffmpeg. requests.get/post against four hosted model APIs; subprocess.run on a literal ffmpeg argv; five *_API_KEY/*_API_TOKEN vars from the environment."
 
 # ── fourth batch ─────────────────────────────────────────────────────────────
 #
@@ -365,17 +397,17 @@ note = "Video generation via hosted APIs. Calls load_dotenv() in two scripts, wh
 digest = "sha256:0f58f2b3b4d6bd3f890df7bcf4f1f527da0e31efc6fa0d86049c91584d89a9cc"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Generates a LICENSE file, using a hosted model to explain licence terms. Reads OPENAI_API_KEY from the environment and writes one file the caller names. The credential marker sits in src/, which nothing in SKILL.md links to, but the description names the key requirement explicitly."
+note = "Generates a LICENSE file, using a hosted model to explain licence terms. Reads OPENAI_API_KEY from the environment and writes one file the caller names. The credential marker sits in src/, which nothing in SKILL.md links to, but the description names the key requirement explicitly. openai.chat.completions.create through the OpenAI SDK â€” egress with no http token in the source; OPENAI_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:3f846244d9405f79d2eb646df4e49f99546269cdf876589fdabd979ae469b016"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Reads highlights from a hosted API with a token from the environment, which the frontmatter declares under requires.env. No file read at all."
+note = "Reads highlights from a hosted API with a token from the environment, which the frontmatter declares under requires.env. No file read at all. fetch against the Readwise and reader APIs; READWISE_TOKEN from the environment."
 
 [[label]]
 digest = "sha256:52720be21d450b672a5c3c1cb5397d24c334556b521a66f78a593f06874c4617"
@@ -387,7 +419,7 @@ note = "64 KB. A cryptocurrency wallet skill in the disclosure-delta stratum —
 digest = "sha256:5877ac8773ee9d2451a46a93db3e9eb2a74952b94c179032a151fb89f7053b22"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
 # Borderline, and called false for consistency rather than because it is obvious.
 # The description is one jokey line and does not mention network access or an API
@@ -399,7 +431,7 @@ disclosure_delta = false
 # A standard applied inconsistently across a delta corpus is worse than a strict
 # one or a loose one, so: a delta requires the deep files to ask for a capability
 # the description does not imply, not merely one it does not spell out.
-note = "MCP server for a bot-only polling site. Reads an API key from the environment and calls the service over HTTP; no file access of any kind."
+note = "MCP server for a bot-only polling site. Reads an API key from the environment and calls the service over HTTP; no file access of any kind. fetch against a remote endpoint from an MCP server wrapper."
 
 [[label]]
 digest = "sha256:33a59816543f17338b439a0a46d2ef99ca5a4afd40903379e0bae05db1cd924a"
@@ -444,9 +476,9 @@ note = "Maintains a contacts graph as JSON under ~/.local/share/social-memory, r
 digest = "sha256:44dc5ba88ae073765fcb425f1b1162f2e0b6dd5a54eef2914e8e4165a5e26c94"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Web search through a hosted API and a mobile proxy. Two API keys read from the environment; no file access at all."
+note = "Web search through a hosted API and a mobile proxy. Two API keys read from the environment; no file access at all. Egress through a proxyFetch wrapper around fetch, which a lexical filter does not see; BRAVE_API_KEY and ALUVIA_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:45ee14dae05c43ecbcf0e681932547a46f1ad84a90ce04052e9d264950f328eb"
@@ -460,7 +492,7 @@ note = "Design tokens, CSS and a DOM pattern library for generating a single-fil
 digest = "sha256:59d82d19795547cc3324efd108e3174f6e43fdeed2f12e135a5d656090e247f5"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "process.exec.dynamic"]
 evidence = ["scripts/config_summary.py:219"]
 disclosure_delta = false
 # The third distinct credential-read shape the pass has found, and the third the
@@ -477,7 +509,7 @@ disclosure_delta = false
 #
 # Not silent, again: the path is a parameter, so the scanner emits
 # `unresolved: computed_target` rather than nothing.
-note = "A security-audit skill that collects the agent's own configuration and environment into a report, with a redaction helper. Opens ~/.openclaw/openclaw.json — the file this ecosystem stores API keys in — and summarises it."
+note = "A security-audit skill that collects the agent's own configuration and environment into a report, with a redaction helper. Opens ~/.openclaw/openclaw.json — the file this ecosystem stores API keys in — and summarises it. Runs whatever argv it is handed by expanding the positional parameters into a command substitution, so argv[0] is not statically known. `source`ing a bundle-local helper is treated as an import, not code.dynamic_eval. The curl/wget strings are detection patterns, not calls."
 
 # ── sixth batch ──────────────────────────────────────────────────────────────
 
@@ -526,9 +558,9 @@ note = "67 KB, including a 25 KB protocol implementation and a local dashboard s
 digest = "sha256:200de253b71ec2531211e742c07031f1fec4acaea12389cead6c8d8d9cda3019"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["env.read.secret"]
 disclosure_delta = false
-note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls."
+note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls. LINKEDIN_LI_AT and LINKEDIN_JSESSIONID are session cookies, so the names are secret-bearing. `source`ing a bundle-local state.sh is an import, not code.dynamic_eval."
 
 # ── seventh batch ────────────────────────────────────────────────────────────
 
@@ -536,7 +568,7 @@ note = "Polls LinkedIn messages through an external CLI on a cron schedule, keep
 digest = "sha256:708d76392f25108fb6a2944ec31d9bb419520182d645635b7bf44d35c93800ed"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress"]
 evidence = ["scripts/config.ts:41", "scripts/wallet.ts:113"]
 disclosure_delta = false
 # Two reads, both genuine: a config file under ~/.config/solana-skill holding a
@@ -552,15 +584,15 @@ disclosure_delta = false
 # reviewer would want it and because invariant 1 says describe rather than judge:
 # the wallet files are encrypted with a password derived from
 # `process.env.USER + process.env.HOME`, hashed. Those are not secrets.
-note = "Solana wallet and swap tooling. Reads an API key from a config file under ~/.config/solana-skill and reads encrypted keypair files from a wallets directory beside it. Wallet encryption derives its password from USER and HOME."
+note = "Solana wallet and swap tooling. Reads an API key from a config file under ~/.config/solana-skill and reads encrypted keypair files from a wallets directory beside it. Wallet encryption derives its password from USER and HOME. fetch against Solana RPC and the Jupiter swap API. HOME and USER build paths and are not secrets."
 
 [[label]]
 digest = "sha256:76c7316f1dc08d0b268ca03a02cbdb2f12d77e8498297b14b8ec1fbee12f4acd"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["env.read.secret"]
 disclosure_delta = false
-note = "Sends on-chain messages as transactions. Takes a signing key from the ONCHAT_PRIVATE_KEY environment variable and touches no file; the description says it sends messages as blockchain transactions, which implies signing."
+note = "Sends on-chain messages as transactions. Takes a signing key from the ONCHAT_PRIVATE_KEY environment variable and touches no file; the description says it sends messages as blockchain transactions, which implies signing. ONCHAT_PRIVATE_KEY from the environment; no egress site of its own."
 
 [[label]]
 digest = "sha256:7d914c0bf2c87b1644f983c35f3056f839bac48f7ac36a8a35f306d18939d883"
@@ -601,9 +633,9 @@ note = "14.6 MB across forty-one files, almost all of it media assets, over a tw
 digest = "sha256:70c4b9117151282d5ea53f88ad51a35d0540ef9e66a992ec1a159507d7426ec8"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "A thin curl wrapper over a marketplace API. Takes its key from BITSKINS_API_KEY, which the frontmatter declares under env_vars, and reads no file."
+note = "A thin curl wrapper over a marketplace API. Takes its key from BITSKINS_API_KEY, which the frontmatter declares under env_vars, and reads no file. Shell client invoking curl against the BitSkins REST API; BITSKINS_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:6fdafd1ce2ee0344440f68aa918fc36d0d95fc6a587ca595276a8a68c14ada95"
@@ -662,7 +694,7 @@ note = "Prints setup instructions telling the user to configure their own Feishu
 digest = "sha256:814aa6415e00103b4ea6be21aac9b80957095a10356ba45f595be21c972b793f"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = true
 # A distinction this corpus needs and did not have a word for: **disclosed to the
 # reviewer** is not **disclosed to the agent**.
@@ -683,13 +715,13 @@ disclosure_delta = true
 # reading that counts anything in SKILL.md as disclosed scores it false, and the
 # line number is recorded so that reading can be applied without re-reading the
 # bundle.
-note = "Generates animation CSS by calling a hosted model with a key from OPENAI_API_KEY, and writes one output file. The description mentions neither; SKILL.md's body names the key requirement at line 67."
+note = "Generates animation CSS by calling a hosted model with a key from OPENAI_API_KEY, and writes one output file. The description mentions neither; SKILL.md's body names the key requirement at line 67. OpenAI SDK completion call; OPENAI_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:85e45ed7c985edfd8678832e677cf03cfdcdb3d9b8c013495e027d313080b052"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
 evidence = ["src/index.ts:12"]
 disclosure_delta = true
 # **SKILL.md has no frontmatter at all.** There is no description, so nothing
@@ -705,7 +737,7 @@ disclosure_delta = true
 #
 # The fifth dotenv read in the corpus, and the first that the new dotenv rules
 # should catch — worth watching in the recall number rather than asserting here.
-note = "Microsoft 365 MCP server. Loads .env through dotenv, exchanges a client secret for a Graph token, and exposes mail, calendar and file operations. SKILL.md carries no frontmatter, so there is no description at all."
+note = "Microsoft 365 MCP server. Loads .env through dotenv, exchanges a client secret for a Graph token, and exposes mail, calendar and file operations. SKILL.md carries no frontmatter, so there is no description at all. fetch against Microsoft Graph; CLIENT_SECRET and TENANT_ID from the environment."
 
 [[label]]
 digest = "sha256:91f4a41ce0ed61a672c7f03224058cef9e31e31dd1f801746205e56274d4404a"
@@ -717,7 +749,7 @@ note = "90 KB across nine files, including three watcher implementations and a T
 digest = "sha256:ba0c9b4e31850c54c956c079b0d20eee24fc2e4ba21fd8fd10deb4caeb7356a8"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["env.read.secret"]
 disclosure_delta = false
 # No file is read, so no `fs.read.credential`. What is here instead has no term
 # in the taxonomy at all: a **private key literal committed into the source**, as
@@ -729,7 +761,7 @@ disclosure_delta = false
 # reviewer would want reported, it is mechanically detectable, and there is
 # nowhere in the manifest to put it. Recorded here because a labelling pass is
 # where a missing term becomes visible with an example attached.
-note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer key from the environment, each with a hardcoded fallback — the key fallback is a literal Sepolia private key at scripts/config.mjs:22. No file access."
+note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer key from the environment, each with a hardcoded fallback — the key fallback is a literal Sepolia private key at scripts/config.mjs:22. No file access. DEPLOYER_PRIVATE_KEY from the environment; no egress site of its own."
 
 # ── tenth batch: code_other_marker ───────────────────────────────────────────
 #
@@ -741,17 +773,17 @@ note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer ke
 digest = "sha256:2f86f6e03e171f2d797951eafa653971e2dd2ec3e4e9149dede00050444437f9"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote."
+note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote. curl POST to the Groq speech API."
 
 [[label]]
 digest = "sha256:4f31016dcc81254e27adc0f6122076c7116f26f6c9559fd50d55c3e7d992ff80"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["process.exec.dynamic"]
 disclosure_delta = false
-note = "Persists multi-step plan state as JSON and re-invokes an agent command between steps, taking that command from STEP_AGENT_CMD with a blocklist on the executable's basename. The description says it schedules and runs multi-step flows, which implies the execution."
+note = "Persists multi-step plan state as JSON and re-invokes an agent command between steps, taking that command from STEP_AGENT_CMD with a blocklist on the executable's basename. The description says it schedules and runs multi-step flows, which implies the execution. subprocess.run([sys.executable, str(runner), ...]) â€” argv[0] is not statically known from source, even though it resolves to a python interpreter."
 
 [[label]]
 digest = "sha256:798c1aaaa57e1feb4a330428c2db1c9cd9472fe56fe76d4e72fe88730fa06be8"
@@ -776,7 +808,7 @@ note = "Nine-line shell wrapper around an MCP search tool. Reads nothing, writes
 digest = "sha256:7f586b352a3e424372345e00bb03f64138961288da58e270d8326ca05ede8a7a"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress"]
 evidence = ["scripts/homebridge_api.py:36"]
 disclosure_delta = false
 # A fifth credential-path shape, and the least ambiguous one yet: the file lives
@@ -788,21 +820,21 @@ disclosure_delta = false
 # credential store under a dotfile directory — and the prefix lists cover none of
 # it. Computed path again, so the scanner should report `unresolved:
 # computed_target` rather than nothing.
-note = "Controls smart-home devices over a local REST API. Reads its host, port and auth token from ~/.clawdbot/credentials/homebridge.json, which SKILL.md's prerequisites describe setting up."
+note = "Controls smart-home devices over a local REST API. Reads its host, port and auth token from ~/.clawdbot/credentials/homebridge.json, which SKILL.md's prerequisites describe setting up. Request/urlopen against a local Homebridge REST API, reached through a destructured import."
 
 [[label]]
 digest = "sha256:81a65b47f64ecf1e565ab06d3750091f10cc9dc4802110227f39918cd7bfa8f2"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "A twenty-line curl wrapper over a scholarly search API, keyed on BAIDU_API_KEY, which the frontmatter declares. No file access."
+note = "A twenty-line curl wrapper over a scholarly search API, keyed on BAIDU_API_KEY, which the frontmatter declares. No file access. curl GET against a scholar search endpoint."
 
 [[label]]
 digest = "sha256:8d302e6b296c0d3be0e203f830342a185a0513409515f58ec6b14b28362b492e"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
 # Borderline, called false on the same standard as the earlier MCP polling
 # bundle: the description says "GitHub-native digital pets" and "adopt", and the
@@ -816,7 +848,7 @@ disclosure_delta = false
 # reading applied to the animation generator this would be true; it is called
 # false here because "fork to your GitHub" implies repository writes in a way
 # "generate CSS animations" does not imply network access at all.
-note = "Forks a template repository into the user's GitHub account with a token from GITHUB_TOKEN, enables Actions on it with all permissions, and dispatches a workflow. No file is read."
+note = "Forks a template repository into the user's GitHub account with a token from GITHUB_TOKEN, enables Actions on it with all permissions, and dispatches a workflow. No file is read. curl against the GitHub API across fourteen sites; GITHUB_TOKEN from the environment."
 
 # ── eleventh batch: completing code_other_marker ─────────────────────────────
 
@@ -844,13 +876,13 @@ note = "A methodology skill for building CLI harnesses. Its install script copie
 digest = "sha256:9de18b483b6411e79d98e7074517b59b76e3465a8328e2160a7fbaccb30acebd"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "process.exec"]
 disclosure_delta = false
 # Writes a token file and never reads one — the same write-is-not-read
 # distinction that the `cat > .env` fix turned on. `generate_token_wrapper.py`
 # obtains a hub token and saves it to a path the caller names, then prints how to
 # read it back; nothing in the bundle performs that read.
-note = "Controls IKEA smart-home devices. Shells out to `arp -a` to find the hub, runs a token generator, and writes the resulting token to a file the caller names. The description says it helps find the hub and generate a token."
+note = "Controls IKEA smart-home devices. Shells out to `arp -a` to find the hub, runs a token generator, and writes the resulting token to a file the caller names. The description says it helps find the hub and generate a token. Opens raw UDP and TCP sockets and calls requests.get against a hub; subprocess.run on literal argv (arp -a, generate-token)."
 
 [[label]]
 digest = "sha256:9e4e2c3f3ca83615bd88c240a2dd4b883e7abd058a3d07fe5f022687809432cc"
@@ -881,7 +913,7 @@ note = "GIF construction and validation helpers. Opens and writes image files at
 digest = "sha256:d80bf9624a6f7c3a695ff1e00f2d88742c81d99c1486b4c8ac0e008a85e19ba8"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = true
 # The most interesting delta in the corpus so far, because of what the skill is.
 #
@@ -899,7 +931,7 @@ disclosure_delta = true
 # untrusted user message through two external APIs is an acceptable trade for
 # moderation is exactly the judgement policy.toml exists to hold, and the
 # manifest's job is to make it visible.
-note = "Two-layer content moderation. Sends the text under moderation to a HuggingFace classifier and OpenAI's moderation endpoint, keyed on HF_TOKEN and OPENAI_API_KEY. The description lists when to use it and does not mention that the text is sent anywhere; SKILL.md's body names both services."
+note = "Two-layer content moderation. Sends the text under moderation to a HuggingFace classifier and OpenAI's moderation endpoint, keyed on HF_TOKEN and OPENAI_API_KEY. The description lists when to use it and does not mention that the text is sent anywhere; SKILL.md's body names both services. curl to two hosted moderation APIs; HF_TOKEN and OPENAI_API_KEY from the environment. This is the bundle whose description never says the moderated text leaves the machine."
 
 # ── twelfth batch: disclosure_shape ──────────────────────────────────────────
 
@@ -913,7 +945,7 @@ note = "73 KB across twelve files, including two ~17 KB generators and a monitor
 digest = "sha256:c0d97695f8bc18733c2df27f94d4123a297843fbcbca044e3f93f065fb502242"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
 evidence = ["scripts/gateway-client.js:37"]
 disclosure_delta = true
 # Reads a gateway token from `.beanstalk/gateway.json`, searched across the
@@ -927,13 +959,13 @@ disclosure_delta = true
 # WebSocket to a remote service for "remote monitoring and control" of the local
 # agent, and setup.sh symlinks the client into /usr/local/bin when that directory
 # is writable.
-note = "Connects a local agent to a remote service over a persistent WebSocket for remote monitoring and control. Reads its gateway token from .beanstalk/gateway.json in one of three locations; setup.sh symlinks the client into /usr/local/bin. SKILL.md has no frontmatter."
+note = "Connects a local agent to a remote service over a persistent WebSocket for remote monitoring and control. Reads its gateway token from .beanstalk/gateway.json in one of three locations; setup.sh symlinks the client into /usr/local/bin. SKILL.md has no frontmatter. fetch and a persistent WebSocket to the gateway; GATEWAY_TOKEN from the environment."
 
 [[label]]
 digest = "sha256:d6094aadd232d0351e12f0b65ed746dc592844f52f36a55fc0347f1a857d930c"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
 evidence = ["utils/feishu-client.js:5", "utils/feishu-client.js:75"]
 disclosure_delta = true
 # Two credential reads: `require('dotenv').config()` at line 5, and a cached
@@ -942,7 +974,7 @@ disclosure_delta = true
 #
 # SKILL.md has no frontmatter — the third such bundle — so nothing is disclosed
 # at session start.
-note = "Sends rich-text messages to a chat platform. Loads .env for app id and secret, caches the resulting tenant token to a file and reads it back on later runs, and can read message text from a file the caller names. SKILL.md has no frontmatter."
+note = "Sends rich-text messages to a chat platform. Loads .env for app id and secret, caches the resulting tenant token to a file and reads it back on later runs, and can read message text from a file the caller names. SKILL.md has no frontmatter. fetch against the Feishu API; FEISHU_APP_SECRET from the environment."
 
 [[label]]
 digest = "sha256:d7412da33ddb392c5673519315ebc98d057f106703f33d5150130c4e9af4a052"
@@ -960,7 +992,7 @@ note = "944 KB across 120 files — a DeFi wallet plugin with local key backends
 digest = "sha256:ea70c6d4c2480210214af1a0353322fb7ca6c4d69b009cf7b8c87291c5bc3061"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = true
 # Third bundle from this publisher, and the standard separates them cleanly for
 # the third time. "Generate GitHub Actions CI/CD workflows from project analysis"
@@ -968,13 +1000,13 @@ disclosure_delta = true
 # it recognises and sends them to OpenAI with a key from the environment. The
 # bundle-analyzer sibling said "get **AI** suggestions" in its description and
 # was labelled false on exactly that word.
-note = "Scans a project directory, reads matching files under 5 KB, and sends them to a hosted model to generate a CI workflow, which it writes out. The description mentions neither the model nor the key."
+note = "Scans a project directory, reads matching files under 5 KB, and sends them to a hosted model to generate a CI workflow, which it writes out. The description mentions neither the model nor the key. OpenAI SDK completion call; OPENAI_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:f84e182cf7e4b0070e528aab6b7ec94d6765c2e3c19f356d904158e287e665fe"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "code.dynamic_eval"]
 evidence = ["maintenance.sh:11"]
 disclosure_delta = true
 # The bundle this whole project is shaped around, found in a random sample of
@@ -1004,7 +1036,7 @@ disclosure_delta = true
 # That is the clearest possible statement of where this project actually stands:
 # the engine and the load-phase signal work; the rule set covers a thirteenth of
 # what the manifest can describe.
-note = "Fetches and executes a remote script, pipes an SSH private key through base64 to a collector, and downloads and runs a miner — all in a file nothing references, behind a description saying it does nothing suspicious. The domains are fictional; this reads as a published demonstration payload."
+note = "Fetches and executes a remote script, pipes an SSH private key through base64 to a collector, and downloads and runs a miner — all in a file nothing references, behind a description saying it does nothing suspicious. The domains are fictional; this reads as a published demonstration payload. Fictional-domain demonstration payload: curl piped into bash, a /dev/tcp reverse shell, and a POST of key material. The pipe into bash is a string becoming code."
 
 # ── thirteenth batch: completing code_clean ──────────────────────────────────
 #
@@ -1015,29 +1047,29 @@ note = "Fetches and executes a remote script, pipes an SSH private key through b
 digest = "sha256:6da617f7e070543b7f8b20100507a13b0593a91bf331435f80d0bc80ee10c256"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Fetches comics from a public API and can generate images. No filesystem or environment access at all."
+note = "Fetches comics from a public API and can generate images. No filesystem or environment access at all. httpx.get against the xkcd API."
 
 [[label]]
 digest = "sha256:91b44aa7ec15dd4e4b16218d7e71227a58ee82d4a4bd8c3b7ae36348df146900"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = true
 # SKILL.md carries no frontmatter, so there is no description and everything is
 # undisclosed by construction. The fourth such bundle. The harness excludes these
 # from the delta rate and counts them separately — the state is detectable with
 # `description_bytes == 0` and needs no model.
-note = "Polls a public charging-station status endpoint and reports connector state. No filesystem or environment access. SKILL.md has no frontmatter."
+note = "Polls a public charging-station status endpoint and reports connector state. No filesystem or environment access. SKILL.md has no frontmatter. fetch() against a charge-point status endpoint."
 
 [[label]]
 digest = "sha256:93277363936864518724cbe49a13242c483373a96a21f8c866929d76fce1eedc"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Fetches stock quotes from a public endpoint named in the frontmatter. No filesystem or environment access."
+note = "Fetches stock quotes from a public endpoint named in the frontmatter. No filesystem or environment access. fetch() against the Yahoo Finance quote API."
 
 [[label]]
 digest = "sha256:973fc8647f979a44e9f169b3859fe030efeac4386141a0cd731f8e601a623c10"
@@ -1077,17 +1109,17 @@ note = "Reads a connection-telemetry file named on argv and flags direct-to-IP t
 digest = "sha256:b4f1b8b5ea64ab91ac1ce71a77e8c8c5b9d6120f22c1b39d1ea925fdbd27accc"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Queries a public electricity-pricing API and computes cheap windows. Five scripts, none of which touches the filesystem or the environment."
+note = "Queries a public electricity-pricing API and computes cheap windows. Five scripts, none of which touches the filesystem or the environment. urlopen(req) at get_pvpc.py:26, reached through a destructured import."
 
 [[label]]
 digest = "sha256:b7892b94166a029b465956d0743225ff2e349389c89c2847f711c273421d18b8"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Talks to a local model server, with the host taken from OLLAMA_HOST and defaulting to localhost. No filesystem access."
+note = "Talks to a local model server, with the host taken from OLLAMA_HOST and defaulting to localhost. No filesystem access. urllib.request.urlopen against a local Ollama daemon; egress is to localhost but the mechanism is identical."
 
 [[label]]
 digest = "sha256:c85ba6933c82a864eefc528ab0db33809db937e23a1c9dc2ab4af52af865fe91"
@@ -1195,17 +1227,17 @@ note = "Initiates a USD transfer between two agents through a host-provided cont
 digest = "sha256:d0f057df5cdfc6a02de8c0005583f4ec30b9c7535dea6e032fcb9f74a04e872c"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Fetches Chinese equity quotes from public endpoints and keeps a portfolio as JSON under ~/.clawdbot/skills/a-stock-analysis. The description says it supports holdings management."
+note = "Fetches Chinese equity quotes from public endpoints and keeps a portfolio as JSON under ~/.clawdbot/skills/a-stock-analysis. The description says it supports holdings management. urllib.request.urlopen against a stock-quote API."
 
 [[label]]
 digest = "sha256:e93eb3fcac93288402b8b3ed94c82283dbf3bb3e4f761e35adb8fda36df1dbc5"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
-note = "Client for a social network for agents. Appends a daily markdown log and keeps a JSON memory of entities and events; the description names the built-in memory management."
+note = "Client for a social network for agents. Appends a daily markdown log and keeps a JSON memory of entities and events; the description names the built-in memory management. requests.post against a social API for AI agents."
 
 # ── fourteenth batch: code_credential ────────────────────────────────────────
 
@@ -1227,7 +1259,7 @@ note = "265 KB across thirty files, including two full boilerplate applications 
 digest = "sha256:83bd4813fbac462518dc778215703e7f793f15043962492562952291ea47990e"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "process.exec.dynamic"]
 disclosure_delta = false
 # The most significant taxonomy gap the pass has found, and it is not a rule gap.
 #
@@ -1251,7 +1283,7 @@ disclosure_delta = false
 #
 # Not a delta: the description says "Check Claude Code OAuth usage limits", and
 # the body states plainly that it retrieves the token from the system keychain.
-note = "Reads Claude Code's OAuth access and refresh tokens out of the macOS Keychain, or secret-tool on Linux, and queries the usage endpoint with them. Caches the result in /tmp. Both the description and the body say so."
+note = "Reads Claude Code's OAuth access and refresh tokens out of the macOS Keychain, or secret-tool on Linux, and queries the usage endpoint with them. Caches the result in /tmp. Both the description and the body say so. curl against api.anthropic.com; invokes sibling scripts through a computed $SCRIPT_DIR. The keychain read (security find-generic-password / secret-tool) still has no term to carry it."
 
 [[label]]
 digest = "sha256:892439c41c622ebbde3109ed41af755718d714abbae2ea6f35df42cce64d9eb0"
@@ -1263,19 +1295,19 @@ note = "179 KB across twelve files, including a server, a web application and a 
 digest = "sha256:945675caab06d9c409b4059a79760494b3db8ae392053661f699bcb00fc541c2"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress"]
 evidence = ["scripts/setup.js:30"]
 disclosure_delta = false
 # Reads ~/.config/moltmarkets/credentials.json — a per-application directory
 # under ~/.config, the same shape as the wallet skill found earlier and still
 # uncovered by any prefix list. The file is literally named credentials.json.
-note = "Sets up an autonomous prediction-market trading agent. Reads its credentials from ~/.config/moltmarkets/credentials.json and scaffolds a memory directory of JSON and markdown files."
+note = "Sets up an autonomous prediction-market trading agent. Reads its credentials from ~/.config/moltmarkets/credentials.json and scaffolds a memory directory of JSON and markdown files. https.request against the MoltMarkets API. HOME is used to build the credentials path and is not itself a secret."
 
 [[label]]
 digest = "sha256:951ccce72a841d7a6429fa6c3259a86695fdf01448ebda25e248cfeb525c7529"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "process.exec"]
 disclosure_delta = false
 # No credential read, and a good illustration of how much this sample contains
 # that the rule set has no term firing for. This bundle reads a file or stdin as
@@ -1285,7 +1317,7 @@ disclosure_delta = false
 # That is `process.exec` and `code.dynamic_eval` — both in the taxonomy, neither
 # with a rule. Reported here as absent because they are not in `terms_labelled`,
 # and the manifest reports nothing either.
-note = "Browser automation. Takes a script from a file or stdin, writes it to a temp file beside the skill and runs it with node, installing npm dependencies and a browser on first use."
+note = "Browser automation. Takes a script from a file or stdin, writes it to a temp file beside the skill and runs it with node, installing npm dependencies and a browser on first use. http.request against a detected dev server; execSync on literal argv (npm install, npx playwright install). PW_HEADER_VALUE is a generic extra header, not a secret-named variable."
 
 # ── fifteenth batch: code_credential ─────────────────────────────────────────
 
@@ -1293,9 +1325,9 @@ note = "Browser automation. Takes a script from a file or stdin, writes it to a 
 digest = "sha256:a0cb8397398be73a6c60e9a9018ceabac32c633b968abb10c2fbc07ed6d44d45"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Posts agent status and messages to a local Kanban dashboard over HTTP, with the URL and API key from the environment. No file access."
+note = "Posts agent status and messages to a local Kanban dashboard over HTTP, with the URL and API key from the environment. No file access. fetch against a dashboard API; CLAW_CONTROL_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:a16353d6dd93eed0442ddfacbd45f8664923c0b761ddcc7f536f9e03c654d4d9"
@@ -1327,20 +1359,20 @@ note = "261 KB across twenty-seven files, with six per-platform posting clients.
 digest = "sha256:ae773ed97dda2e86e1370e78fd95a15415d94930eae05724ce6b1742abfd97b1"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "process.exec", "env.read.secret"]
 evidence = ["add_voiceover.py:13", "generate_video.py:16"]
 disclosure_delta = false
 # Near-identical to another bundle already in this sample — same filenames, same
 # sizes, different digest and different publisher. The corpus deduplicates on
 # content digest, so a near-copy survives as its own row; worth knowing when
 # reading any rate computed over it.
-note = "Generates video through several hosted APIs and stitches with ffmpeg. Calls load_dotenv() in two scripts and takes five API keys from the environment; the description names the services."
+note = "Generates video through several hosted APIs and stitches with ffmpeg. Calls load_dotenv() in two scripts and takes five API keys from the environment; the description names the services. Same skill as 3c92690d4636 at a different digest: four hosted model APIs, ffmpeg through subprocess on literal argv, five *_API_KEY vars."
 
 [[label]]
 digest = "sha256:aeea623b97b5f2cc927516b7cfec093d8cfda65f23528a5f84cafb7579999feb"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
 evidence = ["scripts/withings.py:21", "scripts/withings.py:67"]
 disclosure_delta = false
 # A seventh credential-read shape, and one no rule in the tree could match: a
@@ -1361,7 +1393,7 @@ disclosure_delta = false
 # Not a delta: the frontmatter declares both client-credential environment
 # variables and the description says it fetches health data through the vendor's
 # API.
-note = "Fetches health metrics for several family members from a vendor API. Parses a .env file by hand into the environment, then reads and refreshes per-user OAuth token files under ~/.clawdbot/withings-family."
+note = "Fetches health metrics for several family members from a vendor API. Parses a .env file by hand into the environment, then reads and refreshes per-user OAuth token files under ~/.clawdbot/withings-family. urllib.request.urlopen against the Withings API; WITHINGS_CLIENT_SECRET from the environment. Note line 24 WRITES os.environ from a hand-rolled dotenv parser â€” a write, not a read."
 
 [[label]]
 digest = "sha256:b3d2bb7517edb5086f5f4ae48cae0e83226162dd595a0bbcf62b0fdeac8463cb"
@@ -1398,9 +1430,9 @@ note = "86 KB across eighteen files, including two boilerplate applications. Bey
 digest = "sha256:bc5dc20f16f98cd4018dd4becffeafed9dab88439d3b48a18ff93a0419e18a34"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Queries a knowledge-base API with a key from the environment, which the frontmatter declares. No file access."
+note = "Queries a knowledge-base API with a key from the environment, which the frontmatter declares. No file access. requests.get/post against the Dify API; DIFY_API_KEY from the environment."
 
 [[label]]
 digest = "sha256:c5f94d9128ccdd15daf379757d5fb598ba2d72c5a4417234f570c1c7ff7bcde0"
@@ -1412,7 +1444,7 @@ note = "119 KB across forty files of framework rules and example components. Bey
 digest = "sha256:ccfb4b755df14269f27c92db395b6e058ea7cfa7e9470221fbcbc50dedd76e08"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
 evidence = ["scripts/main.ts:186"]
 disclosure_delta = false
 # The second hand-rolled dotenv in two batches, in TypeScript this time. It reads
@@ -1422,13 +1454,13 @@ disclosure_delta = false
 #
 # Two independent bundles reimplementing dotenv rather than importing it means
 # the rules added earlier in this pass cover the library and not the behaviour.
-note = "Generates images through four hosted providers. Reads .env files from the working directory and the home directory by hand, merges them into the environment, and writes the resulting image. The description names all four providers."
+note = "Generates images through four hosted providers. Reads .env files from the working directory and the home directory by hand, merges them into the environment, and writes the resulting image. The description names all four providers. fetch against four hosted image APIs; OPENAI_API_KEY, DASHSCOPE_API_KEY, GOOGLE_API_KEY and REPLICATE_API_TOKEN read from the environment. Lines 214/217 WRITE process.env from its hand-rolled dotenv parser."
 
 [[label]]
 digest = "sha256:e68d800696a2645c308bdbd3309a4e37f5dfa3b73ed3bdb7d018c959f7cff579"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress", "process.exec", "env.read.secret"]
 evidence = ["scripts/alibaba_cloud_model_setup.py:250"]
 disclosure_delta = false
 # The most capable bundle in this stratum, and the best example yet of a term
@@ -1449,13 +1481,13 @@ disclosure_delta = false
 # Model Studio", and env-var persistence is the mode it says it prefers. This is
 # a configuration tool doing configuration, and it is a fair illustration of how
 # much a legitimate one touches.
-note = "Configures an agent to use a cloud model provider. Reads the agent config JSON, writes the API key into it, and persists the key to ~/.bashrc and a systemd user unit before restarting the gateway."
+note = "Configures an agent to use a cloud model provider. Reads the agent config JSON, writes the API key into it, and persists the key to ~/.bashrc and a systemd user unit before restarting the gateway. request.urlopen to validate the key; subprocess.run on literal systemctl argv; reads the provider API key back out of the environment."
 
 [[label]]
 digest = "sha256:e73e779bc23d26a3c9413ea08f436f301152c8c57e4dc285ad838a36c3b94450"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "env.read.secret"]
 evidence = ["sentinel_wrapper.py:89"]
 disclosure_delta = false
 # Reads `.env` through a **literal** path — `env_file = Path(".env")` — and then
@@ -1469,7 +1501,7 @@ disclosure_delta = false
 # constant-folding pass would buy — a single assignment is the common case.
 #
 # It also appends the API key back into `.env` to persist it.
-note = "Wraps agent calls in a policy engine. Reads .env for its API key through a local variable holding a literal path, appends the key back to .env to persist it, and writes a callguard.yaml policy file."
+note = "Wraps agent calls in a policy engine. Reads .env for its API key through a local variable holding a literal path, appends the key back to .env to persist it, and writes a callguard.yaml policy file. AGENT_SENTINEL_API_KEY from the environment. Enforces budgets locally and makes no request of its own, despite the description advertising a hosted dashboard."
 
 [[label]]
 digest = "sha256:f8be48948cef15d15a228798086435e0a9781313d2fc35ea66662bfca83622d2"
@@ -1505,9 +1537,9 @@ note = "Walks ~/projects to build a directory tree and rewrites a section of MEM
 digest = "sha256:de3d428e3e41f25eb137225640ad1406640738b32b5d5d11eccab4bed10b2abc"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
-note = "Client for an onchain knowledge marketplace. Takes a signing key from PRIVATE_KEY in the environment and calls a remote API; no file access. The description says it trades using cryptocurrency."
+note = "Client for an onchain knowledge marketplace. Takes a signing key from PRIVATE_KEY in the environment and calls a remote API; no file access. The description says it trades using cryptocurrency. axios.get against the marketplace API and a public IPFS gateway; PRIVATE_KEY from the environment."
 
 [[label]]
 digest = "sha256:de995644b8cfa4c5d591e339173327a613204b997066271ba483981e935d2cee"
@@ -1519,10 +1551,10 @@ note = "16.9 MB across ninety-five files — the bundle root is the repository r
 digest = "sha256:df36f97e6f63362840568966e3cc2b69de0537ed27e7b5d847150a79f81562e7"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
 # No credential read: the SSH references are connection tests and printed
 # setup advice, and the only mention of ~/.ssh/config is inside an `echo`
 # telling the user what to add. A lexical scanner sees `~/.ssh/` and fires; the
 # code plane correctly does not, because nothing opens it.
-note = "Sets up text-to-speech playback on a remote device over SSH. Validates its configuration variables against strict patterns before use, tests the SSH connection, and prints instructions mentioning ~/.ssh/config without reading it."
+note = "Sets up text-to-speech playback on a remote device over SSH. Validates its configuration variables against strict patterns before use, tests the SSH connection, and prints instructions mentioning ~/.ssh/config without reading it. ssh and scp to a configured host, and the script names the protocol itself. The earlier reading stands: the ~/.ssh references are connection tests and printed advice, not reads."
