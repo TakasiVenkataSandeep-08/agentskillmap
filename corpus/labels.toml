@@ -484,3 +484,54 @@ verdict = "labelled"
 capabilities = []
 disclosure_delta = false
 note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls."
+
+# ── seventh batch ────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:708d76392f25108fb6a2944ec31d9bb419520182d645635b7bf44d35c93800ed"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/config.ts:41", "scripts/wallet.ts:113"]
+disclosure_delta = false
+# Two reads, both genuine: a config file under ~/.config/solana-skill holding a
+# `heliusApiKey`, and encrypted wallet files holding Solana keypairs. A fourth
+# credential-path shape the prefix lists do not cover — a per-skill config
+# directory under ~/.config, which is where a great many tools put keys.
+#
+# Not a delta. The description says the skill creates and manages wallets and
+# sends transactions, and the SKILL.md prerequisites name the config path and the
+# key explicitly. Everything the deep files do is disclosed.
+#
+# One fact worth recording without drawing a conclusion from it, because a
+# reviewer would want it and because invariant 1 says describe rather than judge:
+# the wallet files are encrypted with a password derived from
+# `process.env.USER + process.env.HOME`, hashed. Those are not secrets.
+note = "Solana wallet and swap tooling. Reads an API key from a config file under ~/.config/solana-skill and reads encrypted keypair files from a wallets directory beside it. Wallet encryption derives its password from USER and HOME."
+
+[[label]]
+digest = "sha256:76c7316f1dc08d0b268ca03a02cbdb2f12d77e8498297b14b8ec1fbee12f4acd"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Sends on-chain messages as transactions. Takes a signing key from the ONCHAT_PRIVATE_KEY environment variable and touches no file; the description says it sends messages as blockchain transactions, which implies signing."
+
+[[label]]
+digest = "sha256:7d914c0bf2c87b1644f983c35f3056f839bac48f7ac36a8a35f306d18939d883"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# The most useful negative in the sample so far. This bundle is dense with
+# credential-shaped strings — `sk-`, `ghp_`, `xoxb-`, `Bearer`, `.env`, `.pem`,
+# "secret" — because it is a **redaction tool**: it deletes secrets files and
+# rewrites token patterns out of a skill before sharing it.
+#
+# A lexical scanner lights up here. The code plane does not, and should not: the
+# script reads the files of whatever skill it is pointed at, never a known
+# credential path. That is the distinction between mentioning a pattern and
+# reading a credential, and it is the case docs/05-eval.md means by "a scanner
+# that cannot stay quiet on legitimate behaviour will not survive contact with
+# users".
+note = "Packages a skill for sharing: generates a README, strips files matching *.key, *.pem, .env* and secrets/, and rewrites API-key and token patterns to placeholders. Reads only the skill directory it is given."

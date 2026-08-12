@@ -10,3 +10,9 @@ export function collect(): string[] {
 
   return [creds, extra];
 }
+
+// must fire as unresolved: computed target, through a destructuring import.
+import { readFileSync } from 'fs';
+export function loadConfig(configPath: string): string {
+  return readFileSync(configPath, 'utf-8');
+}

@@ -123,20 +123,20 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **29 bundles are labelled and
-scored, 7 were too large to read, and 94 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **32 bundles are labelled and
+scored, 7 were too large to read, and 91 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=29 the intervals are still wide, which is the honest reading and the reason every rate
+At n=32 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 3/3 (100%, 95% CI 43.9–100%) |
-| `fs.read.credential` recall | 3/5 (60%, 95% CI 23.1–88.2%) |
+| `fs.read.credential` recall | 3/6 (50%, 95% CI 18.8–81.2%) |
 | False positives, `code_clean` (headline) | 0/13 (0%, **95% CI 0–22.8%**) |
-| Bundles with any `unresolved` entry | 27/29 (93.1%, 95% CI 78.0–98.1%) |
-| Real disclosure delta | 1/29 — see below |
+| Bundles with any `unresolved` entry | 30/32 (93.8%, 95% CI 79.9–98.3%) |
+| Real disclosure delta | 1/32 — see below |
 
 **These are not yet quality numbers.** A 95% upper bound of 22.8% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
@@ -144,12 +144,13 @@ anyway, because the alternative — publishing nothing while the tool ships — 
 numbers exist to prevent. The labels are **single-annotator and unreviewed**; inter-annotator
 agreement is unmeasured.
 
-**Both misses are the good kind**, and the recall number alone cannot say so: the scanner
-reports no capability, but it is not silent either — it emits `unresolved: computed_target`
+**Every current miss is the acknowledged kind**, and the recall number alone cannot say so:
+the scanner reports no capability, but it is not silent — it emits `unresolved: computed_target`
 on the exact line, saying it saw a read whose path it could not resolve. A miss the reader can
-see is categorically different from one they cannot.
+see is categorically different from one they cannot. That was not true two commits ago; see
+the third defect below.
 
-### What twenty-nine bundles found
+### What thirty-two bundles found
 
 Three defects, one of them mine.
 
@@ -167,12 +168,27 @@ Three defects, one of them mine.
   because on a sample this size it is the most concrete evidence available that
   `reviewed_by` being empty is a real weakness rather than a formality.
 
-**A third credential-read shape, still uncovered: the agent's own config file.** One bundle
+- **A silent miss in JavaScript and TypeScript, from import style alone.** The literal form
+  of the credential-read query had both a `fs.readFileSync(…)` and a bare `readFileSync(…)`
+  branch. The *computed* form had only the first. So `fs.readFileSync(CONFIG_FILE)` reported
+  `unresolved: computed_target` and `readFileSync(CONFIG_FILE)` reported **nothing at all** —
+  the same read, the same language, differing only by whether the import was destructured,
+  which is the modern idiom. Python had both branches from the start. **Fixed**, with fixtures.
+  This is the one class of defect this project is least willing to ship: not a missed
+  detection, but a missed detection that says nothing.
+
+**More credential-read shapes, still uncovered: the agent's own config file, and per-skill
+config directories.** One bundle
 opens `~/.openclaw/openclaw.json` and parses it — and a *different* bundle in the same sample
-tells users to put their API key in exactly that file. Agent config is a credential store in
-this ecosystem, and the prefix lists name `~/.aws`, `~/.ssh`, `.env` and nothing agent-shaped.
-The taxonomy has `fs.write.agent_config` and no read counterpart at all. Both are open, because
-the path set should come from the corpus rather than from another guess.
+tells users to put their API key in exactly that file. A wallet skill reads its API key from
+`~/.config/solana-skill/config.json`. The prefix lists name `~/.aws`, `~/.ssh`, `.env` and
+nothing agent-shaped or `~/.config`-shaped. The taxonomy has `fs.write.agent_config` and no
+read counterpart at all. All open, because the path set should come from the corpus rather
+than from another guess.
+
+Note what every one of these misses has in common: **the path is computed**, not a string
+literal. Real code builds credential paths from `homedir()` and constants. The rules were
+written against literals.
 
 This is the argument for doing the pass at all: every one of these was invisible to a test
 suite written by the same person who wrote the rules, and every one turned up in the first

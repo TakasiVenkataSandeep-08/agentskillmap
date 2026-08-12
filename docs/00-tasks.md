@@ -579,7 +579,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 36 of 130 bundles** (29 scored, 7 too large to read). `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 39 of 130 bundles** (32 scored, 7 too large to read). `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -609,10 +609,17 @@ front of; each is a thing this repository currently claims or implies but does n
   is covered; reading it to harvest the keys inside is the more direct attack and has no term.
   Adding one is a schema-version event, so it waits for evidence — the labelling pass is now
   producing that evidence.
-- **Two of the three credential-read shapes the pass found are reported as `unresolved`, not
-  missed silently.** A recall number cannot distinguish "did not detect" from "detected and
-  said the path was computed", and the second is a much better outcome. Worth a separate
-  metric before recall is quoted anywhere as a quality figure.
+- **Every credential-read miss so far is reported as `unresolved`, not missed silently** — but
+  only since the JS/TS query gained its destructured-import computed branch. A recall number
+  cannot distinguish "did not detect" from "detected and said the path was computed", and the
+  second is a much better outcome. Worth a separate metric before recall is quoted anywhere as
+  a quality figure.
+- **Every credential-read miss so far has a computed path.** Real skills build credential paths
+  from `homedir()` and constants; the rules match string literals. The `dynamic` role turns
+  that into an honest `unresolved` rather than silence, which is correct, but it means the
+  capability is under-reported in exactly the population that matters. Whether the code plane
+  should constant-fold simple joins is a design question with real over-reach risk, and it is
+  now backed by measurement rather than speculation.
 - **The disclosure-delta threshold is unset, and it decides whether T7 ships.** The first
   labelled delta is a benign counter file behind a contentless description. Under the standard
   used in `corpus/labels.toml` — an undisclosed capability that is *in the taxonomy* — it

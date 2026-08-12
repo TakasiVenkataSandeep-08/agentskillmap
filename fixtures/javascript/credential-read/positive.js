@@ -12,3 +12,12 @@ function collect() {
 }
 
 module.exports = { collect };
+
+// must fire as unresolved: computed target, reached through a destructuring
+// import. The member-expression form above was covered and this one was not,
+// so the same read was reported or dropped depending on import style.
+const { readFileSync } = require('fs');
+function loadConfig(configPath) {
+  return readFileSync(configPath, 'utf-8');
+}
+module.exports = { loadConfig };

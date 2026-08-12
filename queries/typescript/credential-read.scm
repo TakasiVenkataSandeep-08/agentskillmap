@@ -22,3 +22,21 @@
     property: (property_identifier) @_fn)
   arguments: (arguments . [(identifier) (template_string) (binary_expression) (call_expression)] @dynamic)
   (#match? @_fn "^(readFile|readFileSync|createReadStream|openSync)$")) @site
+
+; The same, after a destructuring import: `import { readFileSync } from 'fs'`.
+;
+; This branch was missing, and its absence was silent in the worst way. The
+; literal form above had both a member-expression and a bare-identifier variant;
+; the computed form had only the member-expression one. So
+; `fs.readFileSync(CONFIG_FILE)` produced `unresolved: computed_target` and
+; `readFileSync(CONFIG_FILE)` produced nothing at all — for the same read, in the
+; same language, differing only by import style. The destructured form is the
+; modern idiom.
+;
+; Found by the T3 labelling pass, on a wallet skill reading an API key out of a
+; config file under ~/.config. Python has had both branches since the reference
+; rule; JavaScript and TypeScript did not.
+(call_expression
+  function: (identifier) @_fn
+  arguments: (arguments . [(identifier) (template_string) (binary_expression) (call_expression)] @dynamic)
+  (#match? @_fn "^(readFile|readFileSync|createReadStream|openSync)$")) @site
