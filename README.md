@@ -123,11 +123,11 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **26 bundles are labelled and
-scored, 6 were too large to read, and 98 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **29 bundles are labelled and
+scored, 7 were too large to read, and 94 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=26 the intervals are still wide, which is the honest reading and the reason every rate
+At n=29 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
@@ -135,8 +135,8 @@ carries one:
 | `fs.read.credential` precision | 3/3 (100%, 95% CI 43.9–100%) |
 | `fs.read.credential` recall | 3/5 (60%, 95% CI 23.1–88.2%) |
 | False positives, `code_clean` (headline) | 0/13 (0%, **95% CI 0–22.8%**) |
-| Bundles with any `unresolved` entry | 25/26 (96.2%, 95% CI 81.1–99.3%) |
-| Real disclosure delta, any stratum | 0/26 |
+| Bundles with any `unresolved` entry | 27/29 (93.1%, 95% CI 78.0–98.1%) |
+| Real disclosure delta | 1/29 — see below |
 
 **These are not yet quality numbers.** A 95% upper bound of 22.8% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
@@ -149,7 +149,7 @@ reports no capability, but it is not silent either — it emits `unresolved: com
 on the exact line, saying it saw a read whose path it could not resolve. A miss the reader can
 see is categorically different from one they cannot.
 
-### What twenty-six bundles found
+### What twenty-nine bundles found
 
 Three defects, one of them mine.
 
@@ -176,7 +176,25 @@ the path set should come from the corpus rather than from another guess.
 
 This is the argument for doing the pass at all: every one of these was invisible to a test
 suite written by the same person who wrote the rules, and every one turned up in the first
-twenty-six bundles of someone else's code.
+twenty-nine bundles of someone else's code.
+
+### The disclosure delta, and the threshold nobody should set alone
+
+`docs/04-semantic-layer.md` says to **cut the semantic layer** if the labelled corpus shows the
+disclosure delta in under ~3% of bundles. One of 29 is 3.4%, with a 95% interval of 0.6–17.2%.
+The criterion is still unresolvable, and now for a more interesting reason than sample size.
+
+The single delta is a skill whose description reads "Development skill from
+everything-claude-code" and whose script quietly keeps a counter file under `~/.local/state`.
+Entirely benign. It counts as a delta under the standard used here — *the deep files exercise
+a capability in the taxonomy that the description does not imply* — because a contentless
+description implies nothing.
+
+A stricter reading, where a delta requires the undisclosed capability to be one a reviewer
+would call sensitive, scores it false and puts the rate at 0/29. **Both readings are
+defensible and they point opposite ways on whether a whole layer ships.** That is a decision
+for more than one annotator, and the labels record the reasoning per bundle so the number can
+be recomputed under either.
 
 What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
 pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and

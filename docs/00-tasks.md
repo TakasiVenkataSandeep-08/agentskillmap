@@ -579,7 +579,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 32 of 130 bundles** (26 scored, 6 too large to read). `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 36 of 130 bundles** (29 scored, 7 too large to read). `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -613,6 +613,12 @@ front of; each is a thing this repository currently claims or implies but does n
   missed silently.** A recall number cannot distinguish "did not detect" from "detected and
   said the path was computed", and the second is a much better outcome. Worth a separate
   metric before recall is quoted anywhere as a quality figure.
+- **The disclosure-delta threshold is unset, and it decides whether T7 ships.** The first
+  labelled delta is a benign counter file behind a contentless description. Under the standard
+  used in `corpus/labels.toml` — an undisclosed capability that is *in the taxonomy* — it
+  counts, and the rate is 1/29. Under a stricter one — undisclosed *and* sensitive — it does
+  not, and the rate is 0/29. `docs/04-semantic-layer.md`'s cut criterion is ~3%, so the two
+  readings land on opposite sides. One annotator should not settle this.
 - **The semantic layer is unmeasured, and that is now the largest gap in the repository.**
   T7 built it; `docs/04-semantic-layer.md` requires precision, recall, a benign-stratum
   false-positive rate and variance across n runs, and none exist because the corpus is not

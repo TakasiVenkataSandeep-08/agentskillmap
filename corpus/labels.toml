@@ -433,3 +433,54 @@ disclosure_delta = false
 # Not silent, again: the path is a parameter, so the scanner emits
 # `unresolved: computed_target` rather than nothing.
 note = "A security-audit skill that collects the agent's own configuration and environment into a report, with a redaction helper. Opens ~/.openclaw/openclaw.json — the file this ecosystem stores API keys in — and summarises it."
+
+# ── sixth batch ──────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:064d797389de6a767cb2255655f2b3df9a1283f63a612e01f1b8e8aeff9e0444"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = true
+# The first `true` in this corpus, so the threshold it sets deserves stating
+# plainly enough that somebody can re-derive the number under a stricter one.
+#
+# The description is "Development skill from everything-claude-code" and the
+# SKILL.md body is "Development skill skill." Neither says anything. The script
+# creates a directory and a counter file under ~/.local/state and increments it
+# on every tool call.
+#
+# Standard applied: a delta exists when the deep files exercise a capability
+# **in the taxonomy** that the description does not imply. Writing state outside
+# the bundle is `fs.write.outside_bundle`; a contentless description implies
+# nothing; therefore a delta.
+#
+# The alternative threshold — delta only when the undisclosed capability is one a
+# reviewer would call sensitive — would score this false. That reading is
+# defensible and would produce a *lower* delta rate, which matters because
+# docs/04-semantic-layer.md's cut criterion turns on that rate. Recorded rather
+# than resolved: one labeller should not settle a threshold that decides whether
+# a whole layer ships.
+note = "Counts tool calls in a file under ~/.local/state and prints a suggestion to compact after a threshold. Benign; the description discloses nothing at all, not even this."
+
+[[label]]
+digest = "sha256:1ad8387f8eec9a71b94b542df8fb2ec2905c7cecff45ea777dcfe41771b39047"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "A task manager over SQLite. Eleven small shell scripts shelling out to sqlite3 against a database under ~/.no-nonsense, all of it described in SKILL.md and AGENT.md."
+
+[[label]]
+digest = "sha256:1ee183f8acad3c1a6fe724fee578389f87baabdb3cb382481f7ec4457046dcf6"
+stratum = "code_other_marker"
+verdict = "too_large"
+note = "67 KB, including a 25 KB protocol implementation and a local dashboard server. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:200de253b71ec2531211e742c07031f1fec4acaea12389cead6c8d8d9cda3019"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls."
