@@ -535,3 +535,78 @@ disclosure_delta = false
 # that cannot stay quiet on legitimate behaviour will not survive contact with
 # users".
 note = "Packages a skill for sharing: generates a README, strips files matching *.key, *.pem, .env* and secrets/, and rewrites API-key and token patterns to placeholders. Reads only the skill directory it is given."
+
+# ── eighth batch ─────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:680f5762d8f5c52bc39671d49ecf8b8775ac901b24b70f4d766df2e714726615"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Stores UI test definitions and run history as JSON under ~/.ui-tests and reads them back. Reads and writes outside the bundle; nothing credential-shaped."
+
+[[label]]
+digest = "sha256:6f99b0dfbab21395d50959d729ba0872c9cc1266488729b25066f7a1568c0e54"
+stratum = "code_credential"
+verdict = "too_large"
+note = "14.6 MB across forty-one files, almost all of it media assets, over a twenty-module Python package. Beyond the reading budget by two orders of magnitude."
+
+[[label]]
+digest = "sha256:70c4b9117151282d5ea53f88ad51a35d0540ef9e66a992ec1a159507d7426ec8"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "A thin curl wrapper over a marketplace API. Takes its key from BITSKINS_API_KEY, which the frontmatter declares under env_vars, and reads no file."
+
+[[label]]
+digest = "sha256:6fdafd1ce2ee0344440f68aa918fc36d0d95fc6a587ca595276a8a68c14ada95"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# Worth recording as a limitation of the sampling, not of the scanner. This
+# bundle opens the user's WeChat message databases under ~/Library/Containers and
+# reads contacts, chat sessions and message history. It landed in `code_clean` —
+# the stratum for bundles with *no* lexical marker at all — because a WeChat
+# container path looks nothing like a credential.
+#
+# `fs.read.credential` is correctly absent: chat history is not a credential. The
+# term that fits is `fs.read.outside_bundle`, which has no rule and is not in
+# `terms_labelled`, so this reads as a clean bundle in every number this file
+# produces.
+#
+# The lesson is about the strata: they are built from credential-shaped markers,
+# so "benign stratum" means "no credential marker", not "harmless". A
+# false-positive rate measured over it is still the right headline; a reader
+# should not take the stratum name as a claim about sensitivity.
+note = "Reads WeChat's local SQLite databases on macOS — contacts, sessions, messages, favourites — read-only. The description says exactly this, including that it needs access to the WeChat data directory."
+
+[[label]]
+digest = "sha256:7269ce4df69d9b9c6d0cb815cf42c580b834a89808c97ad98ef7348dc2d311fe"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Prose about an agent-continuity philosophy plus a JavaScript examples file that touches no filesystem. Ships SKILL.md three times, once as 'SKILL - Kopie.md'."
+
+[[label]]
+digest = "sha256:76a194421a801c5dde01ac0c289de1b288cd81c9d206ce3a9f9fabf1ac29063f"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Prompt templates for an image model, with a 650-byte example script that performs no file or network access."
+
+[[label]]
+digest = "sha256:772c9632064e3000fe5aef426fe3d9e639de6eed1cc715bf5b3445372da7ccdd"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# A useful negative for the shell rule as it now stands: setup.sh's only
+# filesystem-shaped construct is `cat <<'EOF'`, a heredoc printing setup
+# instructions that mention configuring credentials. Nothing is read. The query
+# fix that stopped `cat > .env` from matching leaves this correctly quiet too.
+note = "Prints setup instructions telling the user to configure their own Feishu app credentials. The actual document writing happens through host tools, not through anything in the bundle."

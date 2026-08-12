@@ -579,7 +579,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 39 of 130 bundles** (32 scored, 7 too large to read). `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 46 of 130 bundles** (38 scored, 8 too large to read). `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -623,9 +623,15 @@ front of; each is a thing this repository currently claims or implies but does n
 - **The disclosure-delta threshold is unset, and it decides whether T7 ships.** The first
   labelled delta is a benign counter file behind a contentless description. Under the standard
   used in `corpus/labels.toml` — an undisclosed capability that is *in the taxonomy* — it
-  counts, and the rate is 1/29. Under a stricter one — undisclosed *and* sensitive — it does
-  not, and the rate is 0/29. `docs/04-semantic-layer.md`'s cut criterion is ~3%, so the two
+  counts, and the rate is 1/38 (2.6%). Under a stricter one — undisclosed *and* sensitive — it does
+  not, and the rate is 0/38. `docs/04-semantic-layer.md`'s cut criterion is ~3%, so the two
   readings land on opposite sides. One annotator should not settle this.
+- **The strata are built from credential-shaped markers, so `code_clean` means "no credential
+  marker", not "harmless".** One bundle in it reads the user's whole WeChat message history.
+  That is correctly not `fs.read.credential`; the term that fits is `fs.read.outside_bundle`,
+  which has no rule. The headline false-positive rate is still measured over the right
+  population — the point is that a reader should not take the stratum name as a claim about
+  sensitivity.
 - **The semantic layer is unmeasured, and that is now the largest gap in the repository.**
   T7 built it; `docs/04-semantic-layer.md` requires precision, recall, a benign-stratum
   false-positive rate and variance across n runs, and none exist because the corpus is not

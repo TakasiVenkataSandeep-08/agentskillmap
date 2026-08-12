@@ -123,22 +123,22 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **32 bundles are labelled and
-scored, 7 were too large to read, and 91 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **38 bundles are labelled and
+scored, 8 were too large to read, and 84 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=32 the intervals are still wide, which is the honest reading and the reason every rate
+At n=38 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 3/3 (100%, 95% CI 43.9–100%) |
 | `fs.read.credential` recall | 3/6 (50%, 95% CI 18.8–81.2%) |
-| False positives, `code_clean` (headline) | 0/13 (0%, **95% CI 0–22.8%**) |
-| Bundles with any `unresolved` entry | 30/32 (93.8%, 95% CI 79.9–98.3%) |
-| Real disclosure delta | 1/32 — see below |
+| False positives, `code_clean` (headline) | 0/17 (0%, **95% CI 0–18.4%**) |
+| Bundles with any `unresolved` entry | 36/38 (94.7%, 95% CI 82.7–98.5%) |
+| Real disclosure delta | 1/38 — see below |
 
-**These are not yet quality numbers.** A 95% upper bound of 22.8% on the headline metric means
+**These are not yet quality numbers.** A 95% upper bound of 18.4% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
 anyway, because the alternative — publishing nothing while the tool ships — is what the
 numbers exist to prevent. The labels are **single-annotator and unreviewed**; inter-annotator
@@ -150,7 +150,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What thirty-two bundles found
+### What thirty-eight bundles found
 
 Three defects, one of them mine.
 
@@ -192,12 +192,19 @@ written against literals.
 
 This is the argument for doing the pass at all: every one of these was invisible to a test
 suite written by the same person who wrote the rules, and every one turned up in the first
-twenty-nine bundles of someone else's code.
+thirty-eight bundles of someone else's code.
+
+**One thing the strata do not mean.** `code_clean` is the stratum with no credential-shaped
+lexical marker, and one bundle in it reads the user's entire WeChat message history from local
+SQLite databases. That is correctly not a `fs.read.credential` — chat history is not a
+credential — and the term that fits, `fs.read.outside_bundle`, has no rule and is not scored.
+So "benign stratum" means *no credential marker*, not *harmless*. The false-positive rate
+measured over it is still the right headline; the name is not a claim about sensitivity.
 
 ### The disclosure delta, and the threshold nobody should set alone
 
 `docs/04-semantic-layer.md` says to **cut the semantic layer** if the labelled corpus shows the
-disclosure delta in under ~3% of bundles. One of 29 is 3.4%, with a 95% interval of 0.6–17.2%.
+disclosure delta in under ~3% of bundles. One of 38 is 2.6%, with a 95% interval of 0.5–13.5%.
 The criterion is still unresolvable, and now for a more interesting reason than sample size.
 
 The single delta is a skill whose description reads "Development skill from
@@ -207,7 +214,7 @@ a capability in the taxonomy that the description does not imply* — because a 
 description implies nothing.
 
 A stricter reading, where a delta requires the undisclosed capability to be one a reviewer
-would call sensitive, scores it false and puts the rate at 0/29. **Both readings are
+would call sensitive, scores it false and puts the rate at 0/38. **Both readings are
 defensible and they point opposite ways on whether a whole layer ships.** That is a decision
 for more than one annotator, and the labels record the reasoning per bundle so the number can
 be recomputed under either.
