@@ -125,12 +125,12 @@ The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a 
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
 each bundle's source without consulting skillmap's output. **every code-bearing stratum is
 labelled completely** — `code_clean` 40/40, `code_credential` 40/40, `code_other_marker` 15/15,
-`disclosure_shape` 20/20. 90 bundles scored, 25 too large to read, and `prose_only` (15)
+`disclosure_shape` 20/20. 92 bundles scored, 23 too large to read, and `prose_only` (15)
 deliberately unlabelled: those bundles contain no supported-language file by construction, so
 a label there would record the stratum definition rather than a reading — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=90 the intervals are meaningful for the first time, which is the honest reading and the reason every rate
+At n=92 the intervals are meaningful for the first time, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
@@ -141,7 +141,7 @@ carries one:
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 7/7 and the false-positive rate is 0 across all four code strata** — 90 bundles,
+**Precision is 11/11 and the false-positive rate is 0 across all four code strata** — 92 bundles,
 not one spurious capability. The benign stratum's 95% upper bound is **9.6%**.
 
 **Recall is 61.1%**, up from 38.9% before the corpus was labelled. The labelling found why it
@@ -162,7 +162,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What ninety bundles found
+### What ninety-two bundles found
 
 Three defects, one of them mine.
 
@@ -263,7 +263,7 @@ corpus-wide rate needs population weights. The two strata that carry deltas are 
 | Stratum | delta (described bundles) | labelled | share of population |
 |---|---|---|---|
 | `code_clean` | 0/33 | **complete** | 21% |
-| `code_credential` | 0/25 | **complete** | 22% |
+| `code_credential` | 0/26 | **complete** | 22% |
 | `code_other_marker` | 3/14 | **complete** | **46%** |
 | `disclosure_shape` | 3/11 | **complete** | 11% |
 
