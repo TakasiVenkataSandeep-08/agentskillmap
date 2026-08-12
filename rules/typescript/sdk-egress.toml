@@ -1,0 +1,35 @@
+# Detects egress through a vendor SDK, where no protocol is named at the call
+# site. The largest measured gap in `net.egress`.
+id         = "ts.net-egress.sdk"
+language   = "typescript"
+capability = "net.egress"
+tier       = "proven"
+query      = "queries/javascript/sdk-egress.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Reaches a hosted API through a vendor SDK."
+rationale = """
+The most common egress mechanism in the labelled corpus and the least visible one:
+`openai.chat.completions.create(...)` reaches a hosted API without the word http
+appearing anywhere in the call. Reported, never judged.
+"""
+false_positive_notes = """
+The METHOD CHAIN is the evidence, because the receiver is a local name bound to a
+constructor elsewhere in the file and the engine cannot follow a receiver to its
+constructor. That approach works here and would be reckless for `.get(` or
+`.fetch(`: `chat.completions.create` is a shape nothing but an LLM client has
+reason to write, which is why it is matched three levels deep rather than on
+`.create(` alone — that one is an ORM method.
+
+Two families, both drawn from the corpus: four labelled bundles reach an LLM API
+this way and two reach an EVM node. `Linkedin(...)` and `enable_remote_sync(...)`
+are deliberately absent — each appears in exactly one bundle, and naming them
+would raise recall while lowering what the number means.
+
+The viem constructors ARE included, unlike `requests.Session()` in the sibling
+rule. The difference is that they take a transport and a chain, so they name a
+remote endpoint at the call site; a bare session names nothing and sends nothing.
+"""

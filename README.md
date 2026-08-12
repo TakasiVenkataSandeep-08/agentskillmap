@@ -137,8 +137,8 @@ carries one:
 |---|---|
 | `fs.read.credential` precision | 13/13 (100%, 95% CI 77.2–100%) |
 | `fs.read.credential` recall | **13/18 (72.2%, 95% CI 49.1–87.5%)** |
-| `net.egress` precision | 39/39 (100%, 95% CI 91.0–100%) |
-| `net.egress` recall | **39/49 (79.6%, 95% CI 66.4–88.5%)** |
+| `net.egress` precision | 45/45 (100%, 95% CI 92.1–100%) |
+| `net.egress` recall | **45/49 (91.8%, 95% CI 80.8–96.8%)** |
 | `env.read.secret` precision | 23/23 (100%, 95% CI 85.7–100%) |
 | `env.read.secret` recall | **23/28 (82.1%, 95% CI 64.4–92.1%)** |
 | `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
@@ -152,7 +152,7 @@ carries one:
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 95/95 across all eight scored terms and the false-positive rate is 0 across all
+**Precision is 101/101 across all eight scored terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
@@ -170,11 +170,23 @@ hunted for `net.egress`, `env.read.secret`, `process.exec`, `process.exec.dynami
 ```
 
 **`net.egress` is in 53% of the labelled corpus — nearly three times `fs.read.credential`.**
-It went from recall 0/49 to **39/49 (79.6%)** in one commit pair, at precision 39/39 and with
-the benign stratum unmoved. The ten remaining misses are named: requests issued through a
-session object bound to a local name, a wrapper that renames the call (`proxyFetch(url)`), and
-vendor SDKs — `openai`, `viem`, `linkedin_api` — which reach a network with no protocol named
-at the call site and are the largest single gap in this term.
+It went from recall 0/49 to **45/49 (91.8%)** at precision 45/45, with the benign stratum
+unmoved throughout.
+
+**The last third of that came from detecting vendor SDKs**, which the labelling pass measured
+as the most common egress mechanism in the corpus and the least visible: `openai.chat.
+completions.create(...)` reaches a hosted API without the word http appearing anywhere in the
+call. The receiver is a local name bound to a constructor elsewhere in the file, and the engine
+cannot follow a receiver to its constructor — so the **method chain** is the evidence instead.
+That is safe here and would be reckless for `.get(` or `.fetch(`: `chat.completions.create` is
+a shape nothing but an LLM client has reason to write, and it is matched three levels deep
+precisely because `.create(` alone is an ORM method.
+
+Four misses remain, and three of them are declined rather than unsolved: `Linkedin(...)`,
+`enable_remote_sync(...)` and `new Imap(...)` each appear in exactly one bundle, and naming
+them would raise recall while lowering what the number means — the same call made about
+`.beanstalk` and `.fluxa-ai-wallet-mcp`. The fourth is a wrapper that renames the call
+(`proxyFetch(url)`), which needs the interprocedural analysis this engine does not have.
 
 **The two `outside_bundle` terms have low recall on purpose, and that is what makes them
 honest.** 34.6% and 20.8%, at perfect precision. For these two the rule's `[match]` data is

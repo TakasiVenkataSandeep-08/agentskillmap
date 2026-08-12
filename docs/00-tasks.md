@@ -657,14 +657,17 @@ front of; each is a thing this repository currently claims or implies but does n
   instead. In javascript the member form could not be skipped — it is the dominant idiom — so
   there the query enumerates read contexts, which is incomplete by construction and already
   cost one miss until TypeScript's `!` non-null assertion was added.
-- **The ten remaining `net.egress` misses are one shape, and it is the shape that matters.**
-  Vendor SDKs — `openai`, `viem`, `linkedin_api` — reach a network with no protocol named
-  anywhere at the call site. The labelling pass measured this as the most common egress
-  mechanism in the corpus and the least visible one, and the second annotator independently
-  found three of them the first pass had missed. Also uncovered: a request through a session
-  object bound to a local name, and a wrapper that renames the call (`proxyFetch(url)`).
-  Detecting SDK egress means naming client libraries in rule data, which is a different kind of
-  list from a sink name — it wants its own measurement before it is written.
+- **~~The ten remaining `net.egress` misses are one shape, and it is the shape that matters.~~**
+  Closed for six of the ten. Vendor-SDK egress is detected by matching the METHOD CHAIN rather
+  than the receiver — `chat.completions.create` three levels deep, and the viem
+  `readContract`/`writeContract`/`createPublicClient` family. Recall 79.6% → **91.8%**,
+  precision 45/45, benign stratum still 0/36.
+  **Four remain, three of them declined rather than unsolved.** `Linkedin(...)`,
+  `enable_remote_sync(...)` and `new Imap(...)` each appear in exactly one bundle; naming them
+  would raise recall while lowering what the number means, which is the call already made about
+  `.beanstalk` and `.fluxa-ai-wallet-mcp`. The fourth is `proxyFetch(url)` — a wrapper that
+  renames the call, and the same interprocedural limit that bounds the exec and outside_bundle
+  terms.
 - **`detail.hosts` is promised by the schema and supplied by nothing.** `docs/02-manifest-schema.md`
   says hosts appear "when statically resolvable"; the `net.egress` rules capture no `host`,
   because the engine's host filter returns an empty vector when `host_suffixes` is empty — so
