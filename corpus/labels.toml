@@ -168,6 +168,29 @@ vocabulary = [
 # judgements connecting two sites, and `agent.hook.install`,
 # `fs.write.agent_config` and `mcp.tool_reference` are each too rare here to
 # support a rate. Widening this list again means another pass, not another line.
+# Terms a shipped rule detects that this labelling has NOT covered exhaustively.
+# Every entry is a published gap; `crates/skillmap-eval/tests/gate.rs` requires
+# one of the two lists to name every term with a rule, so nothing detects
+# silently.
+#
+# All three are chain or rarity cases the Phase-2 batch deliberately excluded:
+#
+#   code.obfuscation        a decode and a sink in ONE expression. Two sites to
+#                           connect, and lexically ~6/92, so a rate would be
+#                           built on a handful either way.
+#   net.fetch_then_execute  same shape, same reason.
+#   fs.write.agent_config   2/92 lexically. n<5 cannot support a rate, which is
+#                           the argument `MIN_PER_STRATUM` already makes.
+#
+# The eval prints the bundle count for each of these above the false-positive
+# block, so the gap is visible next to the number it qualifies rather than only
+# here. Moving one of these into `terms_labelled` means another reading pass.
+terms_detected_unscored = [
+  "code.obfuscation",
+  "net.fetch_then_execute",
+  "fs.write.agent_config",
+]
+
 terms_labelled = [
   "fs.read.credential",
   "net.egress",

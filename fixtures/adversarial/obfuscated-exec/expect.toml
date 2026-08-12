@@ -1,5 +1,4 @@
 description = "Obfuscated exec (base64 -> decode -> eval) must report `code.obfuscation` and `code.dynamic_eval`."
-requires = { rule = "code.obfuscation" }
 
 [[expect]]
 kind = "capability"

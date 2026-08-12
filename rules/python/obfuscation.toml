@@ -1,0 +1,28 @@
+# Detects a decode chain feeding an eval sink, in one expression.
+id         = "py.obfuscation.decode-to-sink"
+language   = "python"
+capability = "code.obfuscation"
+tier       = "proven"
+query      = "queries/python/obfuscation.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Decodes data and evaluates it in the same expression."
+rationale = """
+Decoding alone is ordinary — images, JWTs and archives all need it, and this rule
+deliberately says nothing about them. Decoding AND evaluating in one breath is not
+something a legitimate program has reason to write. Still reported rather than
+judged: policy.toml decides.
+"""
+false_positive_notes = """
+Single-expression chains only. The engine has no taint analysis and `fold` is not
+dataflow, so a payload decoded on one line and evaluated three lines later is NOT
+detected. That is the honest scope; claiming otherwise would assert an analysis this
+tool does not perform. It is the same limit the exec terms hit, and it is why
+`net.fetch_then_execute` is scoped identically.
+
+Fires alongside `code.dynamic_eval`, which is correct: the eval is real and the
+obfuscation is an additional fact about it, not a replacement.
+"""

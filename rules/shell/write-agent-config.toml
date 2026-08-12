@@ -1,0 +1,48 @@
+# Detects a shell skill writing another agent's configuration.
+id         = "sh.write-agent-config.sink"
+language   = "shell"
+capability = "fs.write.agent_config"
+tier       = "proven"
+query      = "queries/shell/file-write.scm"
+
+[captures]
+# The shell write query has no computed-target branch: a redirect
+# destination is a word or a string, and an expansion there is already
+# covered by the read rules' dynamic branch.
+site    = "@site"
+path    = "@path"
+
+# Agent configuration is a credential store and an instruction store in this
+# ecosystem: a skill that writes `CLAUDE.md` or `.mcp.json` is changing what
+# every later session does.
+[match]
+path_suffixes = [
+  "CLAUDE.md",
+  "AGENTS.md",
+  "settings.json",
+  "settings.local.json",
+  ".mcp.json",
+]
+path_contains = [
+  ".claude",
+  ".cursor",
+  ".codex",
+]
+
+[docs]
+summary = "Writes a file that configures an agent."
+rationale = """
+A skill that installs itself into an agent's configuration changes what that agent
+does in every later session, including sessions the installing user never sees.
+Legitimate for setup scripts, which is most of what this will report. Reported,
+never judged.
+"""
+false_positive_notes = """
+Matches by filename and by containing directory, so a project's own `CLAUDE.md` is
+reported as readily as another agent's. That is intended — the manifest describes
+the act, and whether writing agent config is acceptable is what policy.toml is for.
+
+There is no read counterpart. Reading agent config to harvest the keys inside it is
+the more direct attack and the taxonomy has no term for it; that gap is recorded in
+docs/00-tasks.md rather than papered over by widening this term.
+"""

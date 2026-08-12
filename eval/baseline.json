@@ -1,12 +1,11 @@
 {
   "metrics": {
     "adversarial_failed": 0,
-    "adversarial_passed": 6,
+    "adversarial_passed": 7,
     "fixtures_failed": 0,
-    "fixtures_passed": 28,
+    "fixtures_passed": 35,
     "pending": {
-      "injection-in-reference": "needs a live model: an injection the model must classify as `injection_attempt`",
-      "obfuscated-exec": "needs a rule detecting `code.obfuscation`"
+      "injection-in-reference": "needs a live model: an injection the model must classify as `injection_attempt`"
     }
   },
   "note": "Fixture and adversarial suites only. These are NOT the published numbers docs/05-eval.md requires: there is no labeled corpus yet, so no precision, recall, or benign-stratum false-positive rate has been measured. Re-bless with `cargo run -p skillmap-eval -- --bless`."

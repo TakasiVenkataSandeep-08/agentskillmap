@@ -1009,3 +1009,69 @@ fn an_env_secret_fires_on_a_read_and_never_on_a_write() {
         );
     }
 }
+
+#[test]
+fn a_fetch_without_a_sink_is_egress_and_not_fetch_then_execute() {
+    // The contrast `net.fetch_then_execute` turns on, and it cannot be pinned by
+    // a negative fixture: a fetch that is never executed is still a real
+    // `net.egress` finding, and a negative fixture has to be silent against the
+    // whole ruleset for its language. So it is asserted per term here.
+    //
+    // This also pins the rule's honest scope. The engine has no taint analysis,
+    // so "fetched on one line, executed on another" is NOT detected — the third
+    // case below stores the response and evaluates it two lines later, which is
+    // the same act and reports only the two separate terms. A reader assuming
+    // otherwise would be assuming an analysis this tool does not perform.
+    let rules = rules();
+
+    let terms = |source: &str| -> Vec<String> {
+        let mut found: Vec<String> = analyze(
+            &[SourceFile {
+                path: "run.py",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .iter()
+        .map(|capability| capability.capability.as_str().to_owned())
+        .collect();
+        found.sort_unstable();
+        found.dedup();
+        found
+    };
+
+    // Fetched and executed in one expression: all three terms are true.
+    let chained = terms("exec(requests.get(url).text)\n");
+    assert!(
+        chained.iter().any(|term| term == "net.fetch_then_execute"),
+        "a single-expression chain must report the chain: {chained:?}"
+    );
+    assert!(
+        chained.iter().any(|term| term == "net.egress")
+            && chained.iter().any(|term| term == "code.dynamic_eval"),
+        "the chain does not replace its parts: {chained:?}"
+    );
+
+    // Fetched, never executed.
+    let fetched = terms("body = requests.get(url).text\n");
+    assert_eq!(
+        fetched,
+        vec!["net.egress".to_owned()],
+        "a fetch with no sink is egress and nothing more"
+    );
+
+    // Fetched and executed, but not in one expression. Honest scope: both acts
+    // are reported and the link between them is not claimed.
+    let split = terms("body = requests.get(url).text\nprint(1)\nexec(body)\n");
+    assert!(
+        !split.iter().any(|term| term == "net.fetch_then_execute"),
+        "no taint analysis exists, so the link must not be claimed: {split:?}"
+    );
+    assert!(
+        split.iter().any(|term| term == "net.egress")
+            && split.iter().any(|term| term == "code.dynamic_eval"),
+        "both halves are still reported separately: {split:?}"
+    );
+}

@@ -1,0 +1,31 @@
+# Detects fetched content reaching an interpreter in one expression.
+id         = "py.fetch-then-execute.chain"
+language   = "python"
+capability = "net.fetch_then_execute"
+tier       = "proven"
+query      = "queries/python/fetch-then-execute.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Fetched content reaches an interpreter."
+rationale = """
+The install-script idiom, and also the first line of the corpus's one demonstration
+payload. Reported, never judged — a great many legitimate installers are written
+exactly this way, which is precisely why a reader should be told it is happening.
+"""
+false_positive_notes = """
+SINGLE-EXPRESSION CHAINS ONLY. The engine has no taint analysis and `fold` is not
+dataflow, so content fetched on one line and executed on another is NOT detected.
+That is the honest scope of this rule; claiming otherwise would assert an analysis
+this tool does not perform. The same limit bounds `code.obfuscation`.
+
+The shell form requires the interpreter to be the last named child of its command,
+so it takes no script argument — `curl x | bash` matches and `curl x | python3
+render.py` does not, because there stdin is data and the script is named.
+
+Fires alongside net.egress and code.dynamic_eval on the same site. All three are
+true and none replaces the others: bytes left the machine, bytes became code, and
+these were the same bytes.
+"""
