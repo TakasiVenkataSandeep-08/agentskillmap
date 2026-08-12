@@ -1527,7 +1527,7 @@ note = "Wraps agent calls in a policy engine. Reads .env for its API key through
 digest = "sha256:f8be48948cef15d15a228798086435e0a9781313d2fc35ea66662bfca83622d2"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential"]
+capabilities = ["fs.read.credential", "net.egress"]
 evidence = ["scripts/fluxa-cli.bundle.js:252"]
 disclosure_delta = false
 # A wallet CLI that reads its config — holding agent id, token and JWT — from
@@ -1537,7 +1537,7 @@ disclosure_delta = false
 #
 # Shipped as a 25 KB pre-bundled single file, which is worth noting on its own:
 # the reviewable unit here is build output, not source.
-note = "Onchain payment CLI. Reads an agent id, token and JWT from a config file under ~/.fluxa-ai-wallet-mcp, refreshes the JWT against a remote API, and appends every action to an audit log. Ships as a pre-bundled single file."
+note = "Onchain payment CLI. Reads an agent id, token and JWT from a config file under ~/.fluxa-ai-wallet-mcp, refreshes the JWT against a remote API, and appends every action to an audit log. Ships as a pre-bundled single file. LABELLING ERROR, found by the rule this pass enabled: the note above already said it refreshes the JWT against a remote API, and the term was never added. Four bare fetch(url) calls in scripts/fluxa-cli.bundle.js. The scanner was right."
 
 [[label]]
 digest = "sha256:f968c87d6f6b87a996211c347f8889cbb2980c226078ebbd51ee67af61a04451"

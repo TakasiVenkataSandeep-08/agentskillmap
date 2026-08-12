@@ -1,0 +1,38 @@
+# Detects a typescript skill issuing a network request.
+#
+# Counterpart to the python and shell rules. The query is shared with
+# javascript, as the dotenv rules already do: a query compiles against whatever
+# grammar the rule's language names, and these node kinds line up.
+id         = "ts.net-egress.client"
+language   = "typescript"
+capability = "net.egress"
+tier       = "proven"
+query      = "queries/javascript/net-egress.scm"
+
+[captures]
+site = "@site"
+
+# No [match] block and no host capture, for the same two reasons as the python
+# rule: a host list is policy rather than description, and the engine discards
+# captured hosts when `host_suffixes` is empty, so capturing them would lose
+# them silently rather than report them.
+
+[docs]
+summary = "Issues a network request."
+rationale = """
+Ordinary. Reported, never judged — policy.toml decides whether a repository accepts
+it. What makes it worth reporting is the disclosure delta: a skill whose description
+never mentions that data leaves the machine.
+"""
+false_positive_notes = """
+`fetch` is matched as a bare identifier only. `cache.fetch()`, `repo.fetch()` and
+`imap.fetch()` are all real method names on objects that reach no network, and the
+last one cost a label during the corpus pass — a mail skill whose only apparent
+network site was an IMAP method coincidentally named `fetch`. negative.js pins all
+three, plus an import with no call.
+
+The cost of that choice is the known miss: a wrapper renames the call out of reach.
+`proxyFetch(url)` is invisible here, and the corpus contains one. Vendor SDKs are
+the larger miss — `openai`, `viem` and `linkedin_api` clients reach a network with
+no protocol named at the call site. Both wait for a measurement rather than a guess.
+"""
