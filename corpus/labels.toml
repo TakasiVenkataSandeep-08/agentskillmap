@@ -80,11 +80,31 @@
 #
 # ── What this file is not ────────────────────────────────────────────────────
 #
-# **Single-annotator and unreviewed.** `labeller` is an AI assistant; `reviewed_by`
-# is empty. Inter-annotator agreement is therefore unmeasured and unmeasurable
-# from this file alone, and every number computed from it inherits that. It is
-# marked provisional wherever it is published, and it stays provisional until a
-# second annotator disagrees with some of it.
+# **Partially reviewed, and the review found the first annotator wrong every
+# time.** A second annotator independently labelled 23 of the 92 bundles — a
+# seeded 15% control sample plus every judgement the first annotator had flagged
+# as contested — blind to this file and without running the scanner.
+#
+#   raw bundle-level agreement   18/23 (78.3%)
+#   disagreements adjudicated     5, all in the second annotator's favour
+#
+# That last number is the finding. Three disagreements were the same systematic
+# miss: egress reached through a **vendor SDK or a wrapper**, where no protocol
+# is ever named in the call — `linkedin_api.Linkedin(...).get_conversations()`,
+# a viem `http()` transport, `enable_remote_sync(platform_url=..., auto_start=True)`.
+# A fourth was an env read behind an `env(name)` indirection. The fifth was a
+# rule the second annotator argued better: `$("$SCRIPT_DIR/sibling.sh")` is not
+# `process.exec.dynamic`, because the self-directory idiom folds to a file inside
+# the bundle — the same reasoning that already treats `source lib.sh` as an
+# import.
+#
+# A sweep of the other 69 bundles for that systematic miss found two more. So
+# `net.egress` went 43 → 48 as a direct result of being reviewed, and the honest
+# reading is that **48 is still a floor**: the first annotator's method could not
+# see SDK egress, and only bundles importing a *named* SDK were re-swept.
+#
+# Agreement is measured on 25% of the corpus, not all of it. The 69 unreviewed
+# bundles carry the single-annotator caveat in full.
 #
 # **Partial.** `corpus/sample.json` draws 130 bundles; only those appearing below
 # are labelled. Unlabelled bundles are counted and reported as unlabelled — never
@@ -104,7 +124,7 @@
 snapshot = "2026-08"
 sample_seed = "skillmap-labels-1"
 labeller = "claude-opus-5"
-reviewed_by = ""
+reviewed_by = "claude-opus-5 (independent second pass, 23 of 92 bundles)"
 
 # Capability terms a labeller may assign, from docs/02-manifest-schema.md.
 # Constrained so a typo fails the load rather than silently scoring nothing.
@@ -133,8 +153,8 @@ vocabulary = [
 # quietly suppress the terms where the answer is "we looked, and there is
 # almost nothing here", which is itself a finding.
 #
-#   net.egress            43     process.exec            5
-#   env.read.secret       26     process.exec.dynamic    3
+#   net.egress            48     process.exec            5
+#   env.read.secret       27     process.exec.dynamic    2
 #   fs.read.credential    18     code.dynamic_eval       1
 #
 # The last two carry n < 5 and their intervals will be nearly the whole unit
@@ -419,7 +439,7 @@ note = "64 KB. A cryptocurrency wallet skill in the disclosure-delta stratum —
 digest = "sha256:5877ac8773ee9d2451a46a93db3e9eb2a74952b94c179032a151fb89f7053b22"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["net.egress"]
+capabilities = ["net.egress", "env.read.secret"]
 disclosure_delta = false
 # Borderline, and called false for consistency rather than because it is obvious.
 # The description is one jokey line and does not mention network access or an API
@@ -431,7 +451,7 @@ disclosure_delta = false
 # A standard applied inconsistently across a delta corpus is worse than a strict
 # one or a loose one, so: a delta requires the deep files to ask for a capability
 # the description does not imply, not merely one it does not spell out.
-note = "MCP server for a bot-only polling site. Reads an API key from the environment and calls the service over HTTP; no file access of any kind. fetch against a remote endpoint from an MCP server wrapper."
+note = "MCP server for a bot-only polling site. Reads an API key from the environment and calls the service over HTTP; no file access of any kind. fetch against a remote endpoint from an MCP server wrapper. Second annotator found NOBOT_API_KEY, read through an env(name) wrapper that resolves process.env[name] â€” indirection my per-line extraction could not follow."
 
 [[label]]
 digest = "sha256:33a59816543f17338b439a0a46d2ef99ca5a4afd40903379e0bae05db1cd924a"
@@ -558,9 +578,9 @@ note = "67 KB, including a 25 KB protocol implementation and a local dashboard s
 digest = "sha256:200de253b71ec2531211e742c07031f1fec4acaea12389cead6c8d8d9cda3019"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = ["env.read.secret"]
+capabilities = ["env.read.secret", "net.egress"]
 disclosure_delta = false
-note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls. LINKEDIN_LI_AT and LINKEDIN_JSESSIONID are session cookies, so the names are secret-bearing. `source`ing a bundle-local state.sh is an import, not code.dynamic_eval."
+note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls. LINKEDIN_LI_AT and LINKEDIN_JSESSIONID are session cookies, so the names are secret-bearing. `source`ing a bundle-local state.sh is an import, not code.dynamic_eval. Second annotator found the egress I missed: lk.py builds a linkedin_api.Linkedin cookie client and calls get_conversations(), a vendor SDK my mechanism filter did not name."
 
 # ── seventh batch ────────────────────────────────────────────────────────────
 
@@ -590,9 +610,9 @@ note = "Solana wallet and swap tooling. Reads an API key from a config file unde
 digest = "sha256:76c7316f1dc08d0b268ca03a02cbdb2f12d77e8498297b14b8ec1fbee12f4acd"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["env.read.secret"]
+capabilities = ["env.read.secret", "net.egress"]
 disclosure_delta = false
-note = "Sends on-chain messages as transactions. Takes a signing key from the ONCHAT_PRIVATE_KEY environment variable and touches no file; the description says it sends messages as blockchain transactions, which implies signing. ONCHAT_PRIVATE_KEY from the environment; no egress site of its own."
+note = "Sends on-chain messages as transactions. Takes a signing key from the ONCHAT_PRIVATE_KEY environment variable and touches no file; the description says it sends messages as blockchain transactions, which implies signing. ONCHAT_PRIVATE_KEY from the environment; no egress site of its own. Second annotator found the viem http() transport driving readContract/writeContract against Base RPC. Another vendor SDK reaching a network with no http token in the call."
 
 [[label]]
 digest = "sha256:7d914c0bf2c87b1644f983c35f3056f839bac48f7ac36a8a35f306d18939d883"
@@ -749,7 +769,7 @@ note = "90 KB across nine files, including three watcher implementations and a T
 digest = "sha256:ba0c9b4e31850c54c956c079b0d20eee24fc2e4ba21fd8fd10deb4caeb7356a8"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["env.read.secret"]
+capabilities = ["env.read.secret", "net.egress"]
 disclosure_delta = false
 # No file is read, so no `fs.read.credential`. What is here instead has no term
 # in the taxonomy at all: a **private key literal committed into the source**, as
@@ -761,7 +781,7 @@ disclosure_delta = false
 # reviewer would want reported, it is mechanically detectable, and there is
 # nowhere in the manifest to put it. Recorded here because a labelling pass is
 # where a missing term becomes visible with an example attached.
-note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer key from the environment, each with a hardcoded fallback — the key fallback is a literal Sepolia private key at scripts/config.mjs:22. No file access. DEPLOYER_PRIVATE_KEY from the environment; no egress site of its own."
+note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer key from the environment, each with a hardcoded fallback — the key fallback is a literal Sepolia private key at scripts/config.mjs:22. No file access. DEPLOYER_PRIVATE_KEY from the environment; no egress site of its own. Found by the post-review SDK sweep: viem createPublicClient/createWalletClient over an http transport against Sepolia."
 
 # ── tenth batch: code_other_marker ───────────────────────────────────────────
 #
@@ -888,7 +908,7 @@ note = "Controls IKEA smart-home devices. Shells out to `arp -a` to find the hub
 digest = "sha256:9e4e2c3f3ca83615bd88c240a2dd4b883e7abd058a3d07fe5f022687809432cc"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["net.egress"]
 disclosure_delta = false
 # Not a delta, and worth contrasting with the animation generator from the same
 # publisher, which was. That description read "Generate CSS and Framer Motion
@@ -899,7 +919,7 @@ disclosure_delta = false
 # The same publisher, the same architecture, and opposite labels, decided by one
 # word in the description. That is the standard doing its job rather than a
 # quirk.
-note = "Reads package.json, a lock file and up to 5 KB of each build config from a directory the caller names, and sends them to a hosted model for size advice. Key comes from the environment through the OpenAI client's default."
+note = "Reads package.json, a lock file and up to 5 KB of each build config from a directory the caller names, and sends them to a hosted model for size advice. Key comes from the environment through the OpenAI client's default. Found by the post-review SDK sweep: new OpenAI() then openai.chat.completions.create(...)."
 
 [[label]]
 digest = "sha256:b9024f26ae3cdf6266213b24f3431699b40d697f0c4513f6733542e236c93b45"
@@ -1259,7 +1279,7 @@ note = "265 KB across thirty files, including two full boilerplate applications 
 digest = "sha256:83bd4813fbac462518dc778215703e7f793f15043962492562952291ea47990e"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["net.egress", "process.exec.dynamic"]
+capabilities = ["net.egress"]
 disclosure_delta = false
 # The most significant taxonomy gap the pass has found, and it is not a rule gap.
 #
@@ -1487,7 +1507,7 @@ note = "Configures an agent to use a cloud model provider. Reads the agent confi
 digest = "sha256:e73e779bc23d26a3c9413ea08f436f301152c8c57e4dc285ad838a36c3b94450"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "env.read.secret"]
+capabilities = ["fs.read.credential", "env.read.secret", "net.egress"]
 evidence = ["sentinel_wrapper.py:89"]
 disclosure_delta = false
 # Reads `.env` through a **literal** path — `env_file = Path(".env")` — and then
@@ -1501,7 +1521,7 @@ disclosure_delta = false
 # constant-folding pass would buy — a single assignment is the common case.
 #
 # It also appends the API key back into `.env` to persist it.
-note = "Wraps agent calls in a policy engine. Reads .env for its API key through a local variable holding a literal path, appends the key back to .env to persist it, and writes a callguard.yaml policy file. AGENT_SENTINEL_API_KEY from the environment. Enforces budgets locally and makes no request of its own, despite the description advertising a hosted dashboard."
+note = "Wraps agent calls in a policy engine. Reads .env for its API key through a local variable holding a literal path, appends the key back to .env to persist it, and writes a callguard.yaml policy file. AGENT_SENTINEL_API_KEY from the environment. Enforces budgets locally and makes no request of its own, despite the description advertising a hosted dashboard. Corrected on review: hands an API token and platform_url to enable_remote_sync(auto_start=True). The socket is opened inside the SDK, which is the same reasoning already applied to the OpenAI bundles â€” my original label was inconsistent with my own rule."
 
 [[label]]
 digest = "sha256:f8be48948cef15d15a228798086435e0a9781313d2fc35ea66662bfca83622d2"

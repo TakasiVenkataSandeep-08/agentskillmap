@@ -137,8 +137,8 @@ carries one:
 |---|---|
 | `fs.read.credential` precision | 13/13 (100%, 95% CI 77.2–100%) |
 | `fs.read.credential` recall | **13/18 (72.2%, 95% CI 49.1–87.5%)** |
-| `net.egress` recall | **0/43** — no rule exists yet |
-| `env.read.secret` recall | **0/26** — no rule exists yet |
+| `net.egress` recall | **0/48** — no rule exists yet |
+| `env.read.secret` recall | **0/27** — no rule exists yet |
 | `process.exec` recall | 0/5 — no rule exists yet |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
@@ -152,18 +152,32 @@ all 92 bundles hunted for `net.egress`, `env.read.secret`, `process.exec`,
 `process.exec.dynamic` and `code.dynamic_eval`. The denominators are the finding:
 
 ```
-  net.egress            43/92 bundles      env.read.secret      26/92
+  net.egress            48/92 bundles      env.read.secret      27/92
   fs.read.credential    18/92              process.exec          5/92
-  process.exec.dynamic   3/92              code.dynamic_eval     1/92
+  process.exec.dynamic   2/92              code.dynamic_eval     1/92
 ```
 
-**`net.egress` is in 47% of the labelled corpus — more than twice `fs.read.credential`, the
-one term this tool detects.** Recall against it is 0/43, and that zero is now a published
+**`net.egress` is in 52% of the labelled corpus — nearly three times `fs.read.credential`, the
+one term this tool detects.** Recall against it is 0/48, and that zero is now a published
 number rather than an absence. The labelling deliberately landed *before* any rule for these
 terms: widening the scored set while a rule already fires would score every genuine detection
 as a false positive, because an empty `capabilities` array means "not looked for", not "not
 present". `crates/skillmap-eval/tests/gate.rs` makes shipping a rule for an unmeasured term a
 build failure.
+
+**A second annotator reviewed 23 of the 92 bundles and disagreed with five — winning all
+five.** The review was independent: blind to the label file, without running the scanner, on a
+seeded 15% control sample plus every judgement the first pass had flagged as contested. Raw
+bundle-level agreement was **18/23 (78.3%)**, and every adjudicated disagreement went against
+the first annotator. Three were the same systematic miss — egress through a **vendor SDK or a
+wrapper**, where no protocol is named at the call site (`linkedin_api`, a viem `http()`
+transport, `enable_remote_sync(auto_start=True)`). Re-sweeping the other 69 bundles for that
+pattern found two more, which is why `net.egress` reads 48 and not 43.
+
+So **48 is a floor, not a count.** The method that produced it could not see SDK egress, and
+only bundles importing a *named* SDK were re-swept. This is the most concrete evidence the
+project has that `reviewed_by` being empty was a real weakness rather than a formality — and
+69 bundles still carry that caveat in full.
 
 **Recall is 72.2%**, from 38.9% before the corpus was labelled. The labelling found why it was
 low: **every credential read in the corpus reaches its path by computation — not one uses a
@@ -188,8 +202,17 @@ All five report `unresolved: computed_target` on the exact line. A miss the read
 categorically different from one they cannot, and recall alone cannot tell them apart — which
 is why both are published.
 
-Every number carries the same caveat: the labels are **single-annotator and unreviewed**, so
-inter-annotator agreement is unmeasured and one person's judgement stands behind every row.
+**A second annotator was added, and it moved the numbers.** 23 of the 92 bundles — a seeded
+15% control plus every contested judgement — were relabelled independently, blind to the first
+pass and without running the scanner. Raw agreement was **18/23 (78.3%)**, and all five
+disagreements were adjudicated in the *second* annotator's favour.
+
+Three of the five were one systematic miss: **egress through a vendor SDK or a wrapper**, where
+no protocol appears in the call — `linkedin_api.Linkedin(...).get_conversations()`, a viem
+`http()` transport, `enable_remote_sync(platform_url=..., auto_start=True)`. Sweeping the other
+69 bundles for that same shape found two more. `net.egress` went 43 → 48 purely as a result of
+being reviewed, which means **48 should be read as a floor**. The remaining 69 bundles carry the
+single-annotator caveat in full.
 
 **Every current miss is the acknowledged kind**, and the recall number alone cannot say so:
 the scanner reports no capability, but it is not silent — it emits `unresolved: computed_target`
@@ -312,8 +335,10 @@ corpus-wide rate needs population weights. The two strata that carry deltas are 
 **Weighted: 12.9% of the code-bearing corpus, 95% CI 2.6–23.3%.** Four times the threshold,
 computed by the harness and suppressed unless every stratum carries at least five labels.
 
-**On current evidence the layer should not be cut.** What still qualifies that: the labels are
-single-annotator and unreviewed, `prose_only` is unlabelled by design, and the interval is a normal
+**On current evidence the layer should not be cut.** What still qualifies that: **the
+disclosure-delta labels are single-annotator and entirely unreviewed** — the second annotator
+judged capability terms only, so none of the six deltas below has been checked by anyone
+else — `prose_only` is unlabelled by design, and the interval is a normal
 approximation — the thing Wilson exists to avoid at small n. Its lower bound sits at 2.6%, just
 under the threshold, so a second annotator disagreeing with two of the six deltas would change
 the conclusion.
