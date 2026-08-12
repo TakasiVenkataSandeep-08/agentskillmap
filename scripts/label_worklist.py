@@ -96,35 +96,80 @@ FS_PATTERNS = [
     # shell
     r"^\s*(cat|source|\.|export|eval|curl|wget)\b", r"\$\{?[A-Z_]{3,}\}?", r"<\s*[\"']?[~/$]",
 ]
-FS_RE = None
+
+# The same discipline, one term at a time. Every list below names a *mechanism*
+# — an API that can do the thing — and never the property being judged. The
+# difference decides whether the resulting labels are ground truth or an echo.
+#
+# `env` is where that is easiest to get wrong and worst to get wrong. Filtering
+# on `TOKEN|KEY|SECRET` would show the labeller exactly the name set a rule for
+# `env.read.secret` would use, so every judgement would become agreement with a
+# regex nobody had validated, and its measured precision would be circular.
+# Filtering on "reads the environment at all" shows every candidate and leaves
+# the judgement where it belongs. The variable's name goes in the note, so the
+# regex can later be audited against the labels rather than the other way round.
+VIEWS = {
+    "fs": FS_PATTERNS,
+    "net": [
+        # python
+        r"\brequests\.", r"\burllib\b", r"\bhttpx\b", r"\baiohttp\b", r"\bsocket\.",
+        r"http\.client", r"\bwebsockets?\b",
+        # javascript / typescript
+        r"\bfetch\s*\(", r"\baxios\b", r"XMLHttpRequest", r"\bWebSocket\b",
+        r"\bhttps?\.(get|request)\b", r"node-fetch|got\(|undici",
+        # shell
+        r"\b(curl|wget|nc|netcat|ssh|scp|rsync)\b", r"/dev/tcp/",
+    ],
+    "exec": [
+        r"\bsubprocess\b", r"\bos\.system\b", r"\bos\.popen\b", r"\bos\.exec",
+        r"\bcommands\.getoutput\b", r"\bpty\.spawn\b",
+        r"child_process", r"\bexecSync\b|\bspawnSync\b|\bexecFile\b|\bspawn\s*\(|\bexec\s*\(",
+        r"\bxargs\b", r"\$\(", r"`[^`]", r"^\s*(bash|sh|zsh)\s",
+    ],
+    "eval": [
+        r"\beval\s*\(", r"\bexec\s*\(", r"\bcompile\s*\(", r"__import__",
+        r"new\s+Function\s*\(", r"vm\.run", r"\bFunction\s*\(\s*['\"]",
+        r"^\s*(source|\.)\s+", r"\beval\s+", r"pickle\.loads|marshal\.loads",
+    ],
+    "env": [
+        r"os\.environ", r"os\.getenv", r"process\.env", r"\bdotenv\b",
+        r"\bgetenv\s*\(", r"\$\{?[A-Z_]{3,}\}?", r"\bexport\s+[A-Z_]{3,}=",
+    ],
+}
+
+# Two lines rather than one for the views where the sink's argument is usually
+# constructed on the line above — `cmd = [...]` then `subprocess.run(cmd)`.
+CONTEXT = {"fs": 1, "net": 1, "exec": 2, "eval": 2, "env": 1}
+
+_COMPILED = {}
 
 
-def fs_view(rel: str, text: str) -> None:
-    """Print every line that touches the filesystem or the environment."""
-    global FS_RE
+def mechanism_view(rel: str, text: str, views: list) -> None:
+    """Print every line reaching a mechanism in each requested view."""
     import re
 
-    if FS_RE is None:
-        FS_RE = re.compile("|".join(FS_PATTERNS))
-
     lines = text.splitlines()
-    hits = [n for n, line in enumerate(lines) if FS_RE.search(line)]
-    if not hits:
-        print(f"  {rel}: no filesystem or environment access")
-        return
+    for view in views:
+        if view not in _COMPILED:
+            _COMPILED[view] = re.compile("|".join(VIEWS[view]))
+        hits = [n for n, line in enumerate(lines) if _COMPILED[view].search(line)]
+        if not hits:
+            print(f"  {rel} [{view}]: none")
+            continue
 
-    print(f"  {rel}: {len(hits)} site(s)")
-    shown = set()
-    for n in hits:
-        for context in range(max(0, n - 1), min(len(lines), n + 2)):
-            if context in shown:
-                continue
-            shown.add(context)
-            marker = ">" if context == n else " "
-            print(f"  {marker}{context + 1:>4}| {lines[context]}")
+        span = CONTEXT[view]
+        print(f"  {rel} [{view}]: {len(hits)} site(s)")
+        shown = set()
+        for n in hits:
+            for context in range(max(0, n - span), min(len(lines), n + span + 1)):
+                if context in shown:
+                    continue
+                shown.add(context)
+                marker = ">" if context == n else " "
+                print(f"  {marker}{context + 1:>4}| {lines[context]}")
 
 
-def emit(selection: dict, code_only: bool = False, fs_only: bool = False, skill_head: int = 0) -> None:
+def emit(selection: dict, code_only: bool = False, views: list = None, skill_head: int = 0) -> None:
     digest = selection["digest"]
     root = bundle_dir(digest)
 
@@ -173,12 +218,12 @@ def emit(selection: dict, code_only: bool = False, fs_only: bool = False, skill_
             print(f"\n--- {rel} (unreadable: {error}) ---")
             continue
 
-        # --fs-view: SKILL.md in full (the disclosure-delta judgement is made
-        # against its description, so it is never abbreviated), and every
-        # filesystem or environment site in the source.
-        if fs_only and suffix in SOURCE_SUFFIXES:
-            print(f"\n--- {rel} ({len(text)} bytes, filesystem/env sites) ---")
-            fs_view(rel, text)
+        # --view: SKILL.md in full (the disclosure-delta judgement is made
+        # against its description, so it is never abbreviated), and every site in
+        # the source reaching one of the requested mechanisms.
+        if views and suffix in SOURCE_SUFFIXES:
+            print(f"\n--- {rel} ({len(text)} bytes, mechanism sites) ---")
+            mechanism_view(rel, text, views)
             printed += 1
             continue
 
@@ -227,11 +272,24 @@ def main() -> int:
     parser.add_argument("--code-only", action="store_true", help="skip prose that is not SKILL.md")
     parser.add_argument("--skill-head", type=int, default=0, help="show only N body lines of SKILL.md")
     parser.add_argument(
+        "--view",
+        default="",
+        help="comma-separated mechanism views: " + ",".join(VIEWS) + ". SKILL.md is "
+        "shown in full and the source is filtered to sites reaching those mechanisms.",
+    )
+    parser.add_argument(
         "--fs-view",
         action="store_true",
-        help="SKILL.md in full, plus every filesystem/environment site in the source",
+        help="alias for `--view fs`, kept so commands quoted in docs stay runnable",
     )
     args = parser.parse_args()
+
+    views = [v.strip() for v in args.view.split(",") if v.strip()]
+    if args.fs_view and "fs" not in views:
+        views.append("fs")
+    unknown = [v for v in views if v not in VIEWS]
+    if unknown:
+        parser.error(f"unknown view(s) {unknown}; available: {', '.join(VIEWS)}")
 
     sample = json.loads(pathlib.Path(args.sample).read_text(encoding="utf-8"))
     chosen = sample["selected"]
@@ -250,7 +308,7 @@ def main() -> int:
         return 0
 
     for selection in chosen:
-        emit(selection, code_only=args.code_only, fs_only=args.fs_view, skill_head=args.skill_head)
+        emit(selection, code_only=args.code_only, views=views, skill_head=args.skill_head)
         print()
     return 0
 

@@ -22,6 +22,51 @@
 # `evidence` is `path:line`, so any claim here can be checked in seconds against
 # `corpus/raw/<digest>/`. A label nobody can check is an opinion.
 #
+# ── Decision rules, fixed before the pass that used them ─────────────────────
+#
+# Written down first, because a judgement call made fresh on each bundle is not
+# reproducible and a second annotator would disagree at random. Where a rule
+# looks arbitrary it is recorded with the reason, so disagreeing with it is a
+# discussion about the rule rather than about a hundred separate bundles.
+#
+# `net.egress` — the bundle's OWN code opens a socket or issues a request. A URL
+#   in prose does not count. An unused `import requests` does not count.
+#   **Invoking a CLI that is known to be networked — `gh`, `aws`, `npm install`,
+#   `git push` — counts as `process.exec` and NOT as `net.egress`.** This is the
+#   rule most likely to be argued with, so: the code plane can never see inside
+#   `gh`, so labelling that as egress would manufacture a false negative no rule
+#   could ever fix, permanently. Shell `curl`/`wget` DOES count, because there
+#   the script names the protocol itself.
+#
+# `process.exec` vs `process.exec.dynamic` — whether argv[0] is statically
+#   known. `subprocess.run(["git", "status"])` is `process.exec`;
+#   `subprocess.run(cmd)` where `cmd` is built, or `shell=True` with an
+#   interpolated string, is `process.exec.dynamic`. A bundle can carry both.
+#
+# `code.dynamic_eval` — a string becomes code. `json.loads` is not.
+#   `model.eval()` is not — that is a PyTorch mode switch and it is everywhere.
+#
+# `env.read.secret` — judged from the variable's NAME, by the labeller, with the
+#   name recorded in `note` and `path:line` in `evidence`. That inversion is
+#   deliberate and it is the anti-circularity device for this term: the rule's
+#   regex can later be audited against these labels, instead of these labels
+#   being an echo of the regex. `scripts/label_worklist.py --view env` filters on
+#   "reads the environment at all" and never on `TOKEN|KEY|SECRET`, for the same
+#   reason.
+#
+# Sites were found with `scripts/label_worklist.py --view net,exec,eval,env,fs`,
+# which filters by *mechanism* — an API that can do the thing — and never by the
+# property being judged. "I saw every line in this bundle that could open a
+# socket" is a checkable claim about a committed filter.
+#
+# ORDERING, which is the safety property and is easy to get backwards: this pass
+# ran BEFORE any rule existed for the terms it added. Widening `terms_labelled`
+# is free while nothing detects a term — precision is 0/0 and recall an honest
+# 0/N. Doing it after a rule ships instead scores every genuine detection as a
+# false positive, because an empty `capabilities` array means "not looked for",
+# not "not present". `crates/skillmap-eval/tests/gate.rs` enforces the pairing;
+# the commit order is what makes the claim checkable.
+#
 # ── What this file is not ────────────────────────────────────────────────────
 #
 # **Single-annotator and unreviewed.** `labeller` is an AI assistant; `reviewed_by`
