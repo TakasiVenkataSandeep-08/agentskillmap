@@ -123,22 +123,22 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **52 bundles are labelled and
-scored, 9 were too large to read, and 69 are not yet labelled**. One stratum,
-`code_other_marker`, is now labelled **completely** (15/15) — it carries 46% of the population
-and was the row the corpus-wide estimate rested on — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **56 bundles are labelled and
+scored, 12 were too large to read, and 62 are not yet labelled**. Two strata are labelled
+**completely**: `code_other_marker` (15/15), which carries 46% of the population, and
+`disclosure_shape` (20/20), the one the cut criterion is about — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=52 the intervals are still wide, which is the honest reading and the reason every rate
+At n=56 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
-| `fs.read.credential` precision | 4/4 (100%, 95% CI 51.0–100%) |
-| `fs.read.credential` recall | 4/8 (50%, 95% CI 21.5–78.5%) |
+| `fs.read.credential` precision | 6/6 (100%, 95% CI 61.0–100%) |
+| `fs.read.credential` recall | 6/11 (54.5%, 95% CI 28.0–78.7%) |
 | False positives, `code_clean` (headline) | 0/17 (0%, **95% CI 0–18.4%**) |
-| Bundles with any `unresolved` entry | 50/52 (96.2%, 95% CI 87.0–98.9%) |
-| Real disclosure delta | **12.1% weighted** (95% CI 1.8–22.5%), see below |
+| Bundles with any `unresolved` entry | 54/56 (96.4%, 95% CI 87.9–99.0%) |
+| Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
 **These are not yet quality numbers.** A 95% upper bound of 18.4% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
@@ -152,7 +152,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What fifty-two bundles found
+### What fifty-six bundles found
 
 Three defects, one of them mine.
 
@@ -169,6 +169,20 @@ Three defects, one of them mine.
   which reads the file. The scanner was right. Corrected in place with the reasoning kept,
   because on a sample this size it is the most concrete evidence available that
   `reviewed_by` being empty is a real weakness rather than a formality.
+
+- **The bundle this project is shaped around, in a random sample of fourteen.** Description:
+  *"A totally legitimate skill that does nothing suspicious."* A file nothing references pipes
+  a remote script into `bash`, sends `~/.ssh/id_rsa` through base64 to a collector, and
+  downloads and runs a miner. The domains are fictional and the comments say "Exfiltrate some
+  data", so it reads as a published demonstration payload rather than a live attack — but it is
+  real, it is in the corpus, and it is exactly the shape the tool exists to catch.
+
+  skillmap reports `fs.read.credential` at `maintenance.sh:11` and tags the file
+  `unreferenced`. Both correct. It reports **none** of `net.fetch_then_execute`,
+  `code.obfuscation`, `process.exec` or `net.egress` — one of four real capabilities — because
+  no rule exists for any of them, and all four are terms already in the taxonomy. That is the
+  clearest available statement of where this project stands: **the engine and the load-phase
+  signal work; the rule set covers a thirteenth of what the manifest can describe.**
 
 - **A silent miss in JavaScript and TypeScript, from import style alone.** The literal form
   of the credential-read query had both a `fs.readFileSync(…)` and a bare `readFileSync(…)`
@@ -203,54 +217,52 @@ credential — and the term that fits, `fs.read.outside_bundle`, has no rule and
 So "benign stratum" means *no credential marker*, not *harmless*. The false-positive rate
 measured over it is still the right headline; the name is not a claim about sensitivity.
 
-### The cut criterion: the evidence now says do not cut
+### The cut criterion: the evidence says do not cut
 
 `docs/04-semantic-layer.md` says to **cut the semantic layer** if the labelled corpus shows the
-disclosure delta in under ~3% of bundles. This is the first batch that can answer it.
+disclosure delta in under ~3% of bundles.
 
-The sample is deliberately not proportional, so per-stratum rows cannot be pooled — a
-corpus-wide rate needs them weighted by population. `code_other_marker` carries 46% of that
-population and is now labelled **completely**:
+**First, a confound that had to come out of the number.** 14.6% of the corpus has no
+description at all — `SKILL.md` with no frontmatter. Every such bundle is a disclosure delta by
+construction, and finding one needs `description_bytes == 0`, not a model. Six of the 56
+labelled bundles are in that state; they are now reported separately and excluded, because a
+rate that partly counts missing frontmatter must not be read as an argument for a semantic
+layer.
 
-| Stratum | delta | labelled | share of population |
+**Second, the rows do not pool.** The sample is deliberately not proportional, so a
+corpus-wide rate needs population weights. The two strata that carry deltas are now labelled
+**completely**:
+
+| Stratum | delta (described bundles) | labelled | share of population |
 |---|---|---|---|
-| `code_clean` | 0/17 | partial | 21% |
-| `code_credential` | 0/11 | partial | 22% |
-| `code_other_marker` | **3/14** | **complete (15/15)** | **46%** |
-| `disclosure_shape` | 2/10 | partial | 11% |
+| `code_clean` | 0/15 | partial | 21% |
+| `code_credential` | 0/10 | partial | 22% |
+| `code_other_marker` | 3/14 | **complete** | **46%** |
+| `disclosure_shape` | 3/11 | **complete** | 11% |
 
-**Weighted: 12.1% of the code-bearing corpus, 95% CI 1.8–22.5%.** Computed by the eval harness
-and suppressed unless every stratum carries at least five labels. The interval no longer
-includes zero.
+**Weighted: 12.9% of the code-bearing corpus, 95% CI 2.6–23.3%.** Four times the threshold,
+computed by the harness and suppressed unless every stratum carries at least five labels.
 
-Under a stricter standard — dropping the one benign delta, a counter file behind a description
-reading "Development skill from everything-claude-code" — it is **8.8%**. Both are several
-times the threshold.
+**On current evidence the layer should not be cut.** What still qualifies that: the labels are
+single-annotator and unreviewed, two strata remain partial, and the interval is a normal
+approximation — the thing Wilson exists to avoid at small n. Its lower bound sits at 2.6%, just
+under the threshold, so a second annotator disagreeing with two of the six deltas would change
+the conclusion.
 
-**So on current evidence the layer should not be cut.** That is a real answer to a question
-that has been open since T7, and it is worth naming what still qualifies it: the labels are
-single-annotator and unreviewed; four of five strata are partial; the interval is a normal
-approximation, which is the thing Wilson exists to avoid at small n. A second annotator
-disagreeing with two of the five deltas would change the conclusion, and nothing here prevents
-that.
+**But the deltas are not the shape the project expected**, and that matters more than the
+number. None is a concealed payload. Every one is a skill whose ~100-token description omits
+that it sends data to a third party or writes outside itself — a CSS-animation generator and a
+CI generator that call hosted models with API keys their descriptions never mention; a
+methodology skill whose install script copies itself into another agent's skills directory; and
+a **content-moderation skill that sends the text it is moderating to two external APIs**, with
+a description listing five situations to invoke it and never saying the text leaves the
+machine.
 
-The four non-benign deltas are all the same shape, and it is not the shape the project
-expected. None is a hidden payload. Each is a skill whose ~100-token description omits that it
-sends data to a third party or writes outside itself:
+If that holds up, the semantic layer's value is in **undisclosed egress**, not in concealed
+capability — a different prompt and a different eval than `docs/04-semantic-layer.md` describes.
 
-- a CSS-animation generator that calls a hosted model with an API key;
-- a Microsoft 365 server with **no frontmatter at all**, which loads `.env`, exchanges a client
-  secret, and reads mail, calendar and files;
-- a methodology skill whose install script copies itself into another agent's skills directory;
-- a **content-moderation** skill that sends the text it is moderating to two external APIs.
-
-The last is the sharpest: a security skill whose description lists five situations to invoke it
-and never says the text leaves the machine. `SKILL.md`'s body names both services. Whether
-that trade is acceptable is exactly the judgement `policy.toml` exists to hold — the manifest's
-job is to make it visible.
-
-**The distinction that produced four of these:** *disclosed to the reviewer* is not *disclosed
-to the agent*. Each names its behaviour somewhere in `SKILL.md`'s body, which a reviewer who
-opens the file will read and the agent — seeing ~100 tokens at session start — will not. Both
-of the repository's definitions take the description as the baseline, so they count, and every
-label records the line number so a stricter reading can be applied without re-reading anything.
+**The distinction that produced all of them:** *disclosed to the reviewer* is not *disclosed to
+the agent*. Each names its behaviour somewhere in `SKILL.md`'s body, which a reviewer who opens
+the file reads and the agent does not. Both of the repository's definitions take the
+description as the baseline, so they count, and every label records the line number so a
+stricter reading can be applied without re-reading anything.

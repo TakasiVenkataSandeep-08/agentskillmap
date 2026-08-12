@@ -309,9 +309,23 @@ pub struct Report {
     /// reflects newly-honest reporting; it going quietly down while recall is
     /// flat means something is being silently dropped."*
     pub unresolved_rate: Rate,
-    /// Labelled bundles judged to have a real disclosure delta, per stratum.
-    /// The input to `docs/04-semantic-layer.md`'s cut criterion.
+    /// Disclosure delta among bundles that **have a description**, per stratum.
+    ///
+    /// This is the number `docs/04-semantic-layer.md`'s cut criterion should turn
+    /// on. A bundle whose `SKILL.md` carries no frontmatter has no description,
+    /// so every capability it has is undisclosed by construction — and detecting
+    /// that needs no model at all, only `description_bytes == 0`. Pooling the two
+    /// populations produces a rate that partly measures how many authors omit
+    /// frontmatter, which is a real finding about the ecosystem and not an
+    /// argument for a semantic layer.
+    ///
+    /// 14.6% of the 2026-08 corpus has no description, so the confound is large.
     pub disclosure_delta: BTreeMap<String, Rate>,
+    /// Labelled bundles with **no description at all**, per stratum.
+    ///
+    /// Reported separately and never pooled with the above. Every one of these
+    /// is trivially a disclosure delta and none of them needs a model to find.
+    pub no_description: BTreeMap<String, Rate>,
     /// Population size per stratum, from `corpus/sample.json`.
     ///
     /// Printed beside every per-stratum rate because the sample is **not
@@ -401,6 +415,7 @@ pub fn run(
     // exhaustively cannot be called a false positive.
     let mut per_stratum: BTreeMap<String, (usize, usize)> = BTreeMap::new();
     let mut delta: BTreeMap<String, (usize, usize)> = BTreeMap::new();
+    let mut undescribed: BTreeMap<String, (usize, usize)> = BTreeMap::new();
     for (label, manifest) in &scanned {
         let entry = per_stratum.entry(label.stratum.clone()).or_insert((0, 0));
         entry.1 += 1;
@@ -412,10 +427,23 @@ pub fn run(
             entry.0 += 1;
         }
 
-        let seen = delta.entry(label.stratum.clone()).or_insert((0, 0));
-        seen.1 += 1;
-        if label.disclosure_delta {
-            seen.0 += 1;
+        // Read from the manifest, not from the label: whether a bundle has a
+        // description is a fact the scanner establishes, and a labeller should
+        // not be asked to restate it.
+        let described = manifest.disclosure.description_bytes > 0;
+
+        let counted = undescribed.entry(label.stratum.clone()).or_insert((0, 0));
+        counted.1 += 1;
+        if !described {
+            counted.0 += 1;
+        }
+
+        if described {
+            let seen = delta.entry(label.stratum.clone()).or_insert((0, 0));
+            seen.1 += 1;
+            if label.disclosure_delta {
+                seen.0 += 1;
+            }
         }
     }
 
@@ -438,6 +466,10 @@ pub fn run(
             .collect(),
         unresolved_rate: Rate::new(unresolved_hits, scanned.len()),
         disclosure_delta: delta
+            .into_iter()
+            .map(|(stratum, (hits, total))| (stratum, Rate::new(hits, total)))
+            .collect(),
+        no_description: undescribed
             .into_iter()
             .map(|(stratum, (hits, total))| (stratum, Rate::new(hits, total)))
             .collect(),
@@ -598,9 +630,25 @@ pub fn render(report: &Report) -> String {
         report.unresolved_rate.render()
     );
 
+    // Printed before the delta rate, and above it on the page, because it is the
+    // number that qualifies the other one. 14.6% of the 2026-08 corpus carries no
+    // description at all; every such bundle is a disclosure delta by
+    // construction, and finding one needs `description_bytes == 0` rather than a
+    // model. Pooling the two would let a rate that partly measures missing
+    // frontmatter be read as an argument for a semantic layer.
     let _ = writeln!(
         out,
-        "\n  disclosure delta per stratum (docs/04-semantic-layer.md's cut criterion):"
+        "\n  bundles with NO description at all — delta by construction, and\n\
+         \x20 detectable deterministically. Excluded from the rate below:"
+    );
+    for (stratum, rate) in &report.no_description {
+        let _ = writeln!(out, "    {stratum:<18} {}", rate.render());
+    }
+
+    let _ = writeln!(
+        out,
+        "\n  disclosure delta among bundles that HAVE a description\n\
+         \x20 (docs/04-semantic-layer.md's cut criterion):"
     );
     for (stratum, rate) in &report.disclosure_delta {
         let _ = writeln!(
@@ -699,6 +747,14 @@ mod tests {
         path
     }
 
+    fn rules_for_test() -> RuleSet {
+        skillmap_rules::load(&repo_root())
+    }
+
+    fn repo_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
+    }
+
     fn scratch(name: &str) -> PathBuf {
         let dir =
             std::env::temp_dir().join(format!("skillmap-labels-{}-{name}", std::process::id()));
@@ -762,6 +818,61 @@ mod tests {
             "129 of the 130 sampled bundles carry no label and must be said to"
         );
         assert!(render(&report).contains("nothing scored"));
+    }
+
+    #[test]
+    fn a_bundle_with_no_description_leaves_the_delta_denominator() {
+        // The confound this split exists to remove: 14.6% of the 2026-08 corpus
+        // has no description at all, every such bundle is a disclosure delta by
+        // construction, and finding one needs `description_bytes == 0` rather
+        // than a model. Pooling them lets a rate that partly counts missing
+        // frontmatter be read as an argument for a semantic layer.
+        //
+        // Exercised against the real no-frontmatter bundle in fixtures/, staged
+        // into a corpus layout, rather than asserted about the shape of the
+        // types — a test that only inspects field names proves nothing.
+        let repo = repo_root();
+        let source = repo.join("fixtures").join("bundles").join("no-frontmatter");
+        assert!(source.is_dir(), "{source:?} is the fixture this test needs");
+
+        let dir = scratch("nodesc");
+        let digest = "sha256:00feed";
+        let staged = bundle_dir(&dir, digest);
+        let _ = std::fs::remove_dir_all(&staged);
+        std::fs::create_dir_all(&staged).unwrap();
+        for entry in std::fs::read_dir(&source).unwrap().flatten() {
+            if entry.path().is_file() {
+                std::fs::copy(entry.path(), staged.join(entry.file_name())).unwrap();
+            }
+        }
+
+        let path = write(
+            &dir,
+            &labels_toml(&format!(
+                "[[label]]
+digest = \"{digest}\"
+stratum = \"code_clean\"
+                 verdict = \"labelled\"
+disclosure_delta = true
+"
+            )),
+        );
+        let labels = Labels::load(&path).unwrap();
+        let report = run(&labels, &dir, &rules_for_test(), 1, BTreeMap::new());
+
+        assert_eq!(report.scored, 1, "the fixture must actually scan");
+        assert_eq!(
+            report
+                .no_description
+                .get("code_clean")
+                .map(|r| (r.hits, r.total)),
+            Some((1, 1)),
+            "a bundle with no frontmatter must be counted as undescribed"
+        );
+        assert!(
+            !report.disclosure_delta.contains_key("code_clean"),
+            "and must not appear in the delta denominator, even though its              label says disclosure_delta = true"
+        );
     }
 
     #[test]

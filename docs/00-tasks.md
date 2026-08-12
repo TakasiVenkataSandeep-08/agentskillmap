@@ -579,8 +579,8 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 61 of 130 bundles** (52 scored, 9 too large to read), with
-  `code_other_marker` complete at 15/15. `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 68 of 130 bundles** (56 scored, 12 too large to read), with
+  `code_other_marker` complete at 15/15 and `disclosure_shape` complete at 20/20. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -622,12 +622,15 @@ front of; each is a thing this repository currently claims or implies but does n
   should constant-fold simple joins is a design question with real over-reach risk, and it is
   now backed by measurement rather than speculation.
 - **~~The cut criterion for T7 cannot be evaluated.~~** Answered, provisionally: the weighted
-  disclosure delta is **12.1% (95% CI 1.8–22.5%)** against a ~3% criterion, or 8.8% under a
-  stricter standard that drops the one benign case. Several times the threshold either way, and
-  the interval no longer includes zero. **On current evidence the semantic layer should not be
-  cut.** Qualifications that stand: single annotator, unreviewed, four of five strata partial,
-  and a normal-approximation interval. A second annotator disagreeing with two of the five
-  deltas would change it.
+  disclosure delta is **12.9% (95% CI 2.6–23.3%)** against a ~3% criterion, measured over
+  bundles that *have* a description. **On current evidence the semantic layer should not be
+  cut.** Qualifications that stand: single annotator, unreviewed, two of five strata partial,
+  and a normal-approximation interval whose lower bound sits at 2.6% — just under the
+  threshold. A second annotator disagreeing with two of the six deltas would change it.
+- **14.6% of the corpus has no description at all**, and every such bundle is a disclosure
+  delta by construction. That is detectable with `description_bytes == 0` and needs no model,
+  so it is reported separately and excluded from the rate above. Pooling the two would let a
+  number that partly counts missing frontmatter argue for a semantic layer.
 - **The deltas are not the shape the project expected.** None is a hidden payload. Four of five
   are skills whose ~100-token description omits that they send data to a third party or write
   outside themselves — including a content-moderation skill that sends the text it moderates to
