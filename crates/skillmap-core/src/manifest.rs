@@ -503,7 +503,15 @@ pub enum CapabilityTerm {
     /// Fetched content reaches an exec or eval sink.
     #[serde(rename = "net.fetch_then_execute")]
     NetFetchThenExecute,
-    /// Reads a known credential path or secret-bearing env var.
+    /// Reads a file at a path conventionally holding credentials.
+    ///
+    /// **Files only.** This said "or secret-bearing env var" until
+    /// `env.read.secret` got a rule and the overlap became load-bearing: the two
+    /// terms claimed the same act, so which one a manifest carried would have
+    /// depended on which rule happened to fire. No wire name changed and no
+    /// manifest has ever carried this term for an environment read, so the
+    /// serialized form is untouched — but the *meaning* narrowed, and that is
+    /// worth knowing when reading an older manifest.
     #[serde(rename = "fs.read.credential")]
     FsReadCredential,
     /// Reads outside the bundle root and project.

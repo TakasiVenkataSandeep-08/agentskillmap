@@ -634,8 +634,24 @@ front of; each is a thing this repository currently claims or implies but does n
   firing on half the corpus puts at risk. Its first run also caught a labelling error: a bundle
   whose note said it *"refreshes the JWT against a remote API"* carried no `net.egress` term.
   The scanner was right; the denominator moved 48 → 49.
-  **Still open:** `env.read.secret` 0/27, `process.exec` 0/5, `process.exec.dynamic` 0/2,
-  `code.dynamic_eval` 0/1.
+  **Now also closed:** `process.exec` 3/5 and `process.exec.dynamic` 2/2 (both n far too small
+  to read), and `env.read.secret` **23/28 (82.1%), precision 23/23**. Four of the five terms
+  ship, all at precision 1.0, with the benign stratum unmoved at 0/36.
+  **Still open:** `code.dynamic_eval` 0/1 — a denominator of one, which the fixture and
+  adversarial suites have to carry instead of the corpus.
+- **`env.read.secret`'s five misses are three shapes.** Three are shell, deferred on purpose:
+  `$SECRET_VAR` expansion is indistinguishable from a mention, and appears in comments and
+  heredocs, so shell is where a name-regex rule produces its worst noise. It ships after the
+  other three languages have a measured false-positive rate — which they now do, at 0/92, so
+  the deferral has served its purpose and the work is unblocked. The other two are
+  interprocedural: a name read through a wrapper (`env("NOBOT_API_KEY")`) and a name that is
+  itself computed (`os.environ.get(env_var_name)`). Both are the same limit the exec terms hit.
+- **The python subscript read form is deliberately uncovered.** `os.environ["OPENAI_API_KEY"]`
+  as a *read* reports nothing, because `os.environ["X"] = v` is the same node and tree-sitter
+  cannot express "this subscript is not an assignment target". The call forms carry the term
+  instead. In javascript the member form could not be skipped — it is the dominant idiom — so
+  there the query enumerates read contexts, which is incomplete by construction and already
+  cost one miss until TypeScript's `!` non-null assertion was added.
 - **The ten remaining `net.egress` misses are one shape, and it is the shape that matters.**
   Vendor SDKs — `openai`, `viem`, `linkedin_api` — reach a network with no protocol named
   anywhere at the call site. The labelling pass measured this as the most common egress

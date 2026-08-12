@@ -255,14 +255,14 @@ fixtures, or it does not exist (invariant 12).
 | `process.exec.dynamic` | Spawns a subprocess with a computed target |
 | `net.egress` | Outbound network; `detail.hosts` when statically resolvable |
 | `net.fetch_then_execute` | Fetched content reaches an exec or eval sink |
-| `fs.read.credential` | Reads a known credential path or secret-bearing env var |
+| `fs.read.credential` | Reads a **file** at a path conventionally holding credentials |
 | `fs.read.outside_bundle` | Reads outside the bundle root and project |
 | `fs.write.outside_bundle` | Writes outside the bundle root |
 | `fs.write.agent_config` | Writes `CLAUDE.md`, `settings.json`, hook or statusline config |
 | `agent.hook.install` | Registers a hook that runs outside the skill's own trigger |
 | `code.dynamic_eval` | `eval`, `exec`, `Function`, `source` of computed content |
 | `code.obfuscation` | Encoding/decoding chain feeding a sink |
-| `env.read.secret` | Reads env vars matching the secret-name set |
+| `env.read.secret` | Reads an **environment variable** whose name matches the secret-name set |
 | `mcp.tool_reference` | References MCP servers or tools |
 
 Instruction-plane signals use a separate `instruction.*` namespace and never appear in

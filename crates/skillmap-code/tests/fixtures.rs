@@ -935,3 +935,77 @@ fn a_bare_identifier_argv_is_not_claimed_to_be_dynamic() {
         );
     }
 }
+
+#[test]
+fn an_env_secret_fires_on_a_read_and_never_on_a_write() {
+    // The direct counterpart of `a_shell_redirect_fires_on_input_and_not_on_output`,
+    // and it exists because this repository has already shipped that defect once
+    // in the other direction: `sh.credential-read.dotfile` reported `cat > .env`
+    // — a write — as a credential read, because tree-sitter-bash uses one node
+    // for every redirect direction and the query never said which it wanted.
+    //
+    // Here the grammar offers no operator to match on at all. A read
+    // `process.env.OPENAI_API_KEY` and a write `process.env.OPENAI_API_KEY = v`
+    // are the same node, differing only in which field of the parent they
+    // occupy, and tree-sitter has no negation. So the query anchors on read
+    // CONTEXTS instead. Deleting those anchors would make the rule report a
+    // hand-rolled dotenv loader — which SETS credentials — as a reader of them,
+    // and two bundles in the labelled corpus load .env exactly that way.
+    let rules = rules();
+
+    let fires = |path: &str, source: &str| {
+        analyze(
+            &[SourceFile {
+                path,
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .iter()
+        .any(|c| c.capability.as_str() == "env.read.secret")
+    };
+
+    // Reads, in each context the corpus actually uses.
+    assert!(fires("a.js", "const k = process.env.OPENAI_API_KEY;\n"));
+    assert!(fires("a.js", "f({ key: process.env.STRIPE_SECRET });\n"));
+    assert!(fires(
+        "a.js",
+        "const k = process.env.APIFY_TOKEN || null;\n"
+    ));
+    assert!(fires("a.py", "k = os.getenv(\"OPENAI_API_KEY\")\n"));
+    assert!(fires(
+        "a.py",
+        "k = os.environ.get(\"DEPLOYER_PRIVATE_KEY\")\n"
+    ));
+
+    // Writes. Setting a credential is not reading one, and calling it a read
+    // inverts the direction the reader cares about.
+    assert!(
+        !fires("a.js", "process.env.OPENAI_API_KEY = \"x\";\n"),
+        "assigning to the environment is a write"
+    );
+    assert!(
+        !fires("a.js", "if (!process.env[k]) process.env[k] = v;\n"),
+        "the hand-rolled dotenv shape is a write"
+    );
+    assert!(
+        !fires("a.py", "os.environ[\"OPENAI_API_KEY\"] = value\n"),
+        "assigning to os.environ is a write"
+    );
+
+    // And the names a looser regex would catch. Every one is real.
+    for name in [
+        "CACHE_KEY",
+        "PRIMARY_KEY",
+        "MAX_TOKENS",
+        "TOKENIZER",
+        "CLIENT_ID",
+    ] {
+        assert!(
+            !fires("a.js", &format!("const v = process.env.{name};\n")),
+            "`{name}` is not a secret name"
+        );
+    }
+}

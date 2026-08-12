@@ -139,26 +139,27 @@ carries one:
 | `fs.read.credential` recall | **13/18 (72.2%, 95% CI 49.1–87.5%)** |
 | `net.egress` precision | 39/39 (100%, 95% CI 91.0–100%) |
 | `net.egress` recall | **39/49 (79.6%, 95% CI 66.4–88.5%)** |
-| `env.read.secret` recall | **0/27** — no rule exists yet |
+| `env.read.secret` precision | 23/23 (100%, 95% CI 85.7–100%) |
+| `env.read.secret` recall | **23/28 (82.1%, 95% CI 64.4–92.1%)** |
 | `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
 | `process.exec.dynamic` recall | 2/2 — n far too small to read |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 57/57 across all four detected terms and the false-positive rate is 0 across all
+**Precision is 80/80 across all five detected terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
 That last part is what a broad rule puts at risk. `net.egress` fires on 39 of 92 bundles;
 a rule that common is exactly how a benign stratum gets lit up, and `code_clean` held at 0/36.
 
-**Five more terms have ground truth; three now have rules.** A second pass over all 92 bundles
+**Five more terms have ground truth; four now have rules.** A second pass over all 92 bundles
 hunted for `net.egress`, `env.read.secret`, `process.exec`, `process.exec.dynamic` and
 `code.dynamic_eval`. The denominators are the finding:
 
 ```
-  net.egress            49/92 bundles      env.read.secret      27/92
+  net.egress            49/92 bundles      env.read.secret      28/92
   fs.read.credential    18/92              process.exec          5/92
   process.exec.dynamic   2/92              code.dynamic_eval     1/92
 ```
@@ -169,6 +170,22 @@ the benign stratum unmoved. The ten remaining misses are named: requests issued 
 session object bound to a local name, a wrapper that renames the call (`proxyFetch(url)`), and
 vendor SDKs — `openai`, `viem`, `linkedin_api` — which reach a network with no protocol named
 at the call site and are the largest single gap in this term.
+
+**`env.read.secret`'s name regex was tuned against the labels, not invented.** Every
+environment read in the 92 bundles was extracted and split by whether its bundle carries the
+term. Against that set: **28 of 28 secret-bearing names match and 0 of 38 non-secret names do**
+— `CACHE_KEY`, `PRIMARY_KEY`, `SORT_KEY`, `MAX_TOKENS`, `TOKENIZER`, `CLIENT_ID` and
+`TENANT_ID` all held out, and a bare `_KEY$` deliberately absent because every cache and every
+database row has one. That audit is what the labels are *for*: they were made by judging names,
+before the regex existed, so the regex can be checked against them rather than the reverse.
+
+**Reading the environment is not writing it.** `process.env.X` and `process.env.X = v` are the
+same node differing only in which field of the parent they occupy, and tree-sitter has no
+negation. So every pattern anchors on a *read* context. The alternative was reporting a
+hand-rolled `.env` loader — which **sets** credentials — as a reader of them, and two corpus
+bundles load `.env` exactly that way. This repository already shipped that error once in the
+other plane, where `cat > .env` was reported as a credential read; a dedicated test now pins
+both directions.
 
 **`process.exec` and `process.exec.dynamic` ship at n=5 and n=2, and those numbers cannot
 carry an argument.** 3/5 and 2/2 with perfect precision looks good and means very little — the
