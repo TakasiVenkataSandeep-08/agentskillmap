@@ -225,11 +225,9 @@
         "fs.read.outside_bundle",
         "fs.write.outside_bundle",
         "fs.write.agent_config",
-        "agent.hook.install",
         "code.dynamic_eval",
         "code.obfuscation",
-        "env.read.secret",
-        "mcp.tool_reference"
+        "env.read.secret"
       ]
     },
     "instructionSignal": {

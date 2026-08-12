@@ -83,11 +83,15 @@ fn scan_emits_canonical_json() {
     assert!(!json.contains('\r'), "LF only");
     assert!(json.starts_with("{\n  \""), "two-space indent");
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+    // Compared against the constant rather than a literal. This carried "1.0.0"
+    // and had to be edited when the taxonomy shrank — which is a test failing
+    // because it duplicated a value, not because anything was wrong. The point
+    // here is that the shipped binary stamps the version this crate declares.
     assert_eq!(
         parsed
             .get("schema_version")
             .and_then(serde_json::Value::as_str),
-        Some("1.0.0")
+        Some(skillmap_core::SCHEMA_VERSION)
     );
 }
 

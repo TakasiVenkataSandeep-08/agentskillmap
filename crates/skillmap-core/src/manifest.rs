@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::num::NonZeroU64;
 
 /// The schema version this crate produces.
-pub const SCHEMA_VERSION: &str = "1.0.0";
+pub const SCHEMA_VERSION: &str = "1.1.0";
 
 /// A skillmap capability manifest.
 ///
@@ -523,9 +523,6 @@ pub enum CapabilityTerm {
     /// Writes `CLAUDE.md`, `settings.json`, hook or statusline config.
     #[serde(rename = "fs.write.agent_config")]
     FsWriteAgentConfig,
-    /// Registers a hook that runs outside the skill's own trigger.
-    #[serde(rename = "agent.hook.install")]
-    AgentHookInstall,
     /// `eval`, `exec`, `Function`, `source` of computed content.
     #[serde(rename = "code.dynamic_eval")]
     CodeDynamicEval,
@@ -535,9 +532,6 @@ pub enum CapabilityTerm {
     /// Reads env vars matching the secret-name set.
     #[serde(rename = "env.read.secret")]
     EnvReadSecret,
-    /// References MCP servers or tools.
-    #[serde(rename = "mcp.tool_reference")]
-    McpToolReference,
 }
 
 /// A signal from the closed instruction-plane vocabulary.
@@ -608,11 +602,9 @@ wire_names!(CapabilityTerm, capability_term_wire_names_match_serde, [
     FsReadOutsideBundle => "fs.read.outside_bundle",
     FsWriteOutsideBundle => "fs.write.outside_bundle",
     FsWriteAgentConfig => "fs.write.agent_config",
-    AgentHookInstall => "agent.hook.install",
     CodeDynamicEval => "code.dynamic_eval",
     CodeObfuscation => "code.obfuscation",
     EnvReadSecret => "env.read.secret",
-    McpToolReference => "mcp.tool_reference",
 ]);
 
 wire_names!(InstructionSignal, instruction_signal_wire_names_match_serde, [

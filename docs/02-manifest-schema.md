@@ -259,11 +259,9 @@ fixtures, or it does not exist (invariant 12).
 | `fs.read.outside_bundle` | Reads outside the bundle root and project |
 | `fs.write.outside_bundle` | Writes outside the bundle root |
 | `fs.write.agent_config` | Writes `CLAUDE.md`, `settings.json`, hook or statusline config |
-| `agent.hook.install` | Registers a hook that runs outside the skill's own trigger |
 | `code.dynamic_eval` | `eval`, `exec`, `Function`, `source` of computed content |
 | `code.obfuscation` | Encoding/decoding chain feeding a sink |
 | `env.read.secret` | Reads an **environment variable** whose name matches the secret-name set |
-| `mcp.tool_reference` | References MCP servers or tools |
 
 Instruction-plane signals use a separate `instruction.*` namespace and never appear in
 `capabilities`:
@@ -279,6 +277,42 @@ Instruction-plane signals use a separate `instruction.*` namespace and never app
 `instruction.silence` and `instruction.privilege_claim` are the two that will earn this
 project attention. They are also the two most likely to false-positive on legitimate skills
 about logging verbosity and permissions — negative fixtures for those are load-bearing.
+
+## Migration: 1.0.0 → 1.1.0
+
+Three changes, all to the capability taxonomy. Nothing about the manifest's *shape*
+moved: no field was added, removed, or renamed, and the canonical serialization is
+unchanged.
+
+**Two terms were removed.** `agent.hook.install` and `mcp.tool_reference`.
+
+Invariant 12 forbids a term no rule detects, so v1.0 had to either grow rules to cover
+the taxonomy or shrink the taxonomy to match the rules — decided from the corpus rather
+than from ambition. Nine terms grew rules. These two could not:
+
+- `agent.hook.install` appears in 3 of 92 labelled bundles, and its real form is a JSON
+  edit rather than a code sink. Its practical instances are covered by
+  `fs.write.agent_config`, so this is a term merge rather than a capability lost.
+- `mcp.tool_reference` lives in `.mcp.json`, and **no JSON grammar is registered**.
+  Adding one would make every `.json` file in every bundle stop reporting
+  `unsupported_language`, moving the published unresolved rate for all 92 labelled
+  bundles for reasons unrelated to detection quality. That is a large, separately
+  measurable change, and it must not ride along inside a taxonomy commit.
+
+**Compatibility.** Removing a variant from a closed vocabulary is breaking in principle:
+there is no `Unknown` term, so a 1.0.0 consumer rejects a manifest it does not
+recognise, and a 1.1.0 consumer would reject one of these terms if it met it. In
+practice the breakage is provably hypothetical — **no manifest has ever contained
+either term, because no rule has ever emitted one.** That is why this is a minor bump
+and not a major one, and the reasoning is recorded here rather than assumed.
+
+**One term narrowed without changing its wire form.** `fs.read.credential` was
+documented as "reads a known credential path **or secret-bearing env var**", which is
+exactly what `env.read.secret` describes. Both terms claimed the same act, so which one
+a manifest carried would have depended on which rule happened to fire. It now covers
+**files only**. No enum variant changed and the JSON Schema is byte-identical, so a
+1.0.0 manifest still validates — but the *meaning* is narrower, which matters when
+reading an older manifest that was produced before either rule existed.
 
 ## Run-scoped diagnostic codes (closed)
 
