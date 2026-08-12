@@ -1,0 +1,46 @@
+# Detects a python skill issuing a network request.
+#
+# Added because the relabelling pass measured `net.egress` in 48 of 92 labelled
+# bundles — 52% of the corpus, nearly three times `fs.read.credential` — against
+# a recall of 0/48, because no rule existed. See docs/00-tasks.md.
+id         = "py.net-egress.client"
+language   = "python"
+capability = "net.egress"
+tier       = "proven"
+query      = "queries/python/net-egress.scm"
+
+[captures]
+site = "@site"
+
+# No [match] block, and no `host` capture, both deliberately.
+#
+# A host list would be an allowlist of destinations, which is a policy question
+# and belongs in policy.toml — the manifest reports that the code reaches a
+# network, and the reader decides whether this repository tolerates it.
+#
+# The `host` role is left unused for a sharper reason: the engine's host filter
+# discards every captured host when `host_suffixes` is empty, so capturing @host
+# here would silently throw the hosts away rather than report them. Populating
+# `detail.hosts` honestly needs keep-all semantics at that call site plus
+# URL-to-authority extraction, since a captured literal is a whole URL and the
+# filter is a plain `ends_with`. That is its own change, measured separately.
+
+[docs]
+summary = "Issues a network request."
+rationale = """
+Utterly ordinary. Half this corpus talks to an API by design — weather skills, model
+clients, package installers. Reported, never judged; policy.toml decides whether a
+given repository accepts it, and the disclosure delta is what makes it interesting:
+a skill whose description never mentions that data leaves the machine.
+"""
+false_positive_notes = """
+Does not fire on an import, on client construction without a request, or on a local
+object exposing `.get`. All three are in negative.py, and the third is why the module
+is matched as an identifier rather than by attribute name.
+
+The known miss is the mirror of that decision: a request issued through a session
+object (`s = requests.Session()` then `s.get(url)`) resolves to a local name and is
+not matched. Vendor SDKs are a larger miss and a deliberate one — the labelling pass
+found egress reached through `openai`, `viem` and `linkedin_api` clients where no
+protocol is named at the call site. Both wait for a measurement rather than a guess.
+"""

@@ -1,0 +1,36 @@
+# Detects a shell skill reaching a network.
+#
+# Counterpart to the python rule, added in the same change. See
+# `queries/shell/net-egress.scm` for why shell is the one language where this
+# term is unambiguous, and `corpus/labels.toml` for the decision rule that
+# separates `curl` from `gh`.
+id         = "sh.net-egress.client"
+language   = "shell"
+capability = "net.egress"
+tier       = "proven"
+query      = "queries/shell/net-egress.scm"
+
+[captures]
+site = "@site"
+
+# No [match] block and no `host` capture, for the same two reasons as the python
+# rule: a host list is policy rather than description, and the engine discards
+# captured hosts when `host_suffixes` is empty, so capturing them would lose them
+# silently.
+
+[docs]
+summary = "Reaches a network endpoint."
+rationale = """
+Ordinary in a shell skill: installers fetch, deploy scripts push, monitors poll.
+Reported, never judged — policy.toml decides. What makes it worth reporting is the
+disclosure delta, where a description never mentions that data leaves the machine.
+"""
+false_positive_notes = """
+Does not fire on `command -v curl`, `which curl`, `echo "curl ..."`, or a comment,
+because the pattern matches the command NAME and in all four cases `curl` is an
+argument or text. All four are in negative.sh.
+
+Deliberately absent: `gh`, `aws`, `npm`, `git push` and every other networked CLI.
+Those are process execution — the code plane cannot see inside them, and calling
+them egress would assert something this tool has not established.
+"""
