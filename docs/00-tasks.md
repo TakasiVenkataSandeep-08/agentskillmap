@@ -579,8 +579,9 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 68 of 130 bundles** (56 scored, 12 too large to read), with
-  `code_other_marker` complete at 15/15 and `disclosure_shape` complete at 20/20. `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 89 of 130 bundles** (75 scored, 14 too large to read). Three strata
+  are complete: `code_clean` 40/40, `code_other_marker` 15/15, `disclosure_shape` 20/20.
+  `code_credential` is at 14/40 and `prose_only` is deliberately unlabelled. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -624,7 +625,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **~~The cut criterion for T7 cannot be evaluated.~~** Answered, provisionally: the weighted
   disclosure delta is **12.9% (95% CI 2.6–23.3%)** against a ~3% criterion, measured over
   bundles that *have* a description. **On current evidence the semantic layer should not be
-  cut.** Qualifications that stand: single annotator, unreviewed, two of five strata partial,
+  cut.** Qualifications that stand: single annotator, unreviewed, `code_credential` partial,
   and a normal-approximation interval whose lower bound sits at 2.6% — just under the
   threshold. A second annotator disagreeing with two of the six deltas would change it.
 - **14.6% of the corpus has no description at all**, and every such bundle is a disclosure
@@ -651,7 +652,9 @@ front of; each is a thing this repository currently claims or implies but does n
   testnet private key as a fallback when the environment variable is unset. Mechanically
   detectable, worth reporting, and nowhere to put it in the manifest.
 - **The strata are built from credential-shaped markers, so `code_clean` means "no credential
-  marker", not "harmless".** One bundle in it reads the user's whole WeChat message history.
+  marker", not "harmless".** Now with three examples from the completed stratum: one reads the
+  user's whole WeChat message history, one reads every agent session transcript under
+  `~/.clawdbot/agents`, and one walks the entire workspace and rewrites other skills' source.
   That is correctly not `fs.read.credential`; the term that fits is `fs.read.outside_bundle`,
   which has no rule. The headline false-positive rate is still measured over the right
   population — the point is that a reader should not take the stratum name as a claim about

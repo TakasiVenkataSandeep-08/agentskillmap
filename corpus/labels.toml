@@ -960,3 +960,204 @@ disclosure_delta = true
 # the engine and the load-phase signal work; the rule set covers a thirteenth of
 # what the manifest can describe.
 note = "Fetches and executes a remote script, pipes an SSH private key through base64 to a collector, and downloads and runs a miner — all in a file nothing references, behind a description saying it does nothing suspicious. The domains are fictional; this reads as a published demonstration payload."
+
+# ── thirteenth batch: completing code_clean ──────────────────────────────────
+#
+# The headline stratum: bundles where the scanner could fire and should not.
+# Every false positive here is one a user would experience.
+
+[[label]]
+digest = "sha256:6da617f7e070543b7f8b20100507a13b0593a91bf331435f80d0bc80ee10c256"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Fetches comics from a public API and can generate images. No filesystem or environment access at all."
+
+[[label]]
+digest = "sha256:91b44aa7ec15dd4e4b16218d7e71227a58ee82d4a4bd8c3b7ae36348df146900"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = true
+# SKILL.md carries no frontmatter, so there is no description and everything is
+# undisclosed by construction. The fourth such bundle. The harness excludes these
+# from the delta rate and counts them separately — the state is detectable with
+# `description_bytes == 0` and needs no model.
+note = "Polls a public charging-station status endpoint and reports connector state. No filesystem or environment access. SKILL.md has no frontmatter."
+
+[[label]]
+digest = "sha256:93277363936864518724cbe49a13242c483373a96a21f8c866929d76fce1eedc"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Fetches stock quotes from a public endpoint named in the frontmatter. No filesystem or environment access."
+
+[[label]]
+digest = "sha256:973fc8647f979a44e9f169b3859fe030efeac4386141a0cd731f8e601a623c10"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Keeps a memory index as JSON under ~/clawd/memory, read and rewritten through jq, with daily and consolidated markdown files beside it. The description says it is a persistent memory system."
+
+[[label]]
+digest = "sha256:a5bc89f52da2ec2e81f258c8e57c43aa6ce6f0350be069edc7c570ad7d2b127b"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Task decomposition helper. No filesystem or environment access."
+
+[[label]]
+digest = "sha256:a846ccb19ba307c1943566b7df6efee25a62bbee01d186266176b072fda19db7"
+stratum = "code_clean"
+verdict = "too_large"
+note = "70 KB across eleven files, including three project-scaffolding shell scripts. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:acd35b2bfae5cbae7b534fc9b8519f5a6f87c2c43f5720058bf525fb2c83d53c"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# A threat-hunting skill whose frontmatter is dense with MITRE ATT&CK technique
+# ids for exfiltration and non-standard ports. It reads one telemetry file the
+# caller names and counts rows. Correctly no capability — another case where a
+# lexical reading would light up and the code plane is right to stay quiet.
+note = "Reads a connection-telemetry file named on argv and flags direct-to-IP traffic, uncommon ports and high egress ratios. One read of a caller-supplied path; no network, no environment."
+
+[[label]]
+digest = "sha256:b4f1b8b5ea64ab91ac1ce71a77e8c8c5b9d6120f22c1b39d1ea925fdbd27accc"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Queries a public electricity-pricing API and computes cheap windows. Five scripts, none of which touches the filesystem or the environment."
+
+[[label]]
+digest = "sha256:b7892b94166a029b465956d0743225ff2e349389c89c2847f711c273421d18b8"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Talks to a local model server, with the host taken from OLLAMA_HOST and defaulting to localhost. No filesystem access."
+
+[[label]]
+digest = "sha256:c85ba6933c82a864eefc528ab0db33809db937e23a1c9dc2ab4af52af865fe91"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# The most capable bundle in this stratum, and correctly reported as having no
+# `fs.read.credential` — it reads everything, not a credential path.
+#
+# Recorded as fact, not conclusion: this skill walks the entire agent workspace
+# reading every non-binary file, and its quarantine mode rewrites other skills'
+# source in place, commenting out lines it judges to be egress after copying the
+# original to a .bak. The description says exactly that, so it is not a delta.
+# Whether an installed skill should be able to edit its neighbours is precisely
+# the judgement policy.toml exists to hold.
+note = "A network-DLP skill for agent workspaces. Walks the workspace reading every non-binary file, maintains a domain allowlist as JSON, and in quarantine mode rewrites other skills' files in place to comment out lines it flags, keeping .bak copies."
+
+[[label]]
+digest = "sha256:ca61d882745c97641809b10344347398ff8dd8f89bd9df2dae2abe7c723af46b"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "A greeting function, byte-for-byte the same script as another bundle in this sample under a different name. No filesystem access."
+
+[[label]]
+digest = "sha256:d0d03fe1a78474d3ed4f74517480dd63911720492a45c707931cdf082f004a7b"
+stratum = "code_clean"
+verdict = "too_large"
+note = "81 KB across thirty-two files of framework guidance and example components. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:d3619d49312d04367e4be3db5f796326de30800b3681f357d889103aa4ff6d99"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Registers with a skill marketplace and publishes skills to it. The setup script only prints instructions; nothing in the bundle reads a file or an environment variable."
+
+[[label]]
+digest = "sha256:dce0562bda28dd790cd815d40d344f810c74bdbe1813877e5f9789131e788bb0"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# Reads the agent's own session transcripts — every `.jsonl` under
+# ~/.clawdbot/agents — and aggregates them to CSV. Not credentials, so correctly
+# no `fs.read.credential`; the fitting term is `fs.read.outside_bundle`, which
+# has no rule and is not scored.
+#
+# The third bundle in this sample that reads something a user would care about
+# through a term the tool cannot report — after the WeChat message databases and
+# the workspace-wide DLP scanner. All three land in `code_clean`, which is more
+# evidence that the stratum name means "no credential marker" rather than
+# "harmless".
+note = "Reads agent session transcripts under ~/.clawdbot/agents and writes hourly usage aggregates to CSV, as the description says."
+
+[[label]]
+digest = "sha256:e779fb11d9454f9fafaec2be47a48a0deeffd0fe16e3b142edf592ba2d6eb712"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Globs a project for ORM schema files and reads them to report on schema design. Reads only under the directory given on argv."
+
+[[label]]
+digest = "sha256:eea8d87c65cfe3470a4f1ccbafcd2703500aa366dc11397f334dfb8f7c1e2b2c"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# No capability and no delta. The description is entirely candid about a purpose
+# many would decline — "bypass AI detection, evade checkers" — which is exactly
+# the case invariant 1 is built for: the manifest describes, and whether this is
+# acceptable is a policy question about the repository installing it, not a
+# property of the code.
+note = "Reads a text file or stdin, rewrites patterns listed in a bundled JSON file, and writes the result out. No network, no environment, no path outside what the caller names."
+
+[[label]]
+digest = "sha256:fe7395a548acd2e57fc290d476dba035de04a0c89bbe80e1caeee0fffb643dee"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Prompt templates for a video model, with a 640-byte example script that performs no file or network access."
+
+[[label]]
+digest = "sha256:ffe61b9a8ad3f1ecaa707ff92f1136ff36a84710b146ecb68eaf58ab47fcd564"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Tracks calorie and weight entries in a SQLite database inside the bundle directory, as the description says. No path outside the bundle."
+
+[[label]]
+digest = "sha256:a330094d74712c81581f75dfc427ebfcec93f6daec36d3f6ab1b0f675b9e118c"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Initiates a USD transfer between two agents through a host-provided context object. No filesystem access, no environment, and no network call of its own — the transfer is delegated to the runtime."
+
+[[label]]
+digest = "sha256:d0f057df5cdfc6a02de8c0005583f4ec30b9c7535dea6e032fcb9f74a04e872c"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Fetches Chinese equity quotes from public endpoints and keeps a portfolio as JSON under ~/.clawdbot/skills/a-stock-analysis. The description says it supports holdings management."
+
+[[label]]
+digest = "sha256:e93eb3fcac93288402b8b3ed94c82283dbf3bb3e4f761e35adb8fda36df1dbc5"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Client for a social network for agents. Appends a daily markdown log and keeps a JSON memory of entities and events; the description names the built-in memory management."

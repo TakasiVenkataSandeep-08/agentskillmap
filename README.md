@@ -123,28 +123,31 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **56 bundles are labelled and
-scored, 12 were too large to read, and 62 are not yet labelled**. Two strata are labelled
-**completely**: `code_other_marker` (15/15), which carries 46% of the population, and
-`disclosure_shape` (20/20), the one the cut criterion is about — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **75 bundles are labelled and
+scored, 14 were too large to read, and 41 are not yet labelled**. Three strata are labelled
+**completely**: `code_clean` (40/40), the headline false-positive population;
+`code_other_marker` (15/15), which carries 46% of the population; and `disclosure_shape`
+(20/20), the one the cut criterion is about — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=56 the intervals are still wide, which is the honest reading and the reason every rate
+At n=75 the intervals are narrowing but still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 6/6 (100%, 95% CI 61.0–100%) |
 | `fs.read.credential` recall | 6/11 (54.5%, 95% CI 28.0–78.7%) |
-| False positives, `code_clean` (headline) | 0/17 (0%, **95% CI 0–18.4%**) |
-| Bundles with any `unresolved` entry | 54/56 (96.4%, 95% CI 87.9–99.0%) |
+| False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
+| Bundles with any `unresolved` entry | 72/75 (96.0%, 95% CI 88.9–98.6%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**These are not yet quality numbers.** A 95% upper bound of 18.4% on the headline metric means
-the sample still cannot distinguish a good scanner from a mediocre one. They are published
-anyway, because the alternative — publishing nothing while the tool ships — is what the
-numbers exist to prevent. The labels are **single-annotator and unreviewed**; inter-annotator
-agreement is unmeasured.
+**The headline number is now worth something.** Thirty-six benign bundles where the scanner
+had a real opportunity to fire, and it did not fire once: a 95% upper bound of **9.6%**. That
+is a bound a reader can act on, and it is the first number in this repository that is.
+
+The rest are not yet quality numbers — recall rests on eleven bundles. And all of them carry
+the same caveat: the labels are **single-annotator and unreviewed**, so inter-annotator
+agreement is unmeasured and one person's judgement stands behind every row.
 
 **Every current miss is the acknowledged kind**, and the recall number alone cannot say so:
 the scanner reports no capability, but it is not silent — it emits `unresolved: computed_target`
@@ -152,7 +155,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What fifty-six bundles found
+### What seventy-five bundles found
 
 Three defects, one of them mine.
 
@@ -235,7 +238,7 @@ corpus-wide rate needs population weights. The two strata that carry deltas are 
 
 | Stratum | delta (described bundles) | labelled | share of population |
 |---|---|---|---|
-| `code_clean` | 0/15 | partial | 21% |
+| `code_clean` | 0/33 | **complete** | 21% |
 | `code_credential` | 0/10 | partial | 22% |
 | `code_other_marker` | 3/14 | **complete** | **46%** |
 | `disclosure_shape` | 3/11 | **complete** | 11% |
@@ -244,7 +247,7 @@ corpus-wide rate needs population weights. The two strata that carry deltas are 
 computed by the harness and suppressed unless every stratum carries at least five labels.
 
 **On current evidence the layer should not be cut.** What still qualifies that: the labels are
-single-annotator and unreviewed, two strata remain partial, and the interval is a normal
+single-annotator and unreviewed, `code_credential` remains partial, and the interval is a normal
 approximation — the thing Wilson exists to avoid at small n. Its lower bound sits at 2.6%, just
 under the threshold, so a second annotator disagreeing with two of the six deltas would change
 the conclusion.
