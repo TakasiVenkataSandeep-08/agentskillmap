@@ -264,9 +264,15 @@ fn the_reference_fixture_still_encodes_what_the_docs_claim() {
         &rules,
     );
 
-    assert_eq!(analysis.capabilities.len(), 1);
-    let capability = &analysis.capabilities[0];
-    assert_eq!(capability.capability.as_str(), "fs.read.credential");
+    // `~/.aws/credentials` is both a credential path and outside the bundle, so
+    // two terms are reported now and both are true. This asserted a single
+    // capability while one rule family existed; it names the term it was always
+    // about.
+    let capability = analysis
+        .capabilities
+        .iter()
+        .find(|capability| capability.capability.as_str() == "fs.read.credential")
+        .expect("the reference fixture must report a credential read");
     assert_eq!(
         capability
             .detail
@@ -287,11 +293,18 @@ fn the_reference_fixture_still_encodes_what_the_docs_claim() {
         .is_some_and(|snippet| snippet.contains("open")));
 
     // The computed-target branch: reported, never silent (invariant 3).
-    assert_eq!(analysis.unresolved.len(), 1);
-    assert_eq!(
-        analysis.unresolved[0].reason,
-        UnresolvedReason::ComputedTarget
-    );
+    //
+    // One site, more than one entry: the credential rule and the
+    // outside-bundle rule both declare a path filter and both fail to resolve
+    // the same computed target, so each says so. That is the honest behaviour —
+    // a rule staying quiet because a sibling already spoke would make the
+    // manifest depend on rule ordering — and the assertion is on the reason
+    // rather than on a count that changes whenever coverage grows.
+    assert!(!analysis.unresolved.is_empty());
+    assert!(analysis
+        .unresolved
+        .iter()
+        .all(|entry| entry.reason == UnresolvedReason::ComputedTarget));
     assert!(analysis.unresolved[0].start_line.is_some());
 }
 
@@ -547,7 +560,7 @@ fn a_shell_redirect_fires_on_input_and_not_on_output() {
     let rules = rules();
 
     let fires = |source: &str| {
-        !analyze(
+        analyze(
             &[SourceFile {
                 path: "run.sh",
                 text: source,
@@ -556,8 +569,14 @@ fn a_shell_redirect_fires_on_input_and_not_on_output() {
             &rules,
         )
         .capabilities
-        .is_empty()
+        .iter()
+        .any(|capability| capability.capability.as_str() == "fs.read.credential")
     };
+
+    // Term-specific now, and the reason is a good sign rather than a compromise:
+    // `cat > ~/.aws/credentials` reports `fs.write.outside_bundle`, because it
+    // is one. What this test has always been about is that the WRITE must not be
+    // claimed as a credential READ, and naming the term says exactly that.
 
     // `~/.aws/credentials`, not `~/.netrc`: the prefix list carries `.netrc`
     // without a tilde, so `~/.netrc` matches no prefix. The first version of
@@ -697,10 +716,17 @@ fn constant_folding_resolves_the_shapes_the_corpus_actually_uses() {
 fn constant_folding_does_not_invent_credentials() {
     // The other half, and the one that matters more: 0 false positives across 92
     // labelled corpus bundles is the claim this test defends locally.
+    //
+    // Term-specific, and it has to be. This asserted "no capability at all"
+    // while credential rules were the only rules in the tree.
+    // `~/.myapp/settings.json` is genuinely outside the bundle, so
+    // `fs.read.outside_bundle` reports it and is right to; what must stay quiet
+    // is the CREDENTIAL claim. Widening a taxonomy turns "silent" into an
+    // ambiguous assertion, and the fix is to say which silence was meant.
     let rules = rules();
 
     let fires = |name: &str, source: &str| {
-        !analyze(
+        analyze(
             &[SourceFile {
                 path: name,
                 text: source,
@@ -709,7 +735,8 @@ fn constant_folding_does_not_invent_credentials() {
             &rules,
         )
         .capabilities
-        .is_empty()
+        .iter()
+        .any(|capability| capability.capability.as_str() == "fs.read.credential")
     };
 
     assert!(
@@ -751,7 +778,7 @@ fn a_credential_directory_is_matched_by_the_directory_and_not_by_the_filename() 
     let rules = rules();
 
     let fires = |source: &str| {
-        !analyze(
+        analyze(
             &[SourceFile {
                 path: "load.js",
                 text: source,
@@ -760,7 +787,8 @@ fn a_credential_directory_is_matched_by_the_directory_and_not_by_the_filename() 
             &rules,
         )
         .capabilities
-        .is_empty()
+        .iter()
+        .any(|capability| capability.capability.as_str() == "fs.read.credential")
     };
 
     let read = |expr: &str| {

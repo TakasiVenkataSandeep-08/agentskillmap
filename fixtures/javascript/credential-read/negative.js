@@ -22,7 +22,12 @@ module.exports = { formatConfig, EXAMPLE_PATHS };
 const os = require("os");
 const path = require("path");
 function readNotes() {
-  const notes = path.join(os.homedir(), "my-credentials", "notes.txt");
+  // Bundle-relative on purpose. This used `os.homedir()` until
+  // `fs.read.outside_bundle` shipped and correctly reported it — a negative
+  // fixture has to be silent against the WHOLE ruleset, so the counterexample
+  // for one rule cannot be a true positive for another. The component-boundary
+  // question it tests is unchanged.
+  const notes = path.join("data", "my-credentials", "notes.txt");
   return fs.readFileSync(notes, "utf8");
 }
 module.exports = { readNotes };

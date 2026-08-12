@@ -1,0 +1,46 @@
+# Detects a javascript skill writing outside its own directory.
+#
+# Shares `queries/javascript/file-write.scm` with the agent-config rule: one write shape, two path filters,
+# two terms.
+id         = "js.write-outside-bundle.sink"
+language   = "javascript"
+capability = "fs.write.outside_bundle"
+tier       = "proven"
+query      = "queries/javascript/file-write.scm"
+
+[captures]
+site    = "@site"
+path    = "@path"
+dynamic = "@dynamic"
+
+# The rare case where the filter IS the definition rather than a list of
+# interesting names: every path inside a bundle is relative and descending, so
+# absolute, home and parent-relative paths are outside by construction.
+#
+# That is exactly why the labels for this term were made from the ACT rather
+# than from these three prefixes — see corpus/labels.toml. Labelling by the
+# filter would have made precision 1.0 by construction and measured nothing.
+[match]
+path_prefixes = [
+  "/",
+  "~/",
+  "../",
+]
+
+[docs]
+summary = "Writes a file outside the bundle directory."
+rationale = """
+Ordinary for installers and for anything keeping state in the user's home. Reported,
+never judged. Worth reporting because a skill that writes outside itself has effects
+that outlive the directory you can inspect.
+"""
+false_positive_notes = """
+Fires on /tmp and on caches under the home directory, which is a large share of what
+it reports. Those writes ARE outside the bundle, so they are not false positives —
+but the term is common rather than alarming, and its presence is not a finding on
+its own.
+
+`scripts/../assets/x` resolves back inside the bundle and is correctly not matched;
+`../sibling-skill/x` is. A write whose path cannot be folded reports
+`unresolved: computed_target` rather than being claimed either way.
+"""

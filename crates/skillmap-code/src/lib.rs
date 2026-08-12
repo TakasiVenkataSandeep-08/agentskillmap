@@ -451,10 +451,22 @@ fn extension_of(path: &str) -> Option<String> {
 /// sequences are **not** interpreted — a literal containing `\x2e` is reported as
 /// written rather than as what it would evaluate to, because interpreting escapes
 /// is the beginning of an evaluator and this is a matcher.
+#[cfg(test)]
+fn strip_for_test(raw: &str) -> String {
+    literal_from_raw(raw)
+}
+
 fn literal(node: Node<'_>, source: &str) -> String {
     let raw = source
         .get(node.start_byte()..node.end_byte())
         .unwrap_or_default();
+    literal_from_raw(raw)
+}
+
+/// The text-level half of [`literal`], split out so it can be tested directly.
+fn literal_from_raw(raw: &str) -> String {
+    // The leading letters are stripped only to reach an opening quote — they are
+    // python's `r"..."`, `b"..."`, `f"..."` prefixes and nothing else.
     let trimmed = raw.trim_start_matches(|ch: char| ch.is_ascii_alphabetic());
 
     for quote in ["\"\"\"", "'''", "\"", "'"] {
@@ -465,7 +477,18 @@ fn literal(node: Node<'_>, source: &str) -> String {
             return inner.to_owned();
         }
     }
-    trimmed.to_owned()
+
+    // No quotes: return the RAW text. Returning `trimmed` here ate the leading
+    // letters of every unquoted value, which in shell is most of them — a bare
+    // `cat templates/default.toml` yielded `/default.toml`.
+    //
+    // That was latent for as long as no rule filtered on a leading `/`. The
+    // moment `fs.read.outside_bundle` did, a bundle-relative read started
+    // matching an absolute-path prefix, and the shell negative fixture caught
+    // it. A mangled path is worse than an unresolved one: it is a confident
+    // wrong answer, and it would have put a made-up path in `detail.paths`
+    // where a reader would have taken it for evidence.
+    raw.to_owned()
 }
 
 #[cfg(test)]
@@ -481,6 +504,29 @@ mod tests {
         assert_eq!(extension_of("scripts/run.PY").as_deref(), Some("py"));
         assert_eq!(extension_of("a.b/c.py").as_deref(), Some("py"));
         assert_eq!(extension_of("Makefile"), None);
+    }
+
+    #[test]
+    fn an_unquoted_value_keeps_its_leading_letters() {
+        // The prefix strip exists to reach past python's `r"`/`b"`/`f"`. Applied
+        // to an unquoted value it silently ate the front of it, so a shell
+        // `cat templates/default.toml` resolved to `/default.toml` — which then
+        // matched an absolute-path prefix and reported a bundle-relative read as
+        // being outside the bundle.
+        //
+        // Latent until a rule filtered on a leading `/`. A mangled path is worse
+        // than an unresolved one: it is a confident wrong answer, and it lands in
+        // `detail.paths` where a reader takes it for evidence.
+        for (source, expected) in [
+            ("templates/default.toml", "templates/default.toml"),
+            ("data/x", "data/x"),
+            ("/etc/hosts", "/etc/hosts"),
+            ("r\"~/.aws/credentials\"", "~/.aws/credentials"),
+            ("b'/tmp/x'", "/tmp/x"),
+            ("\"plain\"", "plain"),
+        ] {
+            assert_eq!(strip_for_test(source), expected, "extracting {source:?}");
+        }
     }
 
     #[test]

@@ -1,0 +1,38 @@
+# Detects a shell skill reading outside its own directory.
+#
+# Reuses `queries/shell/credential-read.scm`: the sink shape is identical to a credential read and only the
+# path filter differs.
+id         = "sh.read-outside-bundle.sink"
+language   = "shell"
+capability = "fs.read.outside_bundle"
+tier       = "proven"
+query      = "queries/shell/credential-read.scm"
+
+[captures]
+site    = "@site"
+path    = "@path"
+dynamic = "@dynamic"
+
+[match]
+path_prefixes = [
+  "/",
+  "~/",
+  "../",
+]
+
+[docs]
+summary = "Reads a file outside the bundle directory."
+rationale = """
+Ordinary, and reported for what it is. `code_clean` — the stratum with no
+credential-shaped marker — contains a bundle that reads the user's entire WeChat
+message history and another that reads every agent session transcript under
+`~/.clawdbot/agents`. Neither is a credential read, and this is the term that fits.
+"""
+false_positive_notes = """
+Overlaps `fs.read.credential` by construction: `~/.aws/credentials` is both a
+credential path and outside the bundle, and both terms are reported. They answer
+different questions and suppressing either would make the manifest say less than it
+knows. Several tests had to move from asserting "no capability" to "not THIS
+capability" when this term landed, which is the correct shape for a widening
+taxonomy.
+"""

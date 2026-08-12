@@ -24,9 +24,35 @@
           }
         ],
         "reachability": "present"
+      },
+      {
+        "capability": "fs.read.outside_bundle",
+        "detail": {
+          "paths": [
+            "~/.aws/credentials"
+          ]
+        },
+        "evidence": [
+          {
+            "end_byte": 101,
+            "file": "positive.py",
+            "rule_id": "py.read-outside-bundle.sink",
+            "snippet_sha256": "sha256:bf1311b21d390553a60f05800eb8b0024e861ff904dba6d6b0bb8ee79ee35eec",
+            "start_byte": 75,
+            "start_line": 5
+          }
+        ],
+        "reachability": "present"
       }
     ],
     "unresolved": [
+      {
+        "end_byte": 245,
+        "file": "positive.py",
+        "reason": "computed_target",
+        "start_byte": 233,
+        "start_line": 10
+      },
       {
         "end_byte": 245,
         "file": "positive.py",

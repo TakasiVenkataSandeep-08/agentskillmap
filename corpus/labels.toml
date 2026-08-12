@@ -57,6 +57,29 @@
 # `code.dynamic_eval` — a string becomes code. `json.loads` is not.
 #   `model.eval()` is not — that is a PyTorch mode switch and it is everywhere.
 #
+# `fs.read.outside_bundle` / `fs.write.outside_bundle` — the bundle opens a file
+#   that is not inside its own directory. A path is INSIDE only if it is
+#   relative and descending (`scripts/x.py`, `templates/default.toml`); absolute
+#   paths, `~/` paths and `../` paths are outside, and so is anything built from
+#   `Path.home()`, `os.homedir()`, `$HOME`, `expanduser`, `tempfile` or `/tmp`.
+#
+#   **Judged from the ACT, not from the prefix list the rule uses.** These two
+#   need that guard more than the other terms did, because here the rule's
+#   `[match]` data is almost the definition of the term rather than a list of
+#   interesting names — so labelling by "does this path start with / or ~/"
+#   would make precision 1.0 by construction and measure nothing at all.
+#
+#   Concretely: a path the labeller can see is outside but the ENGINE cannot
+#   resolve — a directory read from config, a base path passed as an argument,
+#   a variable assigned twice — is still labelled. Those are what make recall a
+#   real number rather than a restatement of the filter.
+#
+#   `scripts/../assets/x` resolves back inside the bundle and is NOT outside;
+#   `../sibling-skill/x` is. Reading `~/.aws/credentials` is both a credential
+#   read and an outside read, and both are labelled — they answer different
+#   questions and neither replaces the other. A path merely PRINTED, or named in
+#   a message telling the user what to create, is not opened.
+#
 # `env.read.secret` — judged from the variable's NAME, by the labeller, with the
 #   name recorded in `note` and `path:line` in `evidence`. That inversion is
 #   deliberate and it is the anti-circularity device for this term: the rule's
@@ -198,6 +221,8 @@ terms_labelled = [
   "process.exec",
   "process.exec.dynamic",
   "code.dynamic_eval",
+  "fs.read.outside_bundle",
+  "fs.write.outside_bundle",
 ]
 
 # ── code_clean ───────────────────────────────────────────────────────────────
@@ -292,7 +317,7 @@ note = "143 KB across thirty files with its own crypto, relay and invite modules
 digest = "sha256:0896ce7ec4ed568ffa99577e2afb63fb1b3b6e0a17a84ac3f10e9145b5e2de89"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress"]
+capabilities = ["fs.read.credential", "net.egress", "fs.write.outside_bundle"]
 evidence = ["assets/templates/pre-deploy.sh:31"]
 disclosure_delta = false
 # CORRECTED. First labelled `capabilities = []` on the reading that the script
@@ -304,7 +329,7 @@ disclosure_delta = false
 # caught by a disagreement, on a sample of seven, and it is the most concrete
 # evidence available that `reviewed_by` being empty is a real weakness rather
 # than a formality.
-note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for required variable names, which reads it. Everything the templates do is described in the guide the skill points at. curl against a configured health-check URL."
+note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for required variable names, which reads it. Everything the templates do is described in the guide the skill points at. curl against a configured health-check URL. Writes deploy backups into /tmp/backups."
 
 # ── second batch ─────────────────────────────────────────────────────────────
 
@@ -312,9 +337,9 @@ note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for requi
 digest = "sha256:13bb5b87992baa4af2ea30059ac6b39ed4c3e4f666a60d290bc7f744c51fe013"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle"]
 disclosure_delta = false
-note = "Reads a skill file named on argv and hashes it in a proof-of-work loop. One readFileSync, no path outside what the caller passed."
+note = "Reads a skill file named on argv and hashes it in a proof-of-work loop. One readFileSync, no path outside what the caller passed. Reads ../molt-security-auditor/SKILL.md by default â€” a sibling skill, parent-relative and therefore outside."
 
 [[label]]
 digest = "sha256:15041814b3ace6113b464612aa6cf1225391aaf56b512f6319203ab72c81604a"
@@ -352,9 +377,9 @@ note = "Cryptocurrency market-data client. Caches an auth token in a .token file
 digest = "sha256:1ba88d628cc5d4aa2a7400e7d1b2d9f9f1b7375ff2d3004517cc21349a755410"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Hashes every file in installed skill directories and stores a trust manifest under a workspace path, defaulting to ~/.openclaw/workspace. Reads outside the bundle, but nothing credential-shaped."
+note = "Hashes every file in installed skill directories and stores a trust manifest under a workspace path, defaulting to ~/.openclaw/workspace. Reads outside the bundle, but nothing credential-shaped. Walks the openclaw workspace under Path.home() and writes manifests back into it."
 
 [[label]]
 digest = "sha256:1d0d1d8a201b9e01a9d4d0aff3735ee85ffc152422a2020e75650e0ae32cfe8f"
@@ -386,9 +411,9 @@ note = "Image-generation client. Reads an API token from the RECRAFT_API_TOKEN e
 digest = "sha256:226465e244ee2ba3aa688b1b28f45756ab81fad4eac3e095c0ea445cf22b5d64"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Writes and re-reads its own receipt JSON under ~/.openclaw/receipts, and reads a text file it wrote itself. Reads and writes outside the bundle; nothing credential-shaped."
+note = "Writes and re-reads its own receipt JSON under ~/.openclaw/receipts, and reads a text file it wrote itself. Reads and writes outside the bundle; nothing credential-shaped. Receipt store built from process.env.HOME, indexed and written back."
 
 [[label]]
 digest = "sha256:305f974a13a93855551b935cee8f300bb33fc09fea230bca1ebdfbf4e6ff090c"
@@ -488,9 +513,9 @@ note = "Price comparison across retail sites. Reads a CSV the caller names and w
 digest = "sha256:425eee85ba547baafd08e13af7192ffdc8aad1ad1cc42c5f7387e2134fa470b4"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Copies its own scripts and docs between hardcoded absolute paths under /root/clawd. Reads and writes well outside the bundle, and nothing credential-shaped."
+note = "Copies its own scripts and docs between hardcoded absolute paths under /root/clawd. Reads and writes well outside the bundle, and nothing credential-shaped. Copies between absolute /root/clawd/... trees in both directions."
 
 [[label]]
 digest = "sha256:4689b84804fbc51d6b68e483e59473217269384996768e40f4ec74689673d1bd"
@@ -509,9 +534,9 @@ note = "Description claims all reasoning is delegated to a hosted model via Hugg
 digest = "sha256:4e8d0b9a24bb95f3337a687f7b47eb4c96d417a6d335a5675dd96481b53b7fe8"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Maintains a contacts graph as JSON under ~/.local/share/social-memory, read and rewritten through jq. Reads and writes outside the bundle; nothing credential-shaped."
+note = "Maintains a contacts graph as JSON under ~/.local/share/social-memory, read and rewritten through jq. Reads and writes outside the bundle; nothing credential-shaped. Maintains a graph under ${HOME}/.local/share/social-memory, read and rewritten."
 
 # ── fifth batch ──────────────────────────────────────────────────────────────
 
@@ -535,7 +560,7 @@ note = "Design tokens, CSS and a DOM pattern library for generating a single-fil
 digest = "sha256:59d82d19795547cc3324efd108e3174f6e43fdeed2f12e135a5d656090e247f5"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "process.exec.dynamic"]
+capabilities = ["fs.read.credential", "process.exec.dynamic", "fs.read.outside_bundle"]
 evidence = ["scripts/config_summary.py:219"]
 disclosure_delta = false
 # The third distinct credential-read shape the pass has found, and the third the
@@ -552,7 +577,7 @@ disclosure_delta = false
 #
 # Not silent, again: the path is a parameter, so the scanner emits
 # `unresolved: computed_target` rather than nothing.
-note = "A security-audit skill that collects the agent's own configuration and environment into a report, with a redaction helper. Opens ~/.openclaw/openclaw.json — the file this ecosystem stores API keys in — and summarises it. Runs whatever argv it is handed by expanding the positional parameters into a command substitution, so argv[0] is not statically known. `source`ing a bundle-local helper is treated as an import, not code.dynamic_eval. The curl/wget strings are detection patterns, not calls."
+note = "A security-audit skill that collects the agent's own configuration and environment into a report, with a redaction helper. Opens ~/.openclaw/openclaw.json — the file this ecosystem stores API keys in — and summarises it. Runs whatever argv it is handed by expanding the positional parameters into a command substitution, so argv[0] is not statically known. `source`ing a bundle-local helper is treated as an import, not code.dynamic_eval. The curl/wget strings are detection patterns, not calls. Reads the agent config under $HOME/.openclaw; its output file is bundle-relative."
 
 # ── sixth batch ──────────────────────────────────────────────────────────────
 
@@ -560,7 +585,7 @@ note = "A security-audit skill that collects the agent's own configuration and e
 digest = "sha256:064d797389de6a767cb2255655f2b3df9a1283f63a612e01f1b8e8aeff9e0444"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = true
 # The first `true` in this corpus, so the threshold it sets deserves stating
 # plainly enough that somebody can re-derive the number under a stricter one.
@@ -581,15 +606,15 @@ disclosure_delta = true
 # docs/04-semantic-layer.md's cut criterion turns on that rate. Recorded rather
 # than resolved: one labeller should not settle a threshold that decides whether
 # a whole layer ships.
-note = "Counts tool calls in a file under ~/.local/state and prints a suggestion to compact after a threshold. Benign; the description discloses nothing at all, not even this."
+note = "Counts tool calls in a file under ~/.local/state and prints a suggestion to compact after a threshold. Benign; the description discloses nothing at all, not even this. Counter file under $HOME/.local/state, read and rewritten each invocation."
 
 [[label]]
 digest = "sha256:1ad8387f8eec9a71b94b542df8fb2ec2905c7cecff45ea777dcfe41771b39047"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "A task manager over SQLite. Eleven small shell scripts shelling out to sqlite3 against a database under ~/.no-nonsense, all of it described in SKILL.md and AGENT.md."
+note = "A task manager over SQLite. Eleven small shell scripts shelling out to sqlite3 against a database under ~/.no-nonsense, all of it described in SKILL.md and AGENT.md. SQLite store under $HOME/.no-nonsense, created and queried."
 
 [[label]]
 digest = "sha256:1ee183f8acad3c1a6fe724fee578389f87baabdb3cb382481f7ec4457046dcf6"
@@ -601,9 +626,9 @@ note = "67 KB, including a 25 KB protocol implementation and a local dashboard s
 digest = "sha256:200de253b71ec2531211e742c07031f1fec4acaea12389cead6c8d8d9cda3019"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = ["env.read.secret", "net.egress"]
+capabilities = ["env.read.secret", "net.egress", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls. LINKEDIN_LI_AT and LINKEDIN_JSESSIONID are session cookies, so the names are secret-bearing. `source`ing a bundle-local state.sh is an import, not code.dynamic_eval. Second annotator found the egress I missed: lk.py builds a linkedin_api.Linkedin cookie client and calls get_conversations(), a vendor SDK my mechanism filter did not name."
+note = "Polls LinkedIn messages through an external CLI on a cron schedule, keeping config, seen-message state and logs under ~/.clawdbot/linkedin-monitor. The config it reads holds a channel id and an autonomy level, not credentials; authentication lives in the CLI it calls. LINKEDIN_LI_AT and LINKEDIN_JSESSIONID are session cookies, so the names are secret-bearing. `source`ing a bundle-local state.sh is an import, not code.dynamic_eval. Second annotator found the egress I missed: lk.py builds a linkedin_api.Linkedin cookie client and calls get_conversations(), a vendor SDK my mechanism filter did not name. Config and state under ${HOME}/.clawdbot/linkedin-monitor, including an expanduser'd credentials.json."
 
 # ── seventh batch ────────────────────────────────────────────────────────────
 
@@ -611,7 +636,7 @@ note = "Polls LinkedIn messages through an external CLI on a cron schedule, keep
 digest = "sha256:708d76392f25108fb6a2944ec31d9bb419520182d645635b7bf44d35c93800ed"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress"]
+capabilities = ["fs.read.credential", "net.egress", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 evidence = ["scripts/config.ts:41", "scripts/wallet.ts:113"]
 disclosure_delta = false
 # Two reads, both genuine: a config file under ~/.config/solana-skill holding a
@@ -627,7 +652,7 @@ disclosure_delta = false
 # reviewer would want it and because invariant 1 says describe rather than judge:
 # the wallet files are encrypted with a password derived from
 # `process.env.USER + process.env.HOME`, hashed. Those are not secrets.
-note = "Solana wallet and swap tooling. Reads an API key from a config file under ~/.config/solana-skill and reads encrypted keypair files from a wallets directory beside it. Wallet encryption derives its password from USER and HOME. fetch against Solana RPC and the Jupiter swap API. HOME and USER build paths and are not secrets."
+note = "Solana wallet and swap tooling. Reads an API key from a config file under ~/.config/solana-skill and reads encrypted keypair files from a wallets directory beside it. Wallet encryption derives its password from USER and HOME. fetch against Solana RPC and the Jupiter swap API. HOME and USER build paths and are not secrets. Config and encrypted keypairs under homedir()/.config/solana-skill."
 
 [[label]]
 digest = "sha256:76c7316f1dc08d0b268ca03a02cbdb2f12d77e8498297b14b8ec1fbee12f4acd"
@@ -641,7 +666,7 @@ note = "Sends on-chain messages as transactions. Takes a signing key from the ON
 digest = "sha256:7d914c0bf2c87b1644f983c35f3056f839bac48f7ac36a8a35f306d18939d883"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
 # The most useful negative in the sample so far. This bundle is dense with
 # credential-shaped strings — `sk-`, `ghp_`, `xoxb-`, `Bearer`, `.env`, `.pem`,
@@ -654,7 +679,7 @@ disclosure_delta = false
 # reading a credential, and it is the case docs/05-eval.md means by "a scanner
 # that cannot stay quiet on legitimate behaviour will not survive contact with
 # users".
-note = "Packages a skill for sharing: generates a README, strips files matching *.key, *.pem, .env* and secrets/, and rewrites API-key and token patterns to placeholders. Reads only the skill directory it is given."
+note = "Packages a skill for sharing: generates a README, strips files matching *.key, *.pem, .env* and secrets/, and rewrites API-key and token patterns to placeholders. Reads only the skill directory it is given. Stages a skill copy in a /tmp work directory and reads it back to sanitise it."
 
 # ── eighth batch ─────────────────────────────────────────────────────────────
 
@@ -662,9 +687,9 @@ note = "Packages a skill for sharing: generates a README, strips files matching 
 digest = "sha256:680f5762d8f5c52bc39671d49ecf8b8775ac901b24b70f4d766df2e714726615"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Stores UI test definitions and run history as JSON under ~/.ui-tests and reads them back. Reads and writes outside the bundle; nothing credential-shaped."
+note = "Stores UI test definitions and run history as JSON under ~/.ui-tests and reads them back. Reads and writes outside the bundle; nothing credential-shaped. Writes generated test scripts into ~/.ui-tests."
 
 [[label]]
 digest = "sha256:6f99b0dfbab21395d50959d729ba0872c9cc1266488729b25066f7a1568c0e54"
@@ -684,7 +709,7 @@ note = "A thin curl wrapper over a marketplace API. Takes its key from BITSKINS_
 digest = "sha256:6fdafd1ce2ee0344440f68aa918fc36d0d95fc6a587ca595276a8a68c14ada95"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle"]
 disclosure_delta = false
 # Worth recording as a limitation of the sampling, not of the scanner. This
 # bundle opens the user's WeChat message databases under ~/Library/Containers and
@@ -701,7 +726,7 @@ disclosure_delta = false
 # so "benign stratum" means "no credential marker", not "harmless". A
 # false-positive rate measured over it is still the right headline; a reader
 # should not take the stratum name as a claim about sensitivity.
-note = "Reads WeChat's local SQLite databases on macOS — contacts, sessions, messages, favourites — read-only. The description says exactly this, including that it needs access to the WeChat data directory."
+note = "Reads WeChat's local SQLite databases on macOS — contacts, sessions, messages, favourites — read-only. The description says exactly this, including that it needs access to the WeChat data directory. os.walk over an expanduser'd WeChat data directory â€” the code_clean example the README cites."
 
 [[label]]
 digest = "sha256:7269ce4df69d9b9c6d0cb815cf42c580b834a89808c97ad98ef7348dc2d311fe"
@@ -816,9 +841,9 @@ note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer ke
 digest = "sha256:2f86f6e03e171f2d797951eafa653971e2dd2ec3e4e9149dede00050444437f9"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = ["net.egress"]
+capabilities = ["net.egress", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote. curl POST to the Groq speech API."
+note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote. curl POST to the Groq speech API. Writes a temporary wav into /tmp before playing it."
 
 [[label]]
 digest = "sha256:4f31016dcc81254e27adc0f6122076c7116f26f6c9559fd50d55c3e7d992ff80"
@@ -851,7 +876,7 @@ note = "Nine-line shell wrapper around an MCP search tool. Reads nothing, writes
 digest = "sha256:7f586b352a3e424372345e00bb03f64138961288da58e270d8326ca05ede8a7a"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress"]
+capabilities = ["fs.read.credential", "net.egress", "fs.read.outside_bundle"]
 evidence = ["scripts/homebridge_api.py:36"]
 disclosure_delta = false
 # A fifth credential-path shape, and the least ambiguous one yet: the file lives
@@ -863,7 +888,7 @@ disclosure_delta = false
 # credential store under a dotfile directory — and the prefix lists cover none of
 # it. Computed path again, so the scanner should report `unresolved:
 # computed_target` rather than nothing.
-note = "Controls smart-home devices over a local REST API. Reads its host, port and auth token from ~/.clawdbot/credentials/homebridge.json, which SKILL.md's prerequisites describe setting up. Request/urlopen against a local Homebridge REST API, reached through a destructured import."
+note = "Controls smart-home devices over a local REST API. Reads its host, port and auth token from ~/.clawdbot/credentials/homebridge.json, which SKILL.md's prerequisites describe setting up. Request/urlopen against a local Homebridge REST API, reached through a destructured import. Reads Path.home()/.clawdbot/credentials/homebridge.json â€” outside as well as credential."
 
 [[label]]
 digest = "sha256:81a65b47f64ecf1e565ab06d3750091f10cc9dc4802110227f39918cd7bfa8f2"
@@ -899,7 +924,7 @@ note = "Forks a template repository into the user's GitHub account with a token 
 digest = "sha256:8ee863ada836c248b876828a60d44b184ee42e9a63497243cf497ab336cc8ad5"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.write.outside_bundle"]
 disclosure_delta = true
 # The description is about methodology: "Use when the user wants Codex to build,
 # refine, test, or validate a CLI-Anything harness for a GUI application or
@@ -913,7 +938,7 @@ disclosure_delta = true
 # A reviewer who lists the files sees `scripts/install.sh` and infers it. The
 # agent, which sees the description, does not — the reviewer-versus-agent
 # distinction again, now for the third time in this corpus.
-note = "A methodology skill for building CLI harnesses. Its install script copies the whole bundle into the Codex skills directory under ~/.codex, refusing to overwrite an existing one."
+note = "A methodology skill for building CLI harnesses. Its install script copies the whole bundle into the Codex skills directory under ~/.codex, refusing to overwrite an existing one. Installs itself into ${CODEX_HOME:-$HOME/.codex}/skills â€” another agent's skills directory."
 
 [[label]]
 digest = "sha256:9de18b483b6411e79d98e7074517b59b76e3465a8328e2160a7fbaccb30acebd"
@@ -1049,7 +1074,7 @@ note = "Scans a project directory, reads matching files under 5 KB, and sends th
 digest = "sha256:f84e182cf7e4b0070e528aab6b7ec94d6765c2e3c19f356d904158e287e665fe"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress", "code.dynamic_eval"]
+capabilities = ["fs.read.credential", "net.egress", "code.dynamic_eval", "fs.read.outside_bundle"]
 evidence = ["maintenance.sh:11"]
 disclosure_delta = true
 # The bundle this whole project is shaped around, found in a random sample of
@@ -1079,7 +1104,7 @@ disclosure_delta = true
 # That is the clearest possible statement of where this project actually stands:
 # the engine and the load-phase signal work; the rule set covers a thirteenth of
 # what the manifest can describe.
-note = "Fetches and executes a remote script, pipes an SSH private key through base64 to a collector, and downloads and runs a miner — all in a file nothing references, behind a description saying it does nothing suspicious. The domains are fictional; this reads as a published demonstration payload. Fictional-domain demonstration payload: curl piped into bash, a /dev/tcp reverse shell, and a POST of key material. The pipe into bash is a string becoming code."
+note = "Fetches and executes a remote script, pipes an SSH private key through base64 to a collector, and downloads and runs a miner — all in a file nothing references, behind a description saying it does nothing suspicious. The domains are fictional; this reads as a published demonstration payload. Fictional-domain demonstration payload: curl piped into bash, a /dev/tcp reverse shell, and a POST of key material. The pipe into bash is a string becoming code. LABELLING MISS, found by the rule: it reads ~/.ssh/id_rsa, which is outside the bundle as well as a credential. Recorded as credential only."
 
 # ── thirteenth batch: completing code_clean ──────────────────────────────────
 #
@@ -1118,9 +1143,9 @@ note = "Fetches stock quotes from a public endpoint named in the frontmatter. No
 digest = "sha256:973fc8647f979a44e9f169b3859fe030efeac4386141a0cd731f8e601a623c10"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Keeps a memory index as JSON under ~/clawd/memory, read and rewritten through jq, with daily and consolidated markdown files beside it. The description says it is a persistent memory system."
+note = "Keeps a memory index as JSON under ~/clawd/memory, read and rewritten through jq, with daily and consolidated markdown files beside it. The description says it is a persistent memory system. Memory store under $HOME/clawd/memory, indexed and appended to."
 
 [[label]]
 digest = "sha256:a5bc89f52da2ec2e81f258c8e57c43aa6ce6f0350be069edc7c570ad7d2b127b"
@@ -1168,7 +1193,7 @@ note = "Talks to a local model server, with the host taken from OLLAMA_HOST and 
 digest = "sha256:c85ba6933c82a864eefc528ab0db33809db937e23a1c9dc2ab4af52af865fe91"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
 # The most capable bundle in this stratum, and correctly reported as having no
 # `fs.read.credential` — it reads everything, not a credential path.
@@ -1179,7 +1204,7 @@ disclosure_delta = false
 # original to a .bak. The description says exactly that, so it is not a delta.
 # Whether an installed skill should be able to edit its neighbours is precisely
 # the judgement policy.toml exists to hold.
-note = "A network-DLP skill for agent workspaces. Walks the workspace reading every non-binary file, maintains a domain allowlist as JSON, and in quarantine mode rewrites other skills' files in place to comment out lines it flags, keeping .bak copies."
+note = "A network-DLP skill for agent workspaces. Walks the workspace reading every non-binary file, maintains a domain allowlist as JSON, and in quarantine mode rewrites other skills' files in place to comment out lines it flags, keeping .bak copies. Scans every skill in the workspace under Path.home() and writes an allowlist there."
 
 [[label]]
 digest = "sha256:ca61d882745c97641809b10344347398ff8dd8f89bd9df2dae2abe7c723af46b"
@@ -1207,7 +1232,7 @@ note = "Registers with a skill marketplace and publishes skills to it. The setup
 digest = "sha256:dce0562bda28dd790cd815d40d344f810c74bdbe1813877e5f9789131e788bb0"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
 # Reads the agent's own session transcripts — every `.jsonl` under
 # ~/.clawdbot/agents — and aggregates them to CSV. Not credentials, so correctly
@@ -1219,7 +1244,7 @@ disclosure_delta = false
 # the workspace-wide DLP scanner. All three land in `code_clean`, which is more
 # evidence that the stratum name means "no credential marker" rather than
 # "harmless".
-note = "Reads agent session transcripts under ~/.clawdbot/agents and writes hourly usage aggregates to CSV, as the description says."
+note = "Reads agent session transcripts under ~/.clawdbot/agents and writes hourly usage aggregates to CSV, as the description says. Reads every agent session transcript under ~/.clawdbot/agents and writes exports beside them."
 
 [[label]]
 digest = "sha256:e779fb11d9454f9fafaec2be47a48a0deeffd0fe16e3b142edf592ba2d6eb712"
@@ -1270,17 +1295,17 @@ note = "Initiates a USD transfer between two agents through a host-provided cont
 digest = "sha256:d0f057df5cdfc6a02de8c0005583f4ec30b9c7535dea6e032fcb9f74a04e872c"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = ["net.egress"]
+capabilities = ["net.egress", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Fetches Chinese equity quotes from public endpoints and keeps a portfolio as JSON under ~/.clawdbot/skills/a-stock-analysis. The description says it supports holdings management. urllib.request.urlopen against a stock-quote API."
+note = "Fetches Chinese equity quotes from public endpoints and keeps a portfolio as JSON under ~/.clawdbot/skills/a-stock-analysis. The description says it supports holdings management. urllib.request.urlopen against a stock-quote API. LABELLING MISS, found by the rule: portfolio state under ~/.clawdbot/skills/, read and rewritten."
 
 [[label]]
 digest = "sha256:e93eb3fcac93288402b8b3ed94c82283dbf3bb3e4f761e35adb8fda36df1dbc5"
 stratum = "code_clean"
 verdict = "labelled"
-capabilities = ["net.egress"]
+capabilities = ["net.egress", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Client for a social network for agents. Appends a daily markdown log and keeps a JSON memory of entities and events; the description names the built-in memory management. requests.post against a social API for AI agents."
+note = "Client for a social network for agents. Appends a daily markdown log and keeps a JSON memory of entities and events; the description names the built-in memory management. requests.post against a social API for AI agents. LABELLING MISS, found by the rule: an absolute /home/<user>/clawd/memory tree, read and appended to."
 
 # ── fourteenth batch: code_credential ────────────────────────────────────────
 
@@ -1302,7 +1327,7 @@ note = "265 KB across thirty files, including two full boilerplate applications 
 digest = "sha256:83bd4813fbac462518dc778215703e7f793f15043962492562952291ea47990e"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["net.egress"]
+capabilities = ["net.egress", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
 # The most significant taxonomy gap the pass has found, and it is not a rule gap.
 #
@@ -1326,7 +1351,7 @@ disclosure_delta = false
 #
 # Not a delta: the description says "Check Claude Code OAuth usage limits", and
 # the body states plainly that it retrieves the token from the system keychain.
-note = "Reads Claude Code's OAuth access and refresh tokens out of the macOS Keychain, or secret-tool on Linux, and queries the usage endpoint with them. Caches the result in /tmp. Both the description and the body say so. curl against api.anthropic.com; invokes sibling scripts through a computed $SCRIPT_DIR. The keychain read (security find-generic-password / secret-tool) still has no term to carry it."
+note = "Reads Claude Code's OAuth access and refresh tokens out of the macOS Keychain, or secret-tool on Linux, and queries the usage endpoint with them. Caches the result in /tmp. Both the description and the body say so. curl against api.anthropic.com; invokes sibling scripts through a computed $SCRIPT_DIR. The keychain read (security find-generic-password / secret-tool) still has no term to carry it. Caches usage state in /tmp and reads it back."
 
 [[label]]
 digest = "sha256:892439c41c622ebbde3109ed41af755718d714abbae2ea6f35df42cce64d9eb0"
@@ -1338,13 +1363,13 @@ note = "179 KB across twelve files, including a server, a web application and a 
 digest = "sha256:945675caab06d9c409b4059a79760494b3db8ae392053661f699bcb00fc541c2"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress"]
+capabilities = ["fs.read.credential", "net.egress", "fs.read.outside_bundle"]
 evidence = ["scripts/setup.js:30"]
 disclosure_delta = false
 # Reads ~/.config/moltmarkets/credentials.json — a per-application directory
 # under ~/.config, the same shape as the wallet skill found earlier and still
 # uncovered by any prefix list. The file is literally named credentials.json.
-note = "Sets up an autonomous prediction-market trading agent. Reads its credentials from ~/.config/moltmarkets/credentials.json and scaffolds a memory directory of JSON and markdown files. https.request against the MoltMarkets API. HOME is used to build the credentials path and is not itself a secret."
+note = "Sets up an autonomous prediction-market trading agent. Reads its credentials from ~/.config/moltmarkets/credentials.json and scaffolds a memory directory of JSON and markdown files. https.request against the MoltMarkets API. HOME is used to build the credentials path and is not itself a secret. Reads ~/.config/moltmarkets/credentials.json â€” outside as well as credential."
 
 [[label]]
 digest = "sha256:951ccce72a841d7a6429fa6c3259a86695fdf01448ebda25e248cfeb525c7529"
@@ -1415,7 +1440,7 @@ note = "Generates video through several hosted APIs and stitches with ffmpeg. Ca
 digest = "sha256:aeea623b97b5f2cc927516b7cfec093d8cfda65f23528a5f84cafb7579999feb"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 evidence = ["scripts/withings.py:21", "scripts/withings.py:67"]
 disclosure_delta = false
 # A seventh credential-read shape, and one no rule in the tree could match: a
@@ -1436,7 +1461,7 @@ disclosure_delta = false
 # Not a delta: the frontmatter declares both client-credential environment
 # variables and the description says it fetches health data through the vendor's
 # API.
-note = "Fetches health metrics for several family members from a vendor API. Parses a .env file by hand into the environment, then reads and refreshes per-user OAuth token files under ~/.clawdbot/withings-family. urllib.request.urlopen against the Withings API; WITHINGS_CLIENT_SECRET from the environment. Note line 24 WRITES os.environ from a hand-rolled dotenv parser â€” a write, not a read."
+note = "Fetches health metrics for several family members from a vendor API. Parses a .env file by hand into the environment, then reads and refreshes per-user OAuth token files under ~/.clawdbot/withings-family. urllib.request.urlopen against the Withings API; WITHINGS_CLIENT_SECRET from the environment. Note line 24 WRITES os.environ from a hand-rolled dotenv parser â€” a write, not a read. Token store under Path.home()/.clawdbot/withings-family, read and rewritten."
 
 [[label]]
 digest = "sha256:b3d2bb7517edb5086f5f4ae48cae0e83226162dd595a0bbcf62b0fdeac8463cb"
@@ -1487,7 +1512,7 @@ note = "119 KB across forty files of framework rules and example components. Bey
 digest = "sha256:ccfb4b755df14269f27c92db395b6e058ea7cfa7e9470221fbcbc50dedd76e08"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret", "fs.read.outside_bundle"]
 evidence = ["scripts/main.ts:186"]
 disclosure_delta = false
 # The second hand-rolled dotenv in two batches, in TypeScript this time. It reads
@@ -1497,13 +1522,13 @@ disclosure_delta = false
 #
 # Two independent bundles reimplementing dotenv rather than importing it means
 # the rules added earlier in this pass cover the library and not the behaviour.
-note = "Generates images through four hosted providers. Reads .env files from the working directory and the home directory by hand, merges them into the environment, and writes the resulting image. The description names all four providers. fetch against four hosted image APIs; OPENAI_API_KEY, DASHSCOPE_API_KEY, GOOGLE_API_KEY and REPLICATE_API_TOKEN read from the environment. Lines 214/217 WRITE process.env from its hand-rolled dotenv parser."
+note = "Generates images through four hosted providers. Reads .env files from the working directory and the home directory by hand, merges them into the environment, and writes the resulting image. The description names all four providers. fetch against four hosted image APIs; OPENAI_API_KEY, DASHSCOPE_API_KEY, GOOGLE_API_KEY and REPLICATE_API_TOKEN read from the environment. Lines 214/217 WRITE process.env from its hand-rolled dotenv parser. Reads ~/.baoyu-skills/.env through homedir() as well as the cwd copy."
 
 [[label]]
 digest = "sha256:e68d800696a2645c308bdbd3309a4e37f5dfa3b73ed3bdb7d018c959f7cff579"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress", "process.exec", "env.read.secret"]
+capabilities = ["fs.read.credential", "net.egress", "process.exec", "env.read.secret", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 evidence = ["scripts/alibaba_cloud_model_setup.py:250"]
 disclosure_delta = false
 # The most capable bundle in this stratum, and the best example yet of a term
@@ -1524,7 +1549,7 @@ disclosure_delta = false
 # Model Studio", and env-var persistence is the mode it says it prefers. This is
 # a configuration tool doing configuration, and it is a fair illustration of how
 # much a legitimate one touches.
-note = "Configures an agent to use a cloud model provider. Reads the agent config JSON, writes the API key into it, and persists the key to ~/.bashrc and a systemd user unit before restarting the gateway. request.urlopen to validate the key; subprocess.run on literal systemctl argv; reads the provider API key back out of the environment."
+note = "Configures an agent to use a cloud model provider. Reads the agent config JSON, writes the API key into it, and persists the key to ~/.bashrc and a systemd user unit before restarting the gateway. request.urlopen to validate the key; subprocess.run on literal systemctl argv; reads the provider API key back out of the environment. Reads agent config under Path.home(), and writes ~/.bashrc and a systemd user unit."
 
 [[label]]
 digest = "sha256:e73e779bc23d26a3c9413ea08f436f301152c8c57e4dc285ad838a36c3b94450"
@@ -1550,7 +1575,7 @@ note = "Wraps agent calls in a policy engine. Reads .env for its API key through
 digest = "sha256:f8be48948cef15d15a228798086435e0a9781313d2fc35ea66662bfca83622d2"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret", "fs.read.outside_bundle", "fs.write.outside_bundle"]
 evidence = ["scripts/fluxa-cli.bundle.js:252"]
 disclosure_delta = false
 # A wallet CLI that reads its config — holding agent id, token and JWT — from
@@ -1560,7 +1585,7 @@ disclosure_delta = false
 #
 # Shipped as a 25 KB pre-bundled single file, which is worth noting on its own:
 # the reviewable unit here is build output, not source.
-note = "Onchain payment CLI. Reads an agent id, token and JWT from a config file under ~/.fluxa-ai-wallet-mcp, refreshes the JWT against a remote API, and appends every action to an audit log. Ships as a pre-bundled single file. LABELLING ERROR, found by the rule this pass enabled: the note above already said it refreshes the JWT against a remote API, and the term was never added. Four bare fetch(url) calls in scripts/fluxa-cli.bundle.js. The scanner was right. Second labelling error on this same bundle, found the same way: fluxa-cli.bundle.js:284-285 read process.env.AGENT_TOKEN and AGENT_JWT into variables named token and jwt. A pre-bundled single file that got skimmed twice."
+note = "Onchain payment CLI. Reads an agent id, token and JWT from a config file under ~/.fluxa-ai-wallet-mcp, refreshes the JWT against a remote API, and appends every action to an audit log. Ships as a pre-bundled single file. LABELLING ERROR, found by the rule this pass enabled: the note above already said it refreshes the JWT against a remote API, and the term was never added. Four bare fetch(url) calls in scripts/fluxa-cli.bundle.js. The scanner was right. Second labelling error on this same bundle, found the same way: fluxa-cli.bundle.js:284-285 read process.env.AGENT_TOKEN and AGENT_JWT into variables named token and jwt. A pre-bundled single file that got skimmed twice. Config and audit log under os.homedir(), read and appended to."
 
 [[label]]
 digest = "sha256:f968c87d6f6b87a996211c347f8889cbb2980c226078ebbd51ee67af61a04451"
@@ -1572,9 +1597,9 @@ note = "135 KB across eight files, most of it a lock file, over a protocol clien
 digest = "sha256:fa142535eb61ce3c26fdec3242870600ea758263d736a9f25e1458d45d607196"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = []
+capabilities = ["fs.read.outside_bundle", "fs.write.outside_bundle"]
 disclosure_delta = false
-note = "Walks ~/projects to build a directory tree and rewrites a section of MEMORY.md with the result. Reads and writes outside the bundle, exactly as the description says, and touches nothing credential-shaped."
+note = "Walks ~/projects to build a directory tree and rewrites a section of MEMORY.md with the result. Reads and writes outside the bundle, exactly as the description says, and touches nothing credential-shaped. Walks ~/projects and rewrites an absolute /home/<user>/clawd/MEMORY.md."
 
 [[label]]
 digest = "sha256:de3d428e3e41f25eb137225640ad1406640738b32b5d5d11eccab4bed10b2abc"
@@ -1594,10 +1619,10 @@ note = "16.9 MB across ninety-five files — the bundle root is the repository r
 digest = "sha256:df36f97e6f63362840568966e3cc2b69de0537ed27e7b5d847150a79f81562e7"
 stratum = "code_credential"
 verdict = "labelled"
-capabilities = ["net.egress"]
+capabilities = ["net.egress", "fs.write.outside_bundle"]
 disclosure_delta = false
 # No credential read: the SSH references are connection tests and printed
 # setup advice, and the only mention of ~/.ssh/config is inside an `echo`
 # telling the user what to add. A lexical scanner sees `~/.ssh/` and fires; the
 # code plane correctly does not, because nothing opens it.
-note = "Sets up text-to-speech playback on a remote device over SSH. Validates its configuration variables against strict patterns before use, tests the SSH connection, and prints instructions mentioning ~/.ssh/config without reading it. ssh and scp to a configured host, and the script names the protocol itself. The earlier reading stands: the ~/.ssh references are connection tests and printed advice, not reads."
+note = "Sets up text-to-speech playback on a remote device over SSH. Validates its configuration variables against strict patterns before use, tests the SSH connection, and prints instructions mentioning ~/.ssh/config without reading it. ssh and scp to a configured host, and the script names the protocol itself. The earlier reading stands: the ~/.ssh references are connection tests and printed advice, not reads. Writes into $CLAWDBOT_WORKSPACE, defaulting to $HOME/clawd."

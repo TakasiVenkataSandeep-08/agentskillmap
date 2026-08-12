@@ -186,9 +186,17 @@ fn a_capability_outside_policy_exits_two_even_when_the_lock_agrees() {
 
     // And allowing it makes the run clean, which is what makes the allowlist a
     // real answer rather than a way to turn the tool off.
+    //
+    // Both terms, because the bundle genuinely has both: `~/.aws/credentials` is
+    // a credential path AND outside the bundle, and each is reported by its own
+    // rule. This listed only the credential term until `fs.read.outside_bundle`
+    // shipped, at which point the "allowed" run correctly exited 2 — the policy
+    // did not permit everything the scan found. Widening the taxonomy widens
+    // what an allowlist has to say, which is the system working rather than a
+    // test needing appeasement.
     std::fs::write(
         &policy,
-        "[allow]\ncapabilities = [\"fs.read.credential\"]\n",
+        "[allow]\ncapabilities = [\"fs.read.credential\", \"fs.read.outside_bundle\"]\n",
     )
     .unwrap();
     let allowed = skillmap(&[
