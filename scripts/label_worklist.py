@@ -124,7 +124,7 @@ def fs_view(rel: str, text: str) -> None:
             print(f"  {marker}{context + 1:>4}| {lines[context]}")
 
 
-def emit(selection: dict, code_only: bool = False, fs_only: bool = False) -> None:
+def emit(selection: dict, code_only: bool = False, fs_only: bool = False, skill_head: int = 0) -> None:
     digest = selection["digest"]
     root = bundle_dir(digest)
 
@@ -182,6 +182,24 @@ def emit(selection: dict, code_only: bool = False, fs_only: bool = False) -> Non
             printed += 1
             continue
 
+        # Bound SKILL.md's *body*. Frontmatter is never truncated: the
+        # description is what a disclosure-delta judgement is made against, and
+        # abbreviating it would corrupt exactly the label it informs. The body is
+        # deep content, so a labeller using this reads it partially — recorded in
+        # corpus/labels.toml where it changes a judgement.
+        if skill_head and path.name == "SKILL.md":
+            lines = text.splitlines()
+            end = 0
+            if lines and lines[0].strip() == "---":
+                for n, line in enumerate(lines[1:], start=1):
+                    if line.strip() == "---":
+                        end = n + 1
+                        break
+            keep = max(end + skill_head, end)
+            if len(lines) > keep:
+                hidden = len(lines) - keep
+                text = "\n".join(lines[:keep]) + f"\n[... {hidden} more body lines not shown]"
+
         if len(text) > MAX_FILE_BYTES:
             print(f"\n--- {rel} ({len(text)} bytes, TRUNCATED to {MAX_FILE_BYTES}) ---")
             text = text[:MAX_FILE_BYTES]
@@ -207,6 +225,7 @@ def main() -> int:
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument("--list", action="store_true", help="digests only, no content")
     parser.add_argument("--code-only", action="store_true", help="skip prose that is not SKILL.md")
+    parser.add_argument("--skill-head", type=int, default=0, help="show only N body lines of SKILL.md")
     parser.add_argument(
         "--fs-view",
         action="store_true",
@@ -231,7 +250,7 @@ def main() -> int:
         return 0
 
     for selection in chosen:
-        emit(selection, code_only=args.code_only, fs_only=args.fs_view)
+        emit(selection, code_only=args.code_only, fs_only=args.fs_view, skill_head=args.skill_head)
         print()
     return 0
 

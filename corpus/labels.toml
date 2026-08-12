@@ -305,3 +305,131 @@ disclosure_delta = false
 # invisible on the first pass. Widened — the filter is still by mechanism, since
 # "load environment from a file" describes the call whatever the file holds.
 note = "Video generation via hosted APIs. Calls load_dotenv() in two scripts, which reads .env from the working directory, then takes OPENAI_API_KEY and other keys from the environment. Shells out to ffmpeg."
+
+# ── fourth batch ─────────────────────────────────────────────────────────────
+#
+# From here on the worklist was read with `--skill-head 12`: SKILL.md frontmatter
+# in full, then the first twelve body lines. The description is never truncated,
+# because that is what a disclosure-delta judgement is made against. The body is
+# deep content and was read only in part, so a delta hiding in the tail of a long
+# SKILL.md body could have been missed. No label below turned on a passage near
+# that boundary, but the method is weaker than the first three batches and saying
+# so is cheaper than pretending otherwise.
+
+[[label]]
+digest = "sha256:0f58f2b3b4d6bd3f890df7bcf4f1f527da0e31efc6fa0d86049c91584d89a9cc"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Generates a LICENSE file, using a hosted model to explain licence terms. Reads OPENAI_API_KEY from the environment and writes one file the caller names. The credential marker sits in src/, which nothing in SKILL.md links to, but the description names the key requirement explicitly."
+
+[[label]]
+digest = "sha256:3f846244d9405f79d2eb646df4e49f99546269cdf876589fdabd979ae469b016"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Reads highlights from a hosted API with a token from the environment, which the frontmatter declares under requires.env. No file read at all."
+
+[[label]]
+digest = "sha256:52720be21d450b672a5c3c1cb5397d24c334556b521a66f78a593f06874c4617"
+stratum = "disclosure_shape"
+verdict = "too_large"
+note = "64 KB. A cryptocurrency wallet skill in the disclosure-delta stratum — the single most valuable bundle in this sample to label properly, and the one least suited to a quick pass."
+
+[[label]]
+digest = "sha256:5877ac8773ee9d2451a46a93db3e9eb2a74952b94c179032a151fb89f7053b22"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# Borderline, and called false for consistency rather than because it is obvious.
+# The description is one jokey line and does not mention network access or an API
+# key; the deep files are an MCP server making authenticated calls. What tips it
+# is that the frontmatter names `homepage: https://nobot.life` and the description
+# says bots vote there — a reader who sees a service named and voting described
+# has been told the skill talks to that service.
+#
+# A standard applied inconsistently across a delta corpus is worse than a strict
+# one or a loose one, so: a delta requires the deep files to ask for a capability
+# the description does not imply, not merely one it does not spell out.
+note = "MCP server for a bot-only polling site. Reads an API key from the environment and calls the service over HTTP; no file access of any kind."
+
+[[label]]
+digest = "sha256:33a59816543f17338b439a0a46d2ef99ca5a4afd40903379e0bae05db1cd924a"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Price comparison across retail sites. Reads a CSV the caller names and writes a report; the other three scripts touch no files."
+
+[[label]]
+digest = "sha256:425eee85ba547baafd08e13af7192ffdc8aad1ad1cc42c5f7387e2134fa470b4"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Copies its own scripts and docs between hardcoded absolute paths under /root/clawd. Reads and writes well outside the bundle, and nothing credential-shaped."
+
+[[label]]
+digest = "sha256:4689b84804fbc51d6b68e483e59473217269384996768e40f4ec74689673d1bd"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# The inverse of a disclosure delta, and worth recording as a shape the corpus
+# contains: a description promising a great deal, and two zero-byte scripts. The
+# manifest describes this correctly and says nothing about it, which is right —
+# "this skill does not do what it says" is a judgement, and invariant 1 puts
+# judgements in policy.toml.
+note = "Description claims all reasoning is delegated to a hosted model via HuggingFace Transformers. Both scripts are zero bytes. No capability, because there is no code."
+
+[[label]]
+digest = "sha256:4e8d0b9a24bb95f3337a687f7b47eb4c96d417a6d335a5675dd96481b53b7fe8"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Maintains a contacts graph as JSON under ~/.local/share/social-memory, read and rewritten through jq. Reads and writes outside the bundle; nothing credential-shaped."
+
+# ── fifth batch ──────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:44dc5ba88ae073765fcb425f1b1162f2e0b6dd5a54eef2914e8e4165a5e26c94"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Web search through a hosted API and a mobile proxy. Two API keys read from the environment; no file access at all."
+
+[[label]]
+digest = "sha256:45ee14dae05c43ecbcf0e681932547a46f1ad84a90ce04052e9d264950f328eb"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Design tokens, CSS and a DOM pattern library for generating a single-file web app. No filesystem or environment access; the credential marker is prose in a Firebase deployment guide."
+
+[[label]]
+digest = "sha256:59d82d19795547cc3324efd108e3174f6e43fdeed2f12e135a5d656090e247f5"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/config_summary.py:219"]
+disclosure_delta = false
+# The third distinct credential-read shape the pass has found, and the third the
+# rules do not cover: **the agent's own config file**. This bundle opens
+# ~/.openclaw/openclaw.json and parses it. That file holds API keys — established
+# not by inference but by another bundle in this same sample, whose SKILL.md tells
+# users they may put their key in `skills."recraft".apiKey` in exactly that file.
+#
+# Two gaps behind this one, both recorded in docs/00-tasks.md:
+#   - The prefix list covers ~/.aws, ~/.ssh, .env and friends, and no agent
+#     config path.
+#   - The taxonomy has `fs.write.agent_config` and no read counterpart, even
+#     though reading agent config to harvest keys is the more direct attack.
+#
+# Not silent, again: the path is a parameter, so the scanner emits
+# `unresolved: computed_target` rather than nothing.
+note = "A security-audit skill that collects the agent's own configuration and environment into a report, with a redaction helper. Opens ~/.openclaw/openclaw.json — the file this ecosystem stores API keys in — and summarises it."

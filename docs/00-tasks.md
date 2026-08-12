@@ -579,9 +579,9 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 16 of 130 bundles.** `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 32 of 130 bundles** (26 scored, 6 too large to read). `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
-  interval, and at this n the headline false-positive bound is 29.9% — still wide enough that
+  interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
   value work left: `python scripts/label_worklist.py --stratum code_clean --limit 6 --fs-view`.
 - **The labels are single-annotator and unreviewed.** `reviewed_by` in `corpus/labels.toml`
@@ -599,6 +599,20 @@ front of; each is a thing this repository currently claims or implies but does n
   reported the right capability from the wrong line — flagging a write while missing the read.
   Bundle-level scoring records that as a true positive. Site-level scoring would catch it, and
   needs every label to carry complete evidence rather than one representative citation.
+- **The credential-path prefix list does not cover agent config files.** The labelling pass
+  found a bundle reading `~/.openclaw/openclaw.json` and parsing it — and another bundle in the
+  same sample documents putting an API key in exactly that file. Agent config is a credential
+  store in this ecosystem, and `rules/*/credential-read.toml` lists `~/.aws`, `~/.ssh`, `.env`
+  and friends but nothing agent-shaped. A data change, once the set of paths is decided from
+  the corpus rather than guessed.
+- **The taxonomy has `fs.write.agent_config` and no read counterpart.** Writing agent config
+  is covered; reading it to harvest the keys inside is the more direct attack and has no term.
+  Adding one is a schema-version event, so it waits for evidence — the labelling pass is now
+  producing that evidence.
+- **Two of the three credential-read shapes the pass found are reported as `unresolved`, not
+  missed silently.** A recall number cannot distinguish "did not detect" from "detected and
+  said the path was computed", and the second is a much better outcome. Worth a separate
+  metric before recall is quoted anywhere as a quality figure.
 - **The semantic layer is unmeasured, and that is now the largest gap in the repository.**
   T7 built it; `docs/04-semantic-layer.md` requires precision, recall, a benign-stratum
   false-positive rate and variance across n runs, and none exist because the corpus is not

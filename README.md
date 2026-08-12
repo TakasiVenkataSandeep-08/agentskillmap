@@ -123,34 +123,33 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **16 bundles are labelled and
-scored, 5 were too large to read, and 109 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **26 bundles are labelled and
+scored, 6 were too large to read, and 98 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=16 the intervals are still wide, which is the honest reading and the reason every rate
+At n=26 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 3/3 (100%, 95% CI 43.9–100%) |
-| `fs.read.credential` recall | 3/4 (75%, 95% CI 30.1–95.4%) |
-| False positives, `code_clean` (headline) | 0/9 (0%, **95% CI 0–29.9%**) |
-| Bundles with any `unresolved` entry | 15/16 (93.8%, 95% CI 71.7–98.9%) |
-| Real disclosure delta, any stratum | 0/16 |
+| `fs.read.credential` recall | 3/5 (60%, 95% CI 23.1–88.2%) |
+| False positives, `code_clean` (headline) | 0/13 (0%, **95% CI 0–22.8%**) |
+| Bundles with any `unresolved` entry | 25/26 (96.2%, 95% CI 81.1–99.3%) |
+| Real disclosure delta, any stratum | 0/26 |
 
-**These are not yet quality numbers.** A 95% upper bound of 29.9% on the headline metric means
+**These are not yet quality numbers.** A 95% upper bound of 22.8% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
 anyway, because the alternative — publishing nothing while the tool ships — is what the
 numbers exist to prevent. The labels are **single-annotator and unreviewed**; inter-annotator
 agreement is unmeasured.
 
-The one remaining miss is worth reading carefully: the scanner does not report it as a
-capability, but it is **not silent** about it either — it emits `unresolved: computed_target`
+**Both misses are the good kind**, and the recall number alone cannot say so: the scanner
+reports no capability, but it is not silent either — it emits `unresolved: computed_target`
 on the exact line, saying it saw a read whose path it could not resolve. A miss the reader can
-see is categorically different from one they cannot, and a recall number alone cannot tell
-them apart.
+see is categorically different from one they cannot.
 
-### What sixteen bundles found
+### What twenty-six bundles found
 
 Three defects, one of them mine.
 
@@ -168,9 +167,16 @@ Three defects, one of them mine.
   because on a sample this size it is the most concrete evidence available that
   `reviewed_by` being empty is a real weakness rather than a formality.
 
-The first two are the argument for doing this at all: both were invisible to a test suite
-written by the same person who wrote the rules, and both were found by sixteen bundles of
-someone else's code.
+**A third credential-read shape, still uncovered: the agent's own config file.** One bundle
+opens `~/.openclaw/openclaw.json` and parses it — and a *different* bundle in the same sample
+tells users to put their API key in exactly that file. Agent config is a credential store in
+this ecosystem, and the prefix lists name `~/.aws`, `~/.ssh`, `.env` and nothing agent-shaped.
+The taxonomy has `fs.write.agent_config` and no read counterpart at all. Both are open, because
+the path set should come from the corpus rather than from another guess.
+
+This is the argument for doing the pass at all: every one of these was invisible to a test
+suite written by the same person who wrote the rules, and every one turned up in the first
+twenty-six bundles of someone else's code.
 
 What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
 pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and
