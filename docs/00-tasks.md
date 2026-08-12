@@ -628,14 +628,29 @@ front of; each is a thing this repository currently claims or implies but does n
   catches *named* SDKs so 48 remains a floor, and the second annotator judged capability terms
   only — every disclosure-delta label, which is the evidence deciding whether T7 ships, remains
   checked by nobody.
-- **Five terms now carry ground truth and no rule.** The relabelling pass scored `net.egress`
-  48/92, `env.read.secret` 27/92, `process.exec` 5/92, `process.exec.dynamic` 2/92 and
-  `code.dynamic_eval` 1/92, all at recall 0/N because nothing detects them. `net.egress` alone
-  is 52% of the labelled corpus, nearly three times `fs.read.credential`. The labelling landed
-  before any rule deliberately: widening the scored set while a rule already fires would score
-  every genuine detection as a false positive, since an empty `capabilities` array means "not
-  looked for" rather than "not present". `crates/skillmap-eval/tests/gate.rs` now makes
-  shipping a rule for an unmeasured term a build failure.
+- **~~Five terms now carry ground truth and no rule.~~** One of the five closed. `net.egress`
+  ships for all four languages at **39/49 recall (79.6%), precision 39/39, zero false
+  positives** across every stratum — including `code_clean` at 0/36, which is the number a rule
+  firing on half the corpus puts at risk. Its first run also caught a labelling error: a bundle
+  whose note said it *"refreshes the JWT against a remote API"* carried no `net.egress` term.
+  The scanner was right; the denominator moved 48 → 49.
+  **Still open:** `env.read.secret` 0/27, `process.exec` 0/5, `process.exec.dynamic` 0/2,
+  `code.dynamic_eval` 0/1.
+- **The ten remaining `net.egress` misses are one shape, and it is the shape that matters.**
+  Vendor SDKs — `openai`, `viem`, `linkedin_api` — reach a network with no protocol named
+  anywhere at the call site. The labelling pass measured this as the most common egress
+  mechanism in the corpus and the least visible one, and the second annotator independently
+  found three of them the first pass had missed. Also uncovered: a request through a session
+  object bound to a local name, and a wrapper that renames the call (`proxyFetch(url)`).
+  Detecting SDK egress means naming client libraries in rule data, which is a different kind of
+  list from a sink name — it wants its own measurement before it is written.
+- **`detail.hosts` is promised by the schema and supplied by nothing.** `docs/02-manifest-schema.md`
+  says hosts appear "when statically resolvable"; the `net.egress` rules capture no `host`,
+  because the engine's host filter returns an empty vector when `host_suffixes` is empty — so
+  capturing one would discard it silently rather than report it. Populating it honestly needs
+  keep-all semantics at that one call site plus URL-to-authority extraction, since a captured
+  literal is a whole URL and the filter is a plain `ends_with`. Worth measuring first: how many
+  egress sites have a literal URL at all, rather than one built at runtime.
 - **~~Nothing detects `dotenv`.~~** Closed. Three of the first four real credential reads the
   labelling pass found were `load_dotenv()` or `require('dotenv').config()` — the shape this
   ecosystem actually uses — and no rule matched any of them. Three rules added
