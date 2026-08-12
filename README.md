@@ -123,40 +123,54 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **7 bundles are labelled and
-scored, 4 were too large to read, and 119 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **16 bundles are labelled and
+scored, 5 were too large to read, and 109 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=7 the intervals are wider than the estimates, which is the honest reading and the reason
-every rate below carries one:
+At n=16 the intervals are still wide, which is the honest reading and the reason every rate
+carries one:
 
 | Metric | Result |
 |---|---|
-| `fs.read.credential` precision | 1/1 (100%, 95% CI 20.7–100%) |
-| `fs.read.credential` recall | 1/2 (50%, 95% CI 9.5–90.5%) |
-| False positives, `code_clean` (headline) | 0/4 (0%, **95% CI 0–49%**) |
-| Bundles with any `unresolved` entry | 6/7 (85.7%, 95% CI 48.7–97.4%) |
-| Real disclosure delta, any stratum | 0/7 |
+| `fs.read.credential` precision | 3/3 (100%, 95% CI 43.9–100%) |
+| `fs.read.credential` recall | 3/4 (75%, 95% CI 30.1–95.4%) |
+| False positives, `code_clean` (headline) | 0/9 (0%, **95% CI 0–29.9%**) |
+| Bundles with any `unresolved` entry | 15/16 (93.8%, 95% CI 71.7–98.9%) |
+| Real disclosure delta, any stratum | 0/16 |
 
-**These are not yet quality numbers.** A 95% upper bound of 49% on the headline metric means
-the sample cannot distinguish a good scanner from a bad one. They are published anyway,
-because the alternative — publishing nothing while the tool ships — is what the numbers exist
-to prevent. The labels are **single-annotator and unreviewed**; inter-annotator agreement is
-unmeasured.
+**These are not yet quality numbers.** A 95% upper bound of 29.9% on the headline metric means
+the sample still cannot distinguish a good scanner from a mediocre one. They are published
+anyway, because the alternative — publishing nothing while the tool ships — is what the
+numbers exist to prevent. The labels are **single-annotator and unreviewed**; inter-annotator
+agreement is unmeasured.
 
-**What seven bundles already found.** Two real rule defects, which cancelled out at the
-bundle level to look like a correct detection:
+The one remaining miss is worth reading carefully: the scanner does not report it as a
+capability, but it is **not silent** about it either — it emits `unresolved: computed_target`
+on the exact line, saying it saw a read whose path it could not resolve. A miss the reader can
+see is categorically different from one they cannot, and a recall number alone cannot tell
+them apart.
 
-- `sh.credential-read.dotfile` reported `cat > .env` — *writing* a credential file — as
-  reading one. tree-sitter-bash parses `<`, `>` and `>>` to one `file_redirect` node and the
-  query never said which it wanted. **Fixed**, in the query, with fixtures both ways.
-- The JavaScript rule misses `require('dotenv').config({ path: '../.env' })`, which is how a
-  large share of Node skills read credentials. Open, in `docs/00-tasks.md`.
+### What sixteen bundles found
 
-And one labelling error: a bundle first labelled clean actually runs `grep -q "^${var}=" .env`,
-which reads the file. The scanner was right and the label was wrong. It is corrected in place
-with the reasoning kept, because it is the most concrete evidence available that a
-single-annotator corpus is a weak one.
+Three defects, one of them mine.
+
+- **`sh.credential-read.dotfile` reported `cat > .env` — a *write* — as a read.**
+  tree-sitter-bash parses `<`, `>` and `>>` to one `file_redirect` node and the query never
+  said which it wanted, so every setup script that generates a `.env` was flagged.
+  **Fixed** in the query, with fixtures both ways.
+- **Nothing detected `dotenv` at all.** Three of the first four real credential reads were
+  `load_dotenv()` or `require('dotenv').config()` — which is how this ecosystem actually reads
+  credentials, as opposed to the `open("~/.aws/credentials")` shape the rules were written
+  for. **Fixed**: three new rules, python/javascript/typescript, which took a `.toml` and a
+  `.scm` and no Rust at all. Recall went 1/4 → 3/4 with no new false positives.
+- **One labelling error, mine.** A bundle I labelled clean also runs `grep -q "^${var}=" .env`,
+  which reads the file. The scanner was right. Corrected in place with the reasoning kept,
+  because on a sample this size it is the most concrete evidence available that
+  `reviewed_by` being empty is a real weakness rather than a formality.
+
+The first two are the argument for doing this at all: both were invisible to a test suite
+written by the same person who wrote the rules, and both were found by sixteen bundles of
+someone else's code.
 
 What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
 pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and

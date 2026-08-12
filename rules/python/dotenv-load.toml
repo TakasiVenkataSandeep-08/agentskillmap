@@ -1,0 +1,38 @@
+# Detects `load_dotenv()`, which reads a .env file into the environment.
+#
+# Added because the labelling pass measured recall at 1/4 and every miss was
+# dotenv-shaped. See docs/00-tasks.md, the labelling pass section.
+id         = "py.credential-read.dotenv"
+language   = "python"
+capability = "fs.read.credential"
+tier       = "proven"
+query      = "queries/python/dotenv-load.scm"
+
+[captures]
+site = "@site"
+
+# No [match] block, deliberately, and this is the only rule in the tree without
+# one. Every other rule captures a literal path and filters it through a prefix
+# list; here the path is a property of the API rather than of the call site —
+# `load_dotenv()` with no argument reads `.env` from the working directory. A
+# prefix list would filter against a literal that does not exist and the rule
+# would never fire.
+#
+# The engine already supports this: a rule that declares no filter fires on any
+# match (`declares_filter` in skillmap-code). That it needed no engine change is
+# invariant 7 doing its job — a gap found by measurement, closed with a .toml and
+# a .scm.
+
+[docs]
+summary = "Loads a .env file into the environment."
+rationale = """
+Extremely common and usually mundane: a skill that needs an API key reads it from
+.env like every other program. Reported, never judged — policy.toml decides
+whether a given repository is fine with it.
+"""
+false_positive_notes = """
+Fires on any call named `load_dotenv`, including one that loads a file holding no
+secrets at all. That is accepted: the alternative is guessing at file contents the
+scanner cannot see. It does NOT fire on the import alone, which is what negative.py
+covers — importing dotenv without calling it reads nothing.
+"""

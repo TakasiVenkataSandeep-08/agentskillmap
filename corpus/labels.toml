@@ -185,3 +185,123 @@ disclosure_delta = false
 # evidence available that `reviewed_by` being empty is a real weakness rather
 # than a formality.
 note = "Deployment hook templates for a PaaS. pre-deploy.sh greps .env for required variable names, which reads it. Everything the templates do is described in the guide the skill points at."
+
+# ── second batch ─────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:13bb5b87992baa4af2ea30059ac6b39ed4c3e4f666a60d290bc7f744c51fe013"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Reads a skill file named on argv and hashes it in a proof-of-work loop. One readFileSync, no path outside what the caller passed."
+
+[[label]]
+digest = "sha256:15041814b3ace6113b464612aa6cf1225391aaf56b512f6319203ab72c81604a"
+stratum = "code_clean"
+verdict = "too_large"
+note = "125 KB across twenty-five files, most of it a bundled MCP server. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:167b30b30a2f2f38b7a39aa320564b41717cbadeaab72264773ed1a2aefdbfe7"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/api_client.py:24"]
+disclosure_delta = false
+# A judgement call worth stating so a reviewer can disagree. The file is the
+# skill's own auth-token cache, named `.token`, sitting beside the script — not
+# somebody else's credentials at a well-known path. It is still a file holding a
+# credential, read with `open()`, and the taxonomy term is descriptive rather
+# than a verdict: `policy.toml` decides whether a skill caching its own API token
+# is acceptable. Labelling it clean because the skill wrote the file itself would
+# be smuggling a judgement into the ground truth.
+#
+# The rule's prefix list does not cover `.token`, so this scores as a miss. That
+# is the point of labelling from source rather than from the rule set.
+#
+# Scored a false negative, and it is the *good* kind. The scanner does not report
+# `fs.read.credential` here, but it is not silent either: it emits
+# `unresolved: computed_target` at scripts/api_client.py:24, the exact line,
+# saying it saw a read whose path it could not resolve. That is invariant 3
+# working — a miss the reader can see is categorically different from a miss they
+# cannot, and a recall number alone cannot tell them apart.
+note = "Cryptocurrency market-data client. Caches an auth token in a .token file beside the script and reads it back on later runs; everything else is HTTP against a documented API."
+
+[[label]]
+digest = "sha256:1ba88d628cc5d4aa2a7400e7d1b2d9f9f1b7375ff2d3004517cc21349a755410"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Hashes every file in installed skill directories and stores a trust manifest under a workspace path, defaulting to ~/.openclaw/workspace. Reads outside the bundle, but nothing credential-shaped."
+
+[[label]]
+digest = "sha256:1d0d1d8a201b9e01a9d4d0aff3735ee85ffc152422a2020e75650e0ae32cfe8f"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "A greeting function. No filesystem access of any kind."
+
+[[label]]
+digest = "sha256:1f175052498df2f2d92eafb16d7b161606ecbae6958ea724c5a7b866457de10f"
+stratum = "code_clean"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Regulatory gap analysis over in-memory data structures. An 18 KB script with no file I/O at all."
+
+[[label]]
+digest = "sha256:11e471f09c28e053648405e3d7262492ebaebaa301f98d71dca4f5cb8dc2da8b"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Image-generation client. Reads an API token from the RECRAFT_API_TOKEN environment variable — which the description and frontmatter both declare — and opens only image files the caller names on argv. No credential file is read."
+
+# ── third batch ──────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:226465e244ee2ba3aa688b1b28f45756ab81fad4eac3e095c0ea445cf22b5d64"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Writes and re-reads its own receipt JSON under ~/.openclaw/receipts, and reads a text file it wrote itself. Reads and writes outside the bundle; nothing credential-shaped."
+
+[[label]]
+digest = "sha256:305f974a13a93855551b935cee8f300bb33fc09fea230bca1ebdfbf4e6ff090c"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# A boundary case worth stating. The script reads APIFY_TOKEN from the
+# environment and never opens .env. What *does* read .env is the SKILL.md
+# itself, which tells the agent to run `export $(grep APIFY_TOKEN .env | xargs)`
+# and `node --env-file=.env`.
+#
+# Labelled clean for `fs.read.credential`, because that term is defined over the
+# code plane and no analysed code reads the file. The bundle nonetheless causes
+# a credential file to be read, by prose the instruction plane has no rule for.
+# That is a coverage gap between the two planes rather than a scanner error, and
+# it is recorded here because a label file is where such a thing becomes visible.
+note = "Runs Apify actors over HTTP with a token from the environment, and writes results to a file the caller names. The .env read happens in shell commands the SKILL.md instructs the agent to run, not in analysed code."
+
+[[label]]
+digest = "sha256:3c92690d46367d9e8ad26b0b18cecf1c0d484c7afb1566accc864ae0b8e13615"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["add_voiceover.py:13", "generate_video.py:16"]
+disclosure_delta = false
+# The second dotenv case in eleven labelled bundles, and the one that made the
+# pattern obvious: `load_dotenv()` in Python and `require('dotenv').config()` in
+# JavaScript are how skills in this ecosystem read credentials, and skillmap
+# detects neither.
+#
+# Also caught a defect in the labelling tooling. `--fs-view` matched `open`,
+# `Path`, `os.environ` and friends but not `load_dotenv`, so this read was
+# invisible on the first pass. Widened — the filter is still by mechanism, since
+# "load environment from a file" describes the call whatever the file holds.
+note = "Video generation via hosted APIs. Calls load_dotenv() in two scripts, which reads .env from the working directory, then takes OPENAI_API_KEY and other keys from the environment. Shells out to ffmpeg."

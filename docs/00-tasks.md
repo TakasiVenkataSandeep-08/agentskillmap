@@ -579,19 +579,22 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 7 of 130 bundles.** `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 16 of 130 bundles.** `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
-  interval, and at this n the headline false-positive bound is 49% — wide enough that the
-  sample cannot yet distinguish a good scanner from a bad one. Continuing it is the highest-
+  interval, and at this n the headline false-positive bound is 29.9% — still wide enough that
+  the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
   value work left: `python scripts/label_worklist.py --stratum code_clean --limit 6 --fs-view`.
 - **The labels are single-annotator and unreviewed.** `reviewed_by` in `corpus/labels.toml`
   is empty. Inter-annotator agreement is unmeasured and unmeasurable from one annotator. The
   pass has already produced one demonstrated labelling error, corrected in place with the
   reasoning kept.
-- **The JavaScript rule misses `dotenv`.** `require('dotenv').config({ path: '../.env' })` is
-  how a large share of Node skills read credentials, and `js.credential-read.dotfile` does not
-  match it — found by the labelling pass, on a real bundle, where it was masked by a shell
-  false positive that has since been fixed. Adding it is a query change, not a Rust one.
+- **~~Nothing detects `dotenv`.~~** Closed. Three of the first four real credential reads the
+  labelling pass found were `load_dotenv()` or `require('dotenv').config()` — the shape this
+  ecosystem actually uses — and no rule matched any of them. Three rules added
+  (python/javascript/typescript); recall went 1/4 to 3/4 with no new false positives. They are
+  the only rules in the tree with no `[match]` block, because the path is a property of the API
+  rather than of the call site, and the engine already supported that. A gap found by
+  measurement and closed with a `.toml` and a `.scm`, which is invariant 7 paying for itself.
 - **Scoring is per bundle, not per evidence site.** The pass found a bundle where the scanner
   reported the right capability from the wrong line — flagging a write while missing the read.
   Bundle-level scoring records that as a true positive. Site-level scoring would catch it, and

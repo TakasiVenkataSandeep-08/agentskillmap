@@ -156,8 +156,8 @@ impl Labels {
         }
         let text =
             std::fs::read_to_string(path).map_err(|error| Error::Io(path.to_path_buf(), error))?;
-        let labels: Self =
-            toml::from_str(&text).map_err(|error| Error::Parse(path.to_path_buf(), Box::new(error)))?;
+        let labels: Self = toml::from_str(&text)
+            .map_err(|error| Error::Parse(path.to_path_buf(), Box::new(error)))?;
 
         let vocabulary: BTreeSet<&str> = labels.vocabulary.iter().map(String::as_str).collect();
         for term in &labels.terms_labelled {

@@ -84,6 +84,12 @@ FS_PATTERNS = [
     r"\bopen\s*\(", r"\bPath\s*\(", r"pathlib", r"os\.path", r"os\.environ", r"os\.getenv",
     r"read_text|write_text|read_bytes|write_bytes", r"\bsubprocess\b", r"\bos\.system\b",
     r"shutil\.", r"\bglob\b", r"expanduser|home\s*\(",
+    # Config loaders that read a file. Added after the view missed
+    # `load_dotenv()` on a real bundle — the single most common way a skill in
+    # this ecosystem reads credentials, and invisible to a filter that only knew
+    # about `open`. Still a mechanism filter: `dotenv` is "load environment from
+    # a file", and the same line would appear whatever the file contained.
+    r"load_dotenv|dotenv|configparser|\.read\s*\(\s*['\"]",
     # javascript / typescript
     r"\bfs\.", r"readFile|writeFile|readFileSync|writeFileSync", r"process\.env",
     r"require\s*\(\s*['\"]fs", r"child_process|execSync|spawnSync",

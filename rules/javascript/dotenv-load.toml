@@ -1,0 +1,22 @@
+# Detects dotenv loading in javascript. See rules/python/dotenv-load.toml for why
+# this rule carries no [match] block, and docs/00-tasks.md for the measurement
+# that produced it.
+id         = "js.credential-read.dotenv"
+language   = "javascript"
+capability = "fs.read.credential"
+tier       = "proven"
+query      = "queries/javascript/dotenv-load.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Loads a .env file into the environment."
+rationale = """
+Common and usually mundane. Reported, never judged — policy.toml decides whether
+a repository is fine with a skill reading .env.
+"""
+false_positive_notes = """
+Fires on any `dotenv.config()` call regardless of what the file holds. Does not
+fire on the require or import alone, which negative covers.
+"""
