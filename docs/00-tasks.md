@@ -579,7 +579,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 50 of 130 bundles** (41 scored, 9 too large to read). `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 56 of 130 bundles** (47 scored, 9 too large to read). `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -620,12 +620,12 @@ front of; each is a thing this repository currently claims or implies but does n
   capability is under-reported in exactly the population that matters. Whether the code plane
   should constant-fold simple joins is a design question with real over-reach risk, and it is
   now backed by measurement rather than speculation.
-- **The disclosure-delta estimate is hostage to the least-sampled stratum.** The sample is
-  deliberately not proportional, so the per-stratum rows do not pool, and a corpus-wide rate
-  needs stratum weights. Weighted, it is dominated by `code_other_marker` — 46% of the
-  population, and three labelled bundles, interval 6–79%. **That stratum is where the next
-  batch should go**, not the interesting-looking ones. The eval report now prints the weights
-  beside every rate so nobody pools by accident.
+- **The weighted disclosure-delta estimate is 7.4% (95% CI 0–17.3%) against a ~3% criterion.**
+  Computed by the harness as a stratified estimate, and suppressed unless every stratum carries
+  at least five labels. The point estimate exceeds the threshold and the interval includes
+  zero, so the criterion is answerable with more labels rather than unanswerable. The interval
+  is a normal approximation — no simple Wilson analogue exists for a stratified combination —
+  so the per-stratum Wilson intervals remain the real ones.
 - **The disclosure-delta threshold is unset, and it decides whether T7 ships.** Three deltas so
   far: a benign counter file behind a contentless description, an animation generator calling a
   hosted model with a key its description never mentions, and a Microsoft 365 server with no

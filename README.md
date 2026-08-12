@@ -123,20 +123,20 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **41 bundles are labelled and
-scored, 9 were too large to read, and 80 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **47 bundles are labelled and
+scored, 9 were too large to read, and 74 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=41 the intervals are still wide, which is the honest reading and the reason every rate
+At n=47 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 4/4 (100%, 95% CI 51.0–100%) |
-| `fs.read.credential` recall | 4/7 (57.1%, 95% CI 25.0–84.2%) |
+| `fs.read.credential` recall | 4/8 (50%, 95% CI 21.5–78.5%) |
 | False positives, `code_clean` (headline) | 0/17 (0%, **95% CI 0–18.4%**) |
-| Bundles with any `unresolved` entry | 39/41 (95.1%, 95% CI 83.9–98.7%) |
-| Real disclosure delta | 3/41 — **not poolable**, see below |
+| Bundles with any `unresolved` entry | 45/47 (95.7%, 95% CI 85.8–98.8%) |
+| Real disclosure delta | **7.4% weighted** (95% CI 0–17.3%), see below |
 
 **These are not yet quality numbers.** A 95% upper bound of 18.4% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
@@ -150,7 +150,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What forty-one bundles found
+### What forty-seven bundles found
 
 Three defects, one of them mine.
 
@@ -201,42 +201,40 @@ credential — and the term that fits, `fs.read.outside_bundle`, has no rule and
 So "benign stratum" means *no credential marker*, not *harmless*. The false-positive rate
 measured over it is still the right headline; the name is not a claim about sensitivity.
 
-### The disclosure delta: two reasons the cut criterion is still unanswerable
+### The disclosure delta, and the cut criterion
 
 `docs/04-semantic-layer.md` says to **cut the semantic layer** if the labelled corpus shows the
-disclosure delta in under ~3% of bundles. Three of 41 labelled bundles have one. That is 7.3%,
-and quoting it would be wrong twice over.
+disclosure delta in under ~3% of bundles.
 
-**First, the sample is not proportional, so the rows do not pool.** It over-samples the
-interesting strata on purpose:
+The sample is deliberately not proportional, so the per-stratum rows cannot be pooled — a
+corpus-wide rate needs them weighted by population:
 
 | Stratum | delta | share of population |
 |---|---|---|
 | `code_clean` | 0/17 | 21% |
 | `code_credential` | 0/11 | 22% |
-| `code_other_marker` | **1/3** | **46%** |
+| `code_other_marker` | 1/9 | **46%** |
 | `disclosure_shape` | 2/10 | 11% |
 
-A corpus-wide rate needs these weighted — and it is then dominated by `code_other_marker`,
-which carries nearly half the population and which I have labelled **three** bundles of. Its
-interval is 6–79%. The estimate is currently hostage to the least-sampled row, which makes
-that stratum the obvious place to spend the next batch. The eval report prints these weights
-beside every rate so nobody pools them by accident.
+**Weighted: 7.4% of the code-bearing corpus, 95% CI 0–17.3%.** That is computed by the eval
+harness, not by hand, and it is suppressed entirely unless every stratum carries at least five
+labels — a number resting on two bundles in the stratum holding half the population is worse
+than no number, because it looks exactly like one resting on two hundred.
 
-**Second, the threshold is unset.** Of the three deltas, one is a benign counter file behind a
-description reading "Development skill from everything-claude-code"; one is a CSS-animation
-generator that calls a hosted model with an API key its description never mentions; one is a
-Microsoft 365 server with **no frontmatter at all** — no description, so nothing is disclosed
-at session start — which loads `.env`, exchanges a client secret, and reads mail, calendar and
-files. A stricter reading counting only the last two gives 2/41.
+The point estimate is above the cut threshold. The interval includes zero. So the criterion is
+**still not decided**, but it has moved from "unanswerable" to "answerable with more labels",
+and the next batch of `code_other_marker` is what would move it most.
 
-Both readings now sit above 3%, which is a change from the previous batch, and neither is an
-estimate of the corpus. The labels record per-bundle reasoning so the rate can be recomputed
-under either.
+Two caveats that belong next to the number rather than in a footnote. The interval is a normal
+approximation, which is the thing Wilson exists to avoid at small n — there is no simple Wilson
+analogue for a stratified combination, so read it as indicative and the per-stratum Wilson
+intervals as the real ones. And the threshold for what counts as a delta is **unset**: of the
+three found, one is a benign counter file behind a description reading "Development skill from
+everything-claude-code". A stricter standard drops it and lowers the estimate.
 
 **A distinction this corpus needed a word for:** *disclosed to the reviewer* is not *disclosed
-to the agent*. The animation generator names its API key requirement at line 67 of a 79-line
-SKILL.md. A reviewer who opens the file learns it; the agent, which sees ~100 tokens of
-description at session start, does not. Both of the repository's definitions take the
-description as the baseline, so it counts — and the line number is recorded so a stricter
-reading can be applied without re-reading the bundle.
+to the agent*. One bundle names its API-key requirement at line 67 of a 79-line SKILL.md. A
+reviewer who opens the file learns it; the agent, which sees ~100 tokens of description at
+session start, does not. Both of the repository's definitions take the description as the
+baseline, so it counts — and the line number is recorded so a stricter reading can be applied
+without re-reading the bundle.

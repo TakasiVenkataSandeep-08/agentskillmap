@@ -469,6 +469,70 @@ fn weight(report: &Report, stratum: &str) -> String {
     format!("   [pop {size}, {:.0}% of population]", share * 100.0)
 }
 
+/// The stratified estimate of a corpus-wide rate, and its interval.
+///
+/// `docs/04-semantic-layer.md`'s cut criterion is a **corpus-wide** rate, and
+/// the per-stratum rows cannot be pooled to get one because the sample is not
+/// proportional. The estimator is the standard one:
+///
+/// ```text
+///   p = Σ Wₕ pₕ            Wₕ = Nₕ / N, over strata with labels
+///   Var(p) = Σ Wₕ² pₕ(1-pₕ)/nₕ
+/// ```
+///
+/// Two honest weaknesses, both reasons this is reported beside the per-stratum
+/// Wilson intervals rather than instead of them:
+///
+/// - The interval is a **normal approximation**, which is exactly what Wilson
+///   exists to avoid at small n and proportions near zero. There is no simple
+///   Wilson analogue for a stratified combination. Read it as indicative.
+/// - It ignores the finite-population correction, so it is slightly wide. That
+///   is the direction to err in.
+///
+/// Returns `None` unless every stratum with a population also has at least
+/// `MIN_PER_STRATUM` labels — a guard so the number cannot appear while one
+/// stratum is carrying it on two or three bundles, which is precisely how the
+/// first version of this estimate would have misled.
+#[must_use]
+pub fn stratified(
+    rates: &BTreeMap<String, Rate>,
+    population: &BTreeMap<String, usize>,
+) -> Option<(f64, f64, f64)> {
+    /// Minimum labels per stratum before a corpus-wide estimate is offered.
+    const MIN_PER_STRATUM: usize = 5;
+
+    let total: usize = population
+        .iter()
+        .filter(|(name, _)| rates.contains_key(name.as_str()))
+        .map(|(_, count)| count)
+        .sum();
+    if total == 0 {
+        return None;
+    }
+
+    let mut point = 0.0_f64;
+    let mut variance = 0.0_f64;
+    for (stratum, size) in population {
+        let Some(rate) = rates.get(stratum) else {
+            continue;
+        };
+        if rate.total < MIN_PER_STRATUM {
+            return None;
+        }
+        let p = rate.point()?;
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "population counts are in the thousands; these are printed shares"
+        )]
+        let (weight, n) = (*size as f64 / total as f64, rate.total as f64);
+        point += weight * p;
+        variance += weight * weight * p * (1.0 - p) / n;
+    }
+
+    let spread = 1.959_963_984_540_054_f64 * variance.sqrt();
+    Some((point, (point - spread).max(0.0), (point + spread).min(1.0)))
+}
+
 /// Render a report for a human, and for the README.
 #[must_use]
 pub fn render(report: &Report) -> String {
@@ -548,9 +612,27 @@ pub fn render(report: &Report) -> String {
     }
     let _ = writeln!(
         out,
-        "    NOT poolable: the sample is not proportional. A corpus-wide rate needs
-             these weighted, and is currently dominated by the least-sampled row."
+        "    NOT poolable: the sample is not proportional. The weighted estimate is:"
     );
+    match stratified(&report.disclosure_delta, &report.population) {
+        None => {
+            let _ = writeln!(
+                out,
+                "      not offered — a stratum has fewer than 5 labels, and a corpus-wide
+                       number carried by two or three bundles is worse than none."
+            );
+        }
+        Some((point, low, high)) => {
+            let _ = writeln!(
+                out,
+                "      {:.1}% of the code-bearing corpus (normal approx. 95% CI {:.1}-{:.1}%)
+                       cut criterion in docs/04-semantic-layer.md is ~3%",
+                point * 100.0,
+                low * 100.0,
+                high * 100.0
+            );
+        }
+    }
 
     out
 }
@@ -680,6 +762,56 @@ mod tests {
             "129 of the 130 sampled bundles carry no label and must be said to"
         );
         assert!(render(&report).contains("nothing scored"));
+    }
+
+    #[test]
+    fn the_stratified_estimate_weights_by_population_not_by_sample() {
+        // The whole reason it exists. A rate of 1.0 in a stratum holding 1% of
+        // the population must not become a corpus rate of 1.0, however many of
+        // that stratum were labelled.
+        let rates = BTreeMap::from([
+            ("small".to_owned(), Rate::new(10, 10)),
+            ("large".to_owned(), Rate::new(0, 10)),
+        ]);
+        let population = BTreeMap::from([("small".to_owned(), 10), ("large".to_owned(), 990)]);
+
+        let (point, _, _) = stratified(&rates, &population).unwrap();
+        assert!(
+            (point - 0.01).abs() < 1e-9,
+            "expected 1% (10 of 1000), got {point}"
+        );
+    }
+
+    #[test]
+    fn a_thinly_labelled_stratum_suppresses_the_estimate_entirely() {
+        // The guard. A corpus-wide number carried by two bundles in the stratum
+        // holding half the population is worse than no number, because it looks
+        // exactly like one carried by two hundred.
+        let rates = BTreeMap::from([
+            ("thin".to_owned(), Rate::new(1, 2)),
+            ("thick".to_owned(), Rate::new(0, 40)),
+        ]);
+        let population = BTreeMap::from([("thin".to_owned(), 500), ("thick".to_owned(), 500)]);
+        assert!(stratified(&rates, &population).is_none());
+    }
+
+    #[test]
+    fn an_all_clean_corpus_estimates_zero_with_an_interval_that_is_not_zero() {
+        let rates = BTreeMap::from([
+            ("a".to_owned(), Rate::new(0, 20)),
+            ("b".to_owned(), Rate::new(0, 20)),
+        ]);
+        let population = BTreeMap::from([("a".to_owned(), 100), ("b".to_owned(), 900)]);
+        let (point, low, high) = stratified(&rates, &population).unwrap();
+        assert_eq!(point, 0.0);
+        assert_eq!(low, 0.0);
+        // The normal approximation collapses at exactly zero, which is its known
+        // weakness and the reason the per-stratum Wilson intervals stay next to
+        // it in the report rather than being replaced by it.
+        assert_eq!(
+            high, 0.0,
+            "documented weakness, asserted so it cannot surprise"
+        );
     }
 
     #[test]

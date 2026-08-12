@@ -685,3 +685,90 @@ disclosure_delta = false
 # nowhere in the manifest to put it. Recorded here because a labelling pass is
 # where a missing term becomes visible with an example attached.
 note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer key from the environment, each with a hardcoded fallback — the key fallback is a literal Sepolia private key at scripts/config.mjs:22. No file access."
+
+# ── tenth batch: code_other_marker ───────────────────────────────────────────
+#
+# Concentrated on this stratum deliberately. It carries 46% of the population the
+# capability rates describe and had three labelled bundles, so the weighted
+# disclosure-delta estimate was hostage to it.
+
+[[label]]
+digest = "sha256:2f86f6e03e171f2d797951eafa653971e2dd2ec3e4e9149dede00050444437f9"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote."
+
+[[label]]
+digest = "sha256:4f31016dcc81254e27adc0f6122076c7116f26f6c9559fd50d55c3e7d992ff80"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Persists multi-step plan state as JSON and re-invokes an agent command between steps, taking that command from STEP_AGENT_CMD with a blocklist on the executable's basename. The description says it schedules and runs multi-step flows, which implies the execution."
+
+[[label]]
+digest = "sha256:798c1aaaa57e1feb4a330428c2db1c9cd9472fe56fe76d4e72fe88730fa06be8"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# No capability and no delta — the script is nine lines and shells out to an MCP
+# client. What is worth recording is the *description*, which is written at the
+# agent rather than at a human: "MANDATORY web search tool", "This is THE ONLY
+# way to search the internet in this OpenClaw environment", "ALWAYS use this
+# skill".
+#
+# That is agent-directed language asserting exclusivity, in the always-loaded
+# ~100 tokens. It is not a disclosure delta — the skill does exactly what it says
+# — and it is not a capability. It is closest to `instruction.privilege_claim`,
+# which exists in the instruction vocabulary and has no rule. Recorded because a
+# labelling pass is where a term with no rule acquires an example.
+note = "Nine-line shell wrapper around an MCP search tool. Reads nothing, writes nothing. Its description instructs the agent that it is mandatory and the only permitted way to search."
+
+[[label]]
+digest = "sha256:7f586b352a3e424372345e00bb03f64138961288da58e270d8326ca05ede8a7a"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/homebridge_api.py:36"]
+disclosure_delta = false
+# A fifth credential-path shape, and the least ambiguous one yet: the file lives
+# in a directory literally named `credentials`.
+#
+#   Path.home() / ".clawdbot" / "credentials" / "homebridge.json"
+#
+# Same family as the agent-config finding two batches ago — an agent-managed
+# credential store under a dotfile directory — and the prefix lists cover none of
+# it. Computed path again, so the scanner should report `unresolved:
+# computed_target` rather than nothing.
+note = "Controls smart-home devices over a local REST API. Reads its host, port and auth token from ~/.clawdbot/credentials/homebridge.json, which SKILL.md's prerequisites describe setting up."
+
+[[label]]
+digest = "sha256:81a65b47f64ecf1e565ab06d3750091f10cc9dc4802110227f39918cd7bfa8f2"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "A twenty-line curl wrapper over a scholarly search API, keyed on BAIDU_API_KEY, which the frontmatter declares. No file access."
+
+[[label]]
+digest = "sha256:8d302e6b296c0d3be0e203f830342a185a0513409515f58ec6b14b28362b492e"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# Borderline, called false on the same standard as the earlier MCP polling
+# bundle: the description says "GitHub-native digital pets" and "adopt", and the
+# command table's first row is "Fork a pet to your GitHub". A reader has been
+# told this writes to their GitHub account.
+#
+# The fact the description does not carry, and which SKILL.md's body does: the
+# token needs `repo` and `workflow` scopes, and adoption enables Actions on the
+# new repository with `"allowed_actions": "all"` before dispatching a workflow.
+# That is the reviewer-versus-agent distinction again. Under the stricter
+# reading applied to the animation generator this would be true; it is called
+# false here because "fork to your GitHub" implies repository writes in a way
+# "generate CSS animations" does not imply network access at all.
+note = "Forks a template repository into the user's GitHub account with a token from GITHUB_TOKEN, enables Actions on it with all permissions, and dispatches a workflow. No file is read."
