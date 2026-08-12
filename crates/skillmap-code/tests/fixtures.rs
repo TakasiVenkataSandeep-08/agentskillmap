@@ -577,3 +577,48 @@ fn a_shell_redirect_fires_on_input_and_not_on_output() {
         "an appending redirect is also a write"
     );
 }
+
+#[test]
+fn a_python_read_text_on_a_variable_is_unresolved_rather_than_silent() {
+    // The third instance in one labelling pass of the same authoring mistake: a
+    // query with a branch for the literal form and none for its variable-valued
+    // twin. `Path("~/.aws/credentials").read_text()` was covered;
+    // `env_file.read_text()` was not, so a hand-rolled dotenv parser produced no
+    // capability *and no unresolved entry*. Silence is the one outcome invariant
+    // 3 forbids, and two bundles in the corpus were reading credentials that way.
+    //
+    // Lives here rather than in the reference fixture because that fixture is
+    // pinned by a blessed expected.json and quoted in docs/03-rules-authoring.md;
+    // appending to it would churn the contract every other rule is copied from.
+    let rules = rules();
+
+    let analyse = |source: &str| {
+        analyze(
+            &[SourceFile {
+                path: "loader.py",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+    };
+
+    let computed =
+        analyse("def load(base):\n    env_file = base / '.env'\n    return env_file.read_text()\n");
+    assert!(
+        computed.capabilities.is_empty(),
+        "the path is computed; claiming a capability would be manufacturing certainty"
+    );
+    assert!(
+        computed
+            .unresolved
+            .iter()
+            .any(|entry| entry.reason == UnresolvedReason::ComputedTarget),
+        "but it must say it saw a read it could not resolve, not stay silent"
+    );
+
+    // And it must not fire on prose or on unrelated identifiers that happen to
+    // have no `read_text` call at all.
+    let quiet = analyse("HELP = 'call read_text yourself'\n");
+    assert!(quiet.capabilities.is_empty() && quiet.unresolved.is_empty());
+}

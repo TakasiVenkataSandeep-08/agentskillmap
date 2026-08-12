@@ -579,9 +579,24 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 103 of 130 bundles**. Three strata are complete: `code_clean` 40/40,
-  `code_other_marker` 15/15, `disclosure_shape` 20/20. `code_credential` is at 28/40 and
-  `prose_only` is deliberately unlabelled. `corpus/sample.json` is drawn and committed;
+- **The labelling pass covers every code-bearing stratum completely**: `code_clean` 40/40,
+  `code_credential` 40/40, `code_other_marker` 15/15, `disclosure_shape` 20/20. 115 of 130
+  bundles labelled, 90 scored, 25 too large to read. `prose_only` (15) is deliberately
+  unlabelled — no supported-language file by construction, so a label there records the
+  stratum definition rather than a reading.
+- **Recall is 38.9% and there are zero silent misses.** Eighteen labelled bundles read a
+  credential; the rules catch seven. All eleven misses report `unresolved: computed_target` on
+  the exact line. Two were silent until this pass, and closing that took one query branch. A
+  recall figure cannot distinguish "did not detect" from "detected and could not resolve the
+  path", so both numbers are published.
+- **Every credential read in the corpus reaches its path by computation.** Not one uses a
+  string literal. Eight distinct shapes were found: `.env` via dotenv, `.env` via two separate
+  hand-rolled parsers, per-app directories under `~/.config`, agent config JSON, agent-managed
+  `credentials/` directories, per-tool dotfile directories, and a token cache beside the
+  script. The rules were written against literals. Whether the code plane should constant-fold
+  simple joins is now the single highest-value open question for detection, and one labelled
+  bundle bounds what it would buy: the weakest possible computation, a local variable holding a
+  constant, is the common case. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-

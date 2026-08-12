@@ -23,3 +23,26 @@
   function: (identifier) @_fn
   arguments: (argument_list . [(identifier) (binary_operator) (call)] @dynamic)
   (#eq? @_fn "open")) @site
+
+; `p.read_text()` where `p` is a variable, not `Path("literal").read_text()`.
+;
+; The literal form above has a pattern; the computed form did not, so
+; `env_file = BASE_DIR / '.env'` followed by `env_file.read_text()` produced
+; **nothing at all** — no capability and no unresolved entry. Two bundles in the
+; T3 labelling pass read credentials exactly that way, and both were silent.
+;
+; This is the third time in this labelling pass that a query had a literal branch
+; and no matching computed branch: the same hole appeared in the JavaScript and
+; TypeScript credential-read queries (destructured imports) and again in the
+; dotenv rules. Writing the shape you are thinking of and forgetting its
+; variable-valued twin is evidently the recurring mistake in this rule set.
+;
+; It over-captures: any object with a `read_text` method matches. The cost is a
+; noisier `unresolved` list, never a false capability — the engine turns a
+; `dynamic` capture into `computed_target`, and invariant 3 prefers a visible
+; "could not resolve" to silence.
+(call
+  function: (attribute
+    object: [(identifier) (attribute) (subscript)] @dynamic
+    attribute: (identifier) @_meth)
+  (#match? @_meth "^(read_text|read_bytes)$")) @site

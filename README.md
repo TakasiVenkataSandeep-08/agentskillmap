@@ -123,31 +123,39 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **75 bundles are labelled and
-scored, 14 were too large to read, and 41 are not yet labelled**. Three strata are labelled
-**completely**: `code_clean` (40/40), the headline false-positive population;
-`code_other_marker` (15/15), which carries 46% of the population; and `disclosure_shape`
-(20/20), the one the cut criterion is about — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **every code-bearing stratum is
+labelled completely** — `code_clean` 40/40, `code_credential` 40/40, `code_other_marker` 15/15,
+`disclosure_shape` 20/20. 90 bundles scored, 25 too large to read, and `prose_only` (15)
+deliberately unlabelled: those bundles contain no supported-language file by construction, so
+a label there would record the stratum definition rather than a reading — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=75 the intervals are narrowing but still wide, which is the honest reading and the reason every rate
+At n=90 the intervals are meaningful for the first time, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 7/7 (100%, 95% CI 64.6–100%) |
-| `fs.read.credential` recall | 7/14 (50%, 95% CI 26.8–73.2%) |
+| `fs.read.credential` recall | 7/18 (38.9%, 95% CI 20.3–61.4%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
-| Bundles with any `unresolved` entry | 72/75 (96.0%, 95% CI 88.9–98.6%) |
+| Bundles with any `unresolved` entry | 87/90 (96.7%, 95% CI 90.7–98.9%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**The headline number is now worth something.** Thirty-six benign bundles where the scanner
-had a real opportunity to fire, and it did not fire once: a 95% upper bound of **9.6%**. That
-is a bound a reader can act on, and it is the first number in this repository that is.
+**Precision is 7/7 and the false-positive rate is 0 across all four code strata** — 90 bundles,
+not one spurious capability. The benign stratum's 95% upper bound is **9.6%**.
 
-The rest are not yet quality numbers — recall rests on eleven bundles. And all of them carry
-the same caveat: the labels are **single-annotator and unreviewed**, so inter-annotator
-agreement is unmeasured and one person's judgement stands behind every row.
+**Recall is 38.9%, and that is the honest headline for the rule set.** Eighteen bundles
+genuinely read a credential; the rules catch seven. But the more useful number is this:
+
+> **Zero silent misses. All eleven are reported as `unresolved: computed_target`, on the
+> exact line.**
+
+Two of them were silent until this pass found them, and fixing that took one query branch. A
+miss the reader can see is categorically different from one they cannot, and recall alone
+cannot tell them apart — which is why both are published.
+
+Every number carries the same caveat: the labels are **single-annotator and unreviewed**, so
+inter-annotator agreement is unmeasured and one person's judgement stands behind every row.
 
 **Every current miss is the acknowledged kind**, and the recall number alone cannot say so:
 the scanner reports no capability, but it is not silent — it emits `unresolved: computed_target`
@@ -155,7 +163,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What seventy-five bundles found
+### What ninety bundles found
 
 Three defects, one of them mine.
 
@@ -247,7 +255,7 @@ corpus-wide rate needs population weights. The two strata that carry deltas are 
 | Stratum | delta (described bundles) | labelled | share of population |
 |---|---|---|---|
 | `code_clean` | 0/33 | **complete** | 21% |
-| `code_credential` | 0/10 | partial | 22% |
+| `code_credential` | 0/25 | **complete** | 22% |
 | `code_other_marker` | 3/14 | **complete** | **46%** |
 | `disclosure_shape` | 3/11 | **complete** | 11% |
 
@@ -255,7 +263,7 @@ corpus-wide rate needs population weights. The two strata that carry deltas are 
 computed by the harness and suppressed unless every stratum carries at least five labels.
 
 **On current evidence the layer should not be cut.** What still qualifies that: the labels are
-single-annotator and unreviewed, `code_credential` remains partial, and the interval is a normal
+single-annotator and unreviewed, `prose_only` is unlabelled by design, and the interval is a normal
 approximation — the thing Wilson exists to avoid at small n. Its lower bound sits at 2.6%, just
 under the threshold, so a second annotator disagreeing with two of the six deltas would change
 the conclusion.

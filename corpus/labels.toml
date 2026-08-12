@@ -1340,3 +1340,144 @@ disclosure_delta = false
 # BEFORE installation". That is `instruction.privilege_claim` territory, a term
 # in the vocabulary with no rule.
 note = "A regex-based security scanner for skill bundles. Walks a directory it is given, reads each source file, and reports pattern matches for credential access, exfiltration and command injection. Reads no credential path itself."
+
+# ── sixteenth batch: completing code_credential ──────────────────────────────
+
+[[label]]
+digest = "sha256:b84d45e6d63db0a1f6f1396d765ac9e56165d2e213c25834b0011dd2e2a385f2"
+stratum = "code_credential"
+verdict = "too_large"
+note = "86 KB across eighteen files, including two boilerplate applications. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:bc5dc20f16f98cd4018dd4becffeafed9dab88439d3b48a18ff93a0419e18a34"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Queries a knowledge-base API with a key from the environment, which the frontmatter declares. No file access."
+
+[[label]]
+digest = "sha256:c5f94d9128ccdd15daf379757d5fb598ba2d72c5a4417234f570c1c7ff7bcde0"
+stratum = "code_credential"
+verdict = "too_large"
+note = "119 KB across forty files of framework rules and example components. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:ccfb4b755df14269f27c92db395b6e058ea7cfa7e9470221fbcbc50dedd76e08"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/main.ts:186"]
+disclosure_delta = false
+# The second hand-rolled dotenv in two batches, in TypeScript this time. It reads
+# `<cwd>/.baoyu-skills/.env` and `~/.baoyu-skills/.env` through `readFile()` and
+# merges them into `process.env` without overwriting anything already set. The
+# load order is documented in the tool's own help text.
+#
+# Two independent bundles reimplementing dotenv rather than importing it means
+# the rules added earlier in this pass cover the library and not the behaviour.
+note = "Generates images through four hosted providers. Reads .env files from the working directory and the home directory by hand, merges them into the environment, and writes the resulting image. The description names all four providers."
+
+[[label]]
+digest = "sha256:e68d800696a2645c308bdbd3309a4e37f5dfa3b73ed3bdb7d018c959f7cff579"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/alibaba_cloud_model_setup.py:250"]
+disclosure_delta = false
+# The most capable bundle in this stratum, and the best example yet of a term
+# that exists in the taxonomy with no rule behind it.
+#
+# It reads the agent's configuration from whichever of ~/.openclaw/openclaw.json,
+# ~/.moltbot/moltbot.json or ~/.clawdbot/clawdbot.json exists, and then:
+#   - writes an API key into that config and restarts the gateway
+#   - appends `export VAR="key"` to ~/.bashrc
+#   - writes a systemd user unit override containing the key
+#   - runs `systemctl --user set-environment VAR=key`
+#
+# `fs.write.agent_config` is in the taxonomy. There is no rule for it, so the
+# manifest reports none of this. Persisting a secret into a shell profile and a
+# systemd unit has no term at all.
+#
+# Not a delta: the description is "Configure OpenClaw ... to use Alibaba Cloud
+# Model Studio", and env-var persistence is the mode it says it prefers. This is
+# a configuration tool doing configuration, and it is a fair illustration of how
+# much a legitimate one touches.
+note = "Configures an agent to use a cloud model provider. Reads the agent config JSON, writes the API key into it, and persists the key to ~/.bashrc and a systemd user unit before restarting the gateway."
+
+[[label]]
+digest = "sha256:e73e779bc23d26a3c9413ea08f436f301152c8c57e4dc285ad838a36c3b94450"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["sentinel_wrapper.py:89"]
+disclosure_delta = false
+# Reads `.env` through a **literal** path — `env_file = Path(".env")` — and then
+# calls `env_file.read_text()` on a later line. The Python query has a pattern
+# for `Path("...").read_text()` as a single expression; one variable assignment
+# in between defeats it.
+#
+# So this is the same computed-path story as every other miss in the corpus, but
+# with the weakest possible form of computation: a local variable holding a
+# constant. Worth recording precisely, because it bounds how much a
+# constant-folding pass would buy — a single assignment is the common case.
+#
+# It also appends the API key back into `.env` to persist it.
+note = "Wraps agent calls in a policy engine. Reads .env for its API key through a local variable holding a literal path, appends the key back to .env to persist it, and writes a callguard.yaml policy file."
+
+[[label]]
+digest = "sha256:f8be48948cef15d15a228798086435e0a9781313d2fc35ea66662bfca83622d2"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/fluxa-cli.bundle.js:252"]
+disclosure_delta = false
+# A wallet CLI that reads its config — holding agent id, token and JWT — from
+# ~/.fluxa-ai-wallet-mcp, and appends to an audit log beside it. The eighth
+# distinct credential-path family: a per-tool dotfile directory under the home
+# directory, computed from `os.homedir()`.
+#
+# Shipped as a 25 KB pre-bundled single file, which is worth noting on its own:
+# the reviewable unit here is build output, not source.
+note = "Onchain payment CLI. Reads an agent id, token and JWT from a config file under ~/.fluxa-ai-wallet-mcp, refreshes the JWT against a remote API, and appends every action to an audit log. Ships as a pre-bundled single file."
+
+[[label]]
+digest = "sha256:f968c87d6f6b87a996211c347f8889cbb2980c226078ebbd51ee67af61a04451"
+stratum = "code_credential"
+verdict = "too_large"
+note = "135 KB across eight files, most of it a lock file, over a protocol client. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:fa142535eb61ce3c26fdec3242870600ea758263d736a9f25e1458d45d607196"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Walks ~/projects to build a directory tree and rewrites a section of MEMORY.md with the result. Reads and writes outside the bundle, exactly as the description says, and touches nothing credential-shaped."
+
+[[label]]
+digest = "sha256:de3d428e3e41f25eb137225640ad1406640738b32b5d5d11eccab4bed10b2abc"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Client for an onchain knowledge marketplace. Takes a signing key from PRIVATE_KEY in the environment and calls a remote API; no file access. The description says it trades using cryptocurrency."
+
+[[label]]
+digest = "sha256:de995644b8cfa4c5d591e339173327a613204b997066271ba483981e935d2cee"
+stratum = "code_credential"
+verdict = "too_large"
+note = "16.9 MB across ninety-five files — the bundle root is the repository root, so the whole project including its docs, CI workflows and image assets was harvested as one bundle. Beyond the reading budget by three orders of magnitude, and a reminder that `bundle_root: \".\"` is a shape the corpus contains."
+
+[[label]]
+digest = "sha256:df36f97e6f63362840568966e3cc2b69de0537ed27e7b5d847150a79f81562e7"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# No credential read: the SSH references are connection tests and printed
+# setup advice, and the only mention of ~/.ssh/config is inside an `echo`
+# telling the user what to add. A lexical scanner sees `~/.ssh/` and fires; the
+# code plane correctly does not, because nothing opens it.
+note = "Sets up text-to-speech playback on a remote device over SSH. Validates its configuration variables against strict patterns before use, tests the SSH connection, and prints instructions mentioning ~/.ssh/config without reading it."
