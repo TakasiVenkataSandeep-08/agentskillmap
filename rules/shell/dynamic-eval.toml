@@ -1,0 +1,33 @@
+# Detects a shell skill turning a string, or fetched bytes, into code.
+id         = "sh.dynamic-eval.builtin"
+language   = "shell"
+capability = "code.dynamic_eval"
+tier       = "proven"
+query      = "queries/shell/dynamic-eval.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Turns a string, or fetched bytes, into code."
+rationale = """
+Reported, never judged. A configurable installer sources a config file by design.
+What makes the pipeline form worth reporting is that nobody can see what ran.
+"""
+false_positive_notes = """
+`eval` fires only with an expansion argument — `eval` on a literal is a quoting idiom
+and evaluates nothing the reader cannot already see.
+
+`source` fires only when the argument is a WHOLE expansion. `source "$SCRIPT_DIR/lib.sh"`
+has a literal tail naming a file inside the bundle: that is an import, not an
+evaluation, and two corpus bundles do it. The labelling pass made the same call, and
+the shell exec rule uses the same anchoring to tell `"$@"` from `"$DIR/script.sh"`.
+
+The pipeline form requires the interpreter to be the last named child of its command,
+so it has no arguments. `curl x | bash` matches; `cat data | python3 script.py` does
+not, because there stdin is data and the script is named. `| jq` and `| grep` are in
+negative.sh.
+
+Disjoint from process.exec.dynamic, which owns a computed command WORD. Here the
+command word is known and the CODE is computed.
+"""

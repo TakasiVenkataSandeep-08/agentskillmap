@@ -637,8 +637,13 @@ front of; each is a thing this repository currently claims or implies but does n
   **Now also closed:** `process.exec` 3/5 and `process.exec.dynamic` 2/2 (both n far too small
   to read), and `env.read.secret` **23/28 (82.1%), precision 23/23**. Four of the five terms
   ship, all at precision 1.0, with the benign stratum unmoved at 0/36.
-  **Still open:** `code.dynamic_eval` 0/1 — a denominator of one, which the fixture and
-  adversarial suites have to carry instead of the corpus.
+  **All five now closed.** `code.dynamic_eval` is 1/1 with a 95% interval of 20.7-100%, which
+  is not a result; what the corpus does establish for it is the other direction — the rule
+  fired on exactly one of 92 bundles and that one was right, so its false-positive rate is a
+  real measurement even though its recall is not. The term is carried by the fixture and
+  adversarial suites.
+  **Six of thirteen terms now have rules, at precision 81/81 and a benign-stratum
+  false-positive rate of 0/36.** The remaining seven are T7's endgame.
 - **`env.read.secret`'s five misses are three shapes.** Three are shell, deferred on purpose:
   `$SECRET_VAR` expansion is indistinguishable from a mention, and appears in comments and
   heredocs, so shell is where a name-regex rule produces its worst noise. It ships after the

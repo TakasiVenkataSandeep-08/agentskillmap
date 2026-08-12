@@ -1,0 +1,25 @@
+# Detects a typescript skill turning a string into code.
+id         = "ts.dynamic-eval.builtin"
+language   = "typescript"
+capability = "code.dynamic_eval"
+tier       = "proven"
+query      = "queries/javascript/dynamic-eval.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Turns a string into code."
+rationale = """
+Reported, never judged. Templating and expression evaluation use these legitimately;
+so does a payload. The manifest says a string became code; policy.toml decides.
+"""
+false_positive_notes = """
+Bare `eval` only — `.eval(` is a method on objects that are not the interpreter, and
+matching the property name is a trap this project has walked into three times.
+
+`setTimeout` and `setInterval` match ONLY with a string first argument. The function
+form is the overwhelmingly common one and evaluates nothing, so matching the callee
+name alone would fire on nearly every asynchronous skill in the corpus. negative.js
+carries the function form.
+"""

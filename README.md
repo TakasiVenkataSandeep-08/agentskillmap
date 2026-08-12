@@ -143,18 +143,19 @@ carries one:
 | `env.read.secret` recall | **23/28 (82.1%, 95% CI 64.4–92.1%)** |
 | `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
 | `process.exec.dynamic` recall | 2/2 — n far too small to read |
+| `code.dynamic_eval` recall | 1/1 — n=1; see below |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 80/80 across all five detected terms and the false-positive rate is 0 across all
+**Precision is 81/81 across all six detected terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
 That last part is what a broad rule puts at risk. `net.egress` fires on 39 of 92 bundles;
 a rule that common is exactly how a benign stratum gets lit up, and `code_clean` held at 0/36.
 
-**Five more terms have ground truth; four now have rules.** A second pass over all 92 bundles
+**Five more terms have ground truth, and all five now have rules.** A second pass over all 92 bundles
 hunted for `net.egress`, `env.read.secret`, `process.exec`, `process.exec.dynamic` and
 `code.dynamic_eval`. The denominators are the finding:
 
@@ -170,6 +171,19 @@ the benign stratum unmoved. The ten remaining misses are named: requests issued 
 session object bound to a local name, a wrapper that renames the call (`proxyFetch(url)`), and
 vendor SDKs — `openai`, `viem`, `linkedin_api` — which reach a network with no protocol named
 at the call site and are the largest single gap in this term.
+
+**`code.dynamic_eval` has a denominator of one, and 1/1 is not a result.** Its 95% interval runs
+20.7%–100%. What *is* worth reading is the other direction: the rule fired on exactly one of 92
+bundles and that one was correct, so the false-positive rate is a real measurement even though
+the recall is not. The term is carried by the fixture and adversarial suites, not by the corpus.
+
+The rule that made it shippable is a subtraction. **`.eval(` is PyTorch's mode switch** —
+`model.eval()` means *stop training*, and appears across a large fraction of ML-adjacent
+skills — while `.exec()` is a method on database cursors and on every compiled regular
+expression in JavaScript. So there is no member form at all: bare `eval`/`exec`/`compile`,
+`new Function`, `vm.run*`, and `setTimeout` **only with a string first argument**. This project
+has now met that trap once per method name — `.get(`, `.fetch(`, `.exec(` — and the negative
+fixtures carry all three.
 
 **`env.read.secret`'s name regex was tuned against the labels, not invented.** Every
 environment read in the 92 bundles was extracted and split by whether its bundle carries the

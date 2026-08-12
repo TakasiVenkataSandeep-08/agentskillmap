@@ -1,0 +1,29 @@
+# Detects a python skill turning a string into code.
+id         = "py.dynamic-eval.builtin"
+language   = "python"
+capability = "code.dynamic_eval"
+tier       = "proven"
+query      = "queries/python/dynamic-eval.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Turns a string into code."
+rationale = """
+Reported, never judged. Templating engines and calculators use `eval` legitimately;
+so does a payload. The manifest says a string became code and policy.toml decides.
+"""
+false_positive_notes = """
+Bare identifiers only, no member form. `model.eval()` is PyTorch's mode switch and
+appears across ML-adjacent skills; `.exec()` is a method on database cursors and on
+compiled regular expressions. Matching the property name would fire on every one,
+and this project has already been caught by that shape three times — `.get(`,
+`.fetch(` and `.exec(`. Unlike `requests` or `child_process` there is no module a
+legitimate `eval` is reached through, so the fix here is no member form at all
+rather than a constrained object list.
+
+`json.loads` and `pickle.loads` are deliberately absent: deserialization is not
+evaluation, however dangerous pickle is. That is a different term and it does not
+exist yet.
+"""
