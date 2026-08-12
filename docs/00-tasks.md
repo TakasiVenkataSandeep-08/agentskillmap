@@ -584,19 +584,21 @@ front of; each is a thing this repository currently claims or implies but does n
   bundles labelled, 90 scored, 25 too large to read. `prose_only` (15) is deliberately
   unlabelled — no supported-language file by construction, so a label there records the
   stratum definition rather than a reading.
-- **Recall is 38.9% and there are zero silent misses.** Eighteen labelled bundles read a
-  credential; the rules catch seven. All eleven misses report `unresolved: computed_target` on
-  the exact line. Two were silent until this pass, and closing that took one query branch. A
-  recall figure cannot distinguish "did not detect" from "detected and could not resolve the
-  path", so both numbers are published.
-- **Every credential read in the corpus reaches its path by computation.** Not one uses a
-  string literal. Eight distinct shapes were found: `.env` via dotenv, `.env` via two separate
-  hand-rolled parsers, per-app directories under `~/.config`, agent config JSON, agent-managed
-  `credentials/` directories, per-tool dotfile directories, and a token cache beside the
-  script. The rules were written against literals. Whether the code plane should constant-fold
-  simple joins is now the single highest-value open question for detection, and one labelled
-  bundle bounds what it would buy: the weakest possible computation, a local variable holding a
-  constant, is the common case. `corpus/sample.json` is drawn and committed;
+- **Recall is 61.1%**, from 38.9% before constant folding, with **zero new false positives**
+  across 92 labelled bundles. Eighteen labelled bundles read a credential; the rules catch
+  eleven.
+- **~~Every credential read computes its path, and the rules match literals.~~** Addressed.
+  `skillmap-code::fold` resolves literals, path joins, home-directory lookups, `Path(x)` and
+  identifiers bound exactly once per file, then matches fully-resolved paths by location or
+  name and partially-resolved ones by name alone. Recall 38.9% to 61.1%, no new false
+  positives. Which filenames count remains data (`[match] path_suffixes`), so invariant 7
+  holds: nothing in the folder knows what a credential is.
+- **Seven credential reads are still missed, and each names a data gap rather than an engine
+  one.** The folded paths are correct; the rule data does not list them — per-application
+  directories under `~/.config`, agent config JSON, and an agent-managed `credentials/`
+  directory whose *directory* name is the signal rather than the filename. That last one needs
+  a third matching mode ("path contains this component") and is deliberately not built on one
+  example. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-

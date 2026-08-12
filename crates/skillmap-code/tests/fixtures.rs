@@ -579,17 +579,13 @@ fn a_shell_redirect_fires_on_input_and_not_on_output() {
 }
 
 #[test]
-fn a_python_read_text_on_a_variable_is_unresolved_rather_than_silent() {
-    // The third instance in one labelling pass of the same authoring mistake: a
-    // query with a branch for the literal form and none for its variable-valued
-    // twin. `Path("~/.aws/credentials").read_text()` was covered;
-    // `env_file.read_text()` was not, so a hand-rolled dotenv parser produced no
-    // capability *and no unresolved entry*. Silence is the one outcome invariant
-    // 3 forbids, and two bundles in the corpus were reading credentials that way.
-    //
-    // Lives here rather than in the reference fixture because that fixture is
-    // pinned by a blessed expected.json and quoted in docs/03-rules-authoring.md;
-    // appending to it would churn the contract every other rule is copied from.
+fn a_python_read_text_on_a_variable_is_never_silent() {
+    // Originally this asserted the case produced `unresolved: computed_target` —
+    // the best available answer when `env_file.read_text()` could not be resolved
+    // at all. Constant folding now resolves `base / ".env"` to a file *named*
+    // `.env`, so the same input produces a capability instead. The assertion
+    // moved with the behaviour rather than being deleted: what must hold in both
+    // worlds is that the read is never passed over in silence.
     let rules = rules();
 
     let analyse = |source: &str| {
@@ -603,22 +599,140 @@ fn a_python_read_text_on_a_variable_is_unresolved_rather_than_silent() {
         )
     };
 
-    let computed =
-        analyse("def load(base):\n    env_file = base / '.env'\n    return env_file.read_text()\n");
-    assert!(
-        computed.capabilities.is_empty(),
-        "the path is computed; claiming a capability would be manufacturing certainty"
+    let folded = analyse(
+        "def load(base):
+    env_file = base / '.env'
+    return env_file.read_text()
+",
     );
     assert!(
-        computed
+        !folded.capabilities.is_empty(),
+        "a join with an unknown head still ends in a file called .env"
+    );
+
+    // Genuinely unfoldable: the path comes out of a call this does not model, so
+    // there is no tail to claim. It must say so rather than stay quiet.
+    let opaque = analyse(
+        "def load():
+    p = compute_path()
+    return p.read_text()
+",
+    );
+    assert!(
+        opaque.capabilities.is_empty(),
+        "nothing is known about this path"
+    );
+    assert!(
+        opaque
             .unresolved
             .iter()
             .any(|entry| entry.reason == UnresolvedReason::ComputedTarget),
-        "but it must say it saw a read it could not resolve, not stay silent"
+        "and the read must still be reported as unresolved, not skipped"
+    );
+}
+
+/// The path shapes real bundles use, from the T3 labelling pass.
+///
+/// Every credential read in the labelled corpus reaches its path by computation;
+/// not one uses a string literal. These are the actual shapes, transcribed.
+#[test]
+fn constant_folding_resolves_the_shapes_the_corpus_actually_uses() {
+    let rules = rules();
+
+    let fires = |name: &str, source: &str| {
+        !analyze(
+            &[SourceFile {
+                path: name,
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .is_empty()
+    };
+
+    // A single-assignment constant composed from home(), then joined.
+    assert!(
+        fires(
+            "a.py",
+            "from pathlib import Path\nBASE = Path.home() / '.myapp'\n\
+             def load():\n    return (BASE / '.env').read_text()\n"
+        ),
+        "constant propagation through one assignment"
     );
 
-    // And it must not fire on prose or on unrelated identifiers that happen to
-    // have no `read_text` call at all.
-    let quiet = analyse("HELP = 'call read_text yourself'\n");
-    assert!(quiet.capabilities.is_empty() && quiet.unresolved.is_empty());
+    // An unknowable head with a knowable tail: matched by name, not location.
+    assert!(
+        fires(
+            "b.py",
+            "import os\ndef load(root):\n    return open(os.path.join(root, '.env')).read()\n"
+        ),
+        "unknown head, known filename"
+    );
+
+    // `os.path.dirname(__file__)` is a real directory this cannot name.
+    assert!(
+        fires(
+            "c.py",
+            "import os\nP = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.token')\n\
+             def load():\n    return open(P).read()\n"
+        ),
+        "dirname is an unknown head, and the tail still identifies the file"
+    );
+
+    // JavaScript: homedir() and join.
+    assert!(
+        fires(
+            "d.js",
+            "const os = require('os');\nconst path = require('path');\n\
+             const P = path.join(os.homedir(), '.myapp', '.env');\n\
+             function load() { return require('fs').readFileSync(P, 'utf8'); }\n"
+        ),
+        "homedir and join in javascript"
+    );
+}
+
+#[test]
+fn constant_folding_does_not_invent_credentials() {
+    // The other half, and the one that matters more: 0 false positives across 92
+    // labelled corpus bundles is the claim this test defends locally.
+    let rules = rules();
+
+    let fires = |name: &str, source: &str| {
+        !analyze(
+            &[SourceFile {
+                path: name,
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .is_empty()
+    };
+
+    assert!(
+        !fires(
+            "a.py",
+            "from pathlib import Path\nBASE = Path.home() / '.myapp'\n\
+             def load():\n    return (BASE / 'settings.json').read_text()\n"
+        ),
+        "a resolved path that is not a credential path must stay quiet"
+    );
+    assert!(
+        !fires(
+            "b.py",
+            "def load(root):\n    return open(root + 'production.env').read()\n"
+        ),
+        "component-boundary matching: production.env is not .env"
+    );
+    assert!(
+        !fires(
+            "c.py",
+            "BASE = compute()\nBASE = other()\n\
+             def load():\n    return open(BASE).read()\n"
+        ),
+        "a name assigned twice has no single value; folding must not pick one"
+    );
 }

@@ -135,24 +135,23 @@ carries one:
 
 | Metric | Result |
 |---|---|
-| `fs.read.credential` precision | 7/7 (100%, 95% CI 64.6–100%) |
-| `fs.read.credential` recall | 7/18 (38.9%, 95% CI 20.3–61.4%) |
+| `fs.read.credential` precision | 11/11 (100%, 95% CI 74.1–100%) |
+| `fs.read.credential` recall | **11/18 (61.1%, 95% CI 38.6–79.7%)** |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
-| Bundles with any `unresolved` entry | 87/90 (96.7%, 95% CI 90.7–98.9%) |
+| Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
 **Precision is 7/7 and the false-positive rate is 0 across all four code strata** — 90 bundles,
 not one spurious capability. The benign stratum's 95% upper bound is **9.6%**.
 
-**Recall is 38.9%, and that is the honest headline for the rule set.** Eighteen bundles
-genuinely read a credential; the rules catch seven. But the more useful number is this:
+**Recall is 61.1%**, up from 38.9% before the corpus was labelled. The labelling found why it
+was low: **every credential read in the corpus reaches its path by computation — not one uses a
+string literal**, and the rules were written against literals. Constant folding closed most of
+that gap, and closed it without costing a single false positive.
 
-> **Zero silent misses. All eleven are reported as `unresolved: computed_target`, on the
-> exact line.**
-
-Two of them were silent until this pass found them, and fixing that took one query branch. A
-miss the reader can see is categorically different from one they cannot, and recall alone
-cannot tell them apart — which is why both are published.
+The remaining misses are reported as `unresolved: computed_target` or resolve to paths the rule
+data does not name. A miss the reader can see is categorically different from one they cannot,
+and recall alone cannot tell them apart — which is why both are published.
 
 Every number carries the same caveat: the labels are **single-annotator and unreviewed**, so
 inter-annotator agreement is unmeasured and one person's judgement stands behind every row.
@@ -194,6 +193,15 @@ Three defects, one of them mine.
   no rule exists for any of them, and all four are terms already in the taxonomy. That is the
   clearest available statement of where this project stands: **the engine and the load-phase
   signal work; the rule set covers a thirteenth of what the manifest can describe.**
+
+- **Every credential read in the corpus computes its path.** Eight distinct shapes: dotenv the
+  library, dotenv hand-rolled twice in two languages, per-application directories under
+  `~/.config`, agent config JSON, agent-managed `credentials/` directories, per-tool dotfile
+  directories, and a token cache beside the script. The rules matched string literals, so they
+  matched almost none of it. **Constant folding took recall from 38.9% to 61.1% with zero new
+  false positives across 92 labelled bundles** — it resolves joins, home-directory lookups and
+  single-assignment constants, and reports a *partially* resolved path by filename when the
+  location is unknowable. Which filenames matter stays in `rules/*.toml`; invariant 7 is intact.
 
 - **A silent miss in JavaScript and TypeScript, from import style alone.** The literal form
   of the credential-read query had both a `fs.readFileSync(…)` and a bare `readFileSync(…)`

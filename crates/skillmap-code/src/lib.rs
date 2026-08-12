@@ -31,6 +31,8 @@ use skillmap_core::{
 use skillmap_rules::{Claim, CompiledRule, LoadedLanguage, Role, RuleSet};
 use std::collections::BTreeMap;
 use std::num::NonZeroU64;
+pub mod fold;
+
 use streaming_iterator::StreamingIterator as _;
 use tree_sitter::{Node, Parser, QueryCursor};
 
@@ -247,6 +249,11 @@ fn analyze_file(
     let reachability = reach::analyze(language, &tree, file.text, file.entered);
     let bytes = file.text.as_bytes();
 
+    // Single-assignment constants, collected once per file. `BASE = Path.home() /
+    // ".foo"` followed by `BASE / ".env"` is how two bundles in the labelled
+    // corpus read credentials, and neither was detectable without this.
+    let scope = fold::Scope::collect(tree.root_node(), file.text);
+
     for rule in rules.rules_for(&language.name) {
         // Tier `pattern` rules belong to the instruction plane. Executing one
         // here would put a lexical finding in `capabilities`, which is exactly
@@ -260,6 +267,7 @@ fn analyze_file(
         while let Some(matched) = matches.next() {
             let mut site: Option<Node<'_>> = None;
             let mut paths: Vec<String> = Vec::new();
+            let mut suffixed: Vec<String> = Vec::new();
             let mut hosts: Vec<String> = Vec::new();
             let mut dynamic = false;
 
@@ -272,7 +280,21 @@ fn analyze_file(
                 } else if index == rule.capture_index(Role::Host) {
                     hosts.push(literal(capture.node, file.text));
                 } else if index == rule.capture_index(Role::Dynamic) {
-                    dynamic = true;
+                    // Try to resolve it before declaring it unresolvable. Every
+                    // credential read in the labelled corpus reaches its path by
+                    // computation, so treating `dynamic` as "give up" made the
+                    // engine blind to the normal case. See `fold`.
+                    match fold::fold(capture.node, file.text, &scope) {
+                        // Fully resolved: as good as a literal, filtered the same way.
+                        fold::Folded::Exact(value) => paths.push(value),
+                        // Head unknown, tail known. Only `path_suffixes` may match
+                        // it — a prefix pattern would be answering a question this
+                        // value cannot support.
+                        fold::Folded::Tail(value) if !value.is_empty() => {
+                            suffixed.push(value);
+                        }
+                        _ => dynamic = true,
+                    }
                 }
             }
 
@@ -281,36 +303,63 @@ fn analyze_file(
                 continue;
             };
 
-            if dynamic {
-                // The target is computed. Reporting a capability would claim a
-                // path we cannot name; reporting nothing would be silence.
-                unresolved.push(Unresolved {
-                    reason: UnresolvedReason::ComputedTarget,
-                    file: file.path.to_owned(),
-                    start_byte: Some(site.start_byte() as u64),
-                    end_byte: Some(site.end_byte() as u64),
-                    start_line: line_of(site),
-                    note: Some(format!(
-                        "`{}` matched but the target is computed, so it could not be \
-                         resolved to a literal",
-                        rule.id
-                    )),
-                });
-                continue;
-            }
-
             // Filter literals through the rule's data. A rule that declares
             // prefixes and matches nothing is a rule that did not fire — this is
             // what makes the reference negative fixture pass, since it opens a
             // real file that simply is not a credential path.
-            let paths = retain_matching(paths, &rule.match_data.path_prefixes, |value, pattern| {
-                value.starts_with(pattern)
-            });
+            // A fully known path — a literal, or one folding resolved completely —
+            // is matched by location **or** by name. Both questions are fair to
+            // ask of it: `~/.aws/` asks where it is, `.env` asks what it is called,
+            // and `~/.clawdbot/x/.env` answers the second even though it answers
+            // the first with "somewhere else".
+            let mut paths: Vec<String> = paths
+                .into_iter()
+                .filter(|value| {
+                    rule.match_data
+                        .path_prefixes
+                        .iter()
+                        .any(|pattern| value.starts_with(pattern))
+                        || rule
+                            .match_data
+                            .path_suffixes
+                            .iter()
+                            .any(|pattern| fold::ends_with_component(value, pattern))
+                })
+                .collect();
+            // A partially resolved path can only be matched by name, at a
+            // component boundary — `.env` matches `<computed>/.env` and never
+            // `production.env`. Asking a prefix question of it would be asking
+            // about a location it does not know.
+            paths.extend(
+                retain_matching(
+                    suffixed,
+                    &rule.match_data.path_suffixes,
+                    fold::ends_with_component,
+                )
+                .into_iter()
+                .map(|value| format!("{}/{value}", fold::UNKNOWN)),
+            );
             let hosts = retain_matching(hosts, &rule.match_data.host_suffixes, |value, pattern| {
                 value.ends_with(pattern)
             });
 
             if declares_filter(rule) && paths.is_empty() && hosts.is_empty() {
+                // Nothing matched. If a capture was computed and unfoldable, that
+                // is still an unresolved read rather than a clean file.
+                if dynamic {
+                    unresolved.push(Unresolved {
+                        reason: UnresolvedReason::ComputedTarget,
+                        file: file.path.to_owned(),
+                        start_byte: Some(site.start_byte() as u64),
+                        end_byte: Some(site.end_byte() as u64),
+                        start_line: line_of(site),
+                        note: Some(format!(
+                            "`{}` matched but the target is computed, so it could not be \
+                             resolved to a literal",
+                            rule.id
+                        )),
+                    });
+                }
                 continue;
             }
 
@@ -331,7 +380,9 @@ fn analyze_file(
 
 /// Whether a rule filters its literals at all.
 fn declares_filter(rule: &CompiledRule) -> bool {
-    !rule.match_data.path_prefixes.is_empty() || !rule.match_data.host_suffixes.is_empty()
+    !rule.match_data.path_prefixes.is_empty()
+        || !rule.match_data.host_suffixes.is_empty()
+        || !rule.match_data.path_suffixes.is_empty()
 }
 
 /// Keep only literals satisfying at least one pattern.

@@ -43,7 +43,30 @@ reduce to the same four roles, so none of them is a reason to touch a `.rs` file
 | `site` | **Required.** Byte span reported as the evidence span. |
 | `path` | Optional. Literal value filtered through `[match].path_prefixes`; survivors land in `detail.paths`. |
 | `host` | Optional. Literal value filtered through `[match].host_suffixes`; survivors land in `detail.hosts`. |
-| `dynamic` | Optional. The target could not be resolved statically. Emits an `unresolved` entry with reason `computed_target` **instead of** a capability — never a silent skip (invariant 3). |
+| `dynamic` | Optional. A computed target. The engine **first tries to fold it** to a path (see below); only if that fails does it emit `unresolved: computed_target` — never a silent skip (invariant 3). |
+
+### `dynamic` does not mean "give up"
+
+It used to. The T3 labelling pass then measured recall at 38.9% and found that **every
+credential read in the corpus reaches its path by computation** — not one used a string
+literal. So a `dynamic` capture is now folded first, and only an unfoldable one becomes
+`unresolved`.
+
+Folding handles literals, path joins (`a / b`, `os.path.join`, `path.join`), home-directory
+lookups (`Path.home()`, `os.homedir()`, `expanduser("~")`), `Path(x)`, and identifiers bound
+**exactly once** in the file. Anything else is unknown, and stays unknown. It is a folder, not
+an interpreter: there is no control flow and no cross-file analysis.
+
+Three outcomes, and a rule author only needs to know which pattern list catches which:
+
+| Fold result | Example | Matched against |
+|---|---|---|
+| fully resolved | `Path.home() / ".aws" / "credentials"` | `path_prefixes` **and** `path_suffixes` |
+| tail only | `os.path.join(root, ".env")` | `path_suffixes` only |
+| unknown | `open(compute())` | nothing; becomes `unresolved` |
+
+A tail-only path knows *what the file is called* and not *where it is*, so asking a prefix
+question of it would be asking about a location it does not have.
 
 Two naming rules, both enforced by `rules validate`:
 
@@ -73,12 +96,20 @@ site        = "@site"                  # byte span reported as evidence
 path        = "@path"                  # optional; lands in detail.paths
 dynamic     = "@dynamic"               # optional; becomes unresolved: computed_target
 
-# Literal path prefixes that make this a credential read. Data, not code.
+# Which paths make this a credential read. Data, not code.
 [match]
+# "is this the file at this location" — matched with starts_with.
 path_prefixes = [
   "~/.aws/", "~/.ssh/", "~/.config/gh/", "~/.kube/config",
   ".env", ".netrc", "~/.docker/config.json"
 ]
+# "is this a file with this name, wherever it lives" — matched at a component
+# boundary, so ".env" matches "a/b/.env" and never "production.env".
+#
+# This is what makes a partially folded path usable. Keep the list short and keep
+# every entry a filename whose only conventional purpose is holding a secret:
+# "config.json" here would fire on most of the benign stratum.
+path_suffixes = [".env", ".netrc", "credentials.json", ".token"]
 
 [docs]
 summary = "Reads a path conventionally holding credentials."

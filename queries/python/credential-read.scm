@@ -37,12 +37,17 @@
 ; dotenv rules. Writing the shape you are thinking of and forgetting its
 ; variable-valued twin is evidently the recurring mistake in this rule set.
 ;
+; The object is `(_)` rather than a list of node kinds: `(BASE / '.env').read_text()`
+; wraps its receiver in a parenthesized expression, and enumerating shapes is how
+; the gaps this pass keeps finding get made. Folding decides what the receiver is;
+; the query's job is only to find the call.
+;
 ; It over-captures: any object with a `read_text` method matches. The cost is a
 ; noisier `unresolved` list, never a false capability — the engine turns a
 ; `dynamic` capture into `computed_target`, and invariant 3 prefers a visible
 ; "could not resolve" to silence.
 (call
   function: (attribute
-    object: [(identifier) (attribute) (subscript)] @dynamic
+    object: (_) @dynamic
     attribute: (identifier) @_meth)
   (#match? @_meth "^(read_text|read_bytes)$")) @site

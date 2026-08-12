@@ -112,6 +112,18 @@ pub struct MatchData {
     /// Host suffixes that make a `host` capture interesting.
     #[serde(default)]
     pub host_suffixes: Vec<String>,
+    /// Path **component** suffixes: a file with this name, wherever it lives.
+    ///
+    /// Distinct from `path_prefixes`, which answers "is this the file at this
+    /// location". Every credential read in the 2026-08 labelled corpus reaches
+    /// its path by computation, so the location is frequently unknowable from
+    /// source and the filename is not. `.env` in `path_prefixes` would match only
+    /// a path *starting* with `.env`, which is nothing anyone writes.
+    ///
+    /// Matched at a component boundary, so `.env` matches `a/b/.env` and not
+    /// `production.env`.
+    #[serde(default)]
+    pub path_suffixes: Vec<String>,
 }
 
 /// Prose for humans reading a finding.
