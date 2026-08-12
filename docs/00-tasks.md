@@ -579,9 +579,9 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 95 of 130 bundles** (79 scored, 16 too large to read). Three strata
-  are complete: `code_clean` 40/40, `code_other_marker` 15/15, `disclosure_shape` 20/20.
-  `code_credential` is at 20/40 and `prose_only` is deliberately unlabelled. `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 103 of 130 bundles**. Three strata are complete: `code_clean` 40/40,
+  `code_other_marker` 15/15, `disclosure_shape` 20/20. `code_credential` is at 28/40 and
+  `prose_only` is deliberately unlabelled. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -610,6 +610,11 @@ front of; each is a thing this repository currently claims or implies but does n
   correctly absent and **the manifest has nothing to say about it at all**. That is arguably
   the most direct route to stealing an agent's authentication. Adding a term is a
   schema-version event; the example is in `corpus/labels.toml`.
+- **A hand-rolled dotenv parser matches no rule.** One bundle reads `BASE_DIR / '.env'` through
+  `read_text()` and splits `KEY=VALUE` into `os.environ` in five lines — reimplementing
+  `load_dotenv()` rather than calling it. The rules added during this pass match the library
+  call. Every credential-read shape found so far reaches its path by computation rather than by
+  a string literal, and this one reaches the *mechanism* by reimplementation too.
 - **The credential-path prefix list does not cover agent config files.** The labelling pass
   found a bundle reading `~/.openclaw/openclaw.json` and parsing it — and another bundle in the
   same sample documents putting an API key in exactly that file. Also uncovered, with several

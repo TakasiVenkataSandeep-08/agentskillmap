@@ -1241,3 +1241,102 @@ disclosure_delta = false
 # with a rule. Reported here as absent because they are not in `terms_labelled`,
 # and the manifest reports nothing either.
 note = "Browser automation. Takes a script from a file or stdin, writes it to a temp file beside the skill and runs it with node, installing npm dependencies and a browser on first use."
+
+# ── fifteenth batch: code_credential ─────────────────────────────────────────
+
+[[label]]
+digest = "sha256:a0cb8397398be73a6c60e9a9018ceabac32c633b968abb10c2fbc07ed6d44d45"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Posts agent status and messages to a local Kanban dashboard over HTTP, with the URL and API key from the environment. No file access."
+
+[[label]]
+digest = "sha256:a16353d6dd93eed0442ddfacbd45f8664923c0b761ddcc7f536f9e03c654d4d9"
+stratum = "code_credential"
+verdict = "too_large"
+note = "158 KB across thirty-three files, most of which are duplicates — every template, reference and the 24 KB scanner appear three times as 'Copy #1 of' and 'Copy #2 of'. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:a5b139cc8972fe6c644f14488854ef7f2e9b2b3adce00f7cfec98bb50617d132"
+stratum = "code_credential"
+verdict = "too_large"
+note = "105 KB, including a 34 KB generator and a 24 KB SKILL.md. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:ac71a41f9cbfe05d07aaa490ce570ded47c902e7313301e337231809a0572988"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Three near-identical scaffolder templates with placeholder bodies — the same shape as another bundle from this publisher already in the sample. One Path() on an argv target and one output write."
+
+[[label]]
+digest = "sha256:ae4e55fd770fbfd754b9afa95c136610425a61ef680befdfa8473ac6b3317291"
+stratum = "code_credential"
+verdict = "too_large"
+note = "261 KB across twenty-seven files, with six per-platform posting clients. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:ae773ed97dda2e86e1370e78fd95a15415d94930eae05724ce6b1742abfd97b1"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["add_voiceover.py:13", "generate_video.py:16"]
+disclosure_delta = false
+# Near-identical to another bundle already in this sample — same filenames, same
+# sizes, different digest and different publisher. The corpus deduplicates on
+# content digest, so a near-copy survives as its own row; worth knowing when
+# reading any rate computed over it.
+note = "Generates video through several hosted APIs and stitches with ffmpeg. Calls load_dotenv() in two scripts and takes five API keys from the environment; the description names the services."
+
+[[label]]
+digest = "sha256:aeea623b97b5f2cc927516b7cfec093d8cfda65f23528a5f84cafb7579999feb"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/withings.py:21", "scripts/withings.py:67"]
+disclosure_delta = false
+# A seventh credential-read shape, and one no rule in the tree could match: a
+# **hand-rolled dotenv parser**.
+#
+#   env_file = BASE_DIR / '.env'
+#   for line in env_file.read_text().splitlines():
+#       key, value = line.split('=', 1)
+#       os.environ[key.strip()] = value.strip().strip('"\'')
+#
+# Not `load_dotenv()`, not `open(".env")` with a literal — a computed path read
+# through `read_text()`, then split into the environment by hand. The dotenv
+# rules added earlier in this pass match the library call, and this bundle
+# reimplements it in five lines.
+#
+# It also reads and rewrites OAuth token files under ~/.clawdbot/withings-family.
+#
+# Not a delta: the frontmatter declares both client-credential environment
+# variables and the description says it fetches health data through the vendor's
+# API.
+note = "Fetches health metrics for several family members from a vendor API. Parses a .env file by hand into the environment, then reads and refreshes per-user OAuth token files under ~/.clawdbot/withings-family."
+
+[[label]]
+digest = "sha256:b3d2bb7517edb5086f5f4ae48cae0e83226162dd595a0bbcf62b0fdeac8463cb"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# A peer of this project: a regex-based security scanner that reads the files of
+# a skill directory and flags patterns. Correctly no capability — it reads
+# whatever path it is given, never a credential path — and a second good example
+# of a bundle dense with credential-shaped strings that the code plane is right
+# to stay quiet about.
+#
+# Two things worth recording. Its threat-pattern list includes
+# `dotenv\\.load|load_dotenv`, which is the exact shape this labelling pass found
+# skillmap missing and added rules for three batches ago — independent
+# corroboration that dotenv is the mechanism that matters in this ecosystem.
+#
+# And its description is agent-directed in the same way as the search wrapper
+# labelled earlier: "MANDATORY before installing any skill", "Always run this
+# BEFORE installation". That is `instruction.privilege_claim` territory, a term
+# in the vocabulary with no rule.
+note = "A regex-based security scanner for skill bundles. Walks a directory it is given, reads each source file, and reports pattern matches for credential access, exfiltration and command injection. Reads no credential path itself."

@@ -135,8 +135,8 @@ carries one:
 
 | Metric | Result |
 |---|---|
-| `fs.read.credential` precision | 6/6 (100%, 95% CI 61.0–100%) |
-| `fs.read.credential` recall | 6/12 (50%, 95% CI 25.4–74.6%) |
+| `fs.read.credential` precision | 7/7 (100%, 95% CI 64.6–100%) |
+| `fs.read.credential` recall | 7/14 (50%, 95% CI 26.8–73.2%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 72/75 (96.0%, 95% CI 88.9–98.6%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
