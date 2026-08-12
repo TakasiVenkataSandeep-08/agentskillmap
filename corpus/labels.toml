@@ -772,3 +772,86 @@ disclosure_delta = false
 # false here because "fork to your GitHub" implies repository writes in a way
 # "generate CSS animations" does not imply network access at all.
 note = "Forks a template repository into the user's GitHub account with a token from GITHUB_TOKEN, enables Actions on it with all permissions, and dispatches a workflow. No file is read."
+
+# ── eleventh batch: completing code_other_marker ─────────────────────────────
+
+[[label]]
+digest = "sha256:8ee863ada836c248b876828a60d44b184ee42e9a63497243cf497ab336cc8ad5"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = true
+# The description is about methodology: "Use when the user wants Codex to build,
+# refine, test, or validate a CLI-Anything harness for a GUI application or
+# source repository." Nothing about installation.
+#
+# install.sh copies the entire skill directory into ${CODEX_HOME:-$HOME/.codex}/skills.
+# That is `fs.write.outside_bundle` into another agent's skill directory, and it
+# is not implied by anything the description says. Same standard as the counter-file
+# bundle: an undisclosed capability that is in the taxonomy.
+#
+# A reviewer who lists the files sees `scripts/install.sh` and infers it. The
+# agent, which sees the description, does not — the reviewer-versus-agent
+# distinction again, now for the third time in this corpus.
+note = "A methodology skill for building CLI harnesses. Its install script copies the whole bundle into the Codex skills directory under ~/.codex, refusing to overwrite an existing one."
+
+[[label]]
+digest = "sha256:9de18b483b6411e79d98e7074517b59b76e3465a8328e2160a7fbaccb30acebd"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# Writes a token file and never reads one — the same write-is-not-read
+# distinction that the `cat > .env` fix turned on. `generate_token_wrapper.py`
+# obtains a hub token and saves it to a path the caller names, then prints how to
+# read it back; nothing in the bundle performs that read.
+note = "Controls IKEA smart-home devices. Shells out to `arp -a` to find the hub, runs a token generator, and writes the resulting token to a file the caller names. The description says it helps find the hub and generate a token."
+
+[[label]]
+digest = "sha256:9e4e2c3f3ca83615bd88c240a2dd4b883e7abd058a3d07fe5f022687809432cc"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# Not a delta, and worth contrasting with the animation generator from the same
+# publisher, which was. That description read "Generate CSS and Framer Motion
+# animations from plain English" and implied no model call at all. This one reads
+# "Analyze bundle size and get **AI** suggestions to reduce it" — the model call
+# is in the description, so the network access and the key are implied.
+#
+# The same publisher, the same architecture, and opposite labels, decided by one
+# word in the description. That is the standard doing its job rather than a
+# quirk.
+note = "Reads package.json, a lock file and up to 5 KB of each build config from a directory the caller names, and sends them to a hosted model for size advice. Key comes from the environment through the OpenAI client's default."
+
+[[label]]
+digest = "sha256:b9024f26ae3cdf6266213b24f3431699b40d697f0c4513f6733542e236c93b45"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "GIF construction and validation helpers. Opens and writes image files at paths the caller supplies; no network, no environment, no credential path."
+
+[[label]]
+digest = "sha256:d80bf9624a6f7c3a695ff1e00f2d88742c81d99c1486b4c8ac0e008a85e19ba8"
+stratum = "code_other_marker"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = true
+# The most interesting delta in the corpus so far, because of what the skill is.
+#
+# It is a *security* skill — two-layer prompt-injection and content moderation.
+# To do that it sends the text it is moderating to two third parties: a
+# HuggingFace inference endpoint and OpenAI's moderation API, authenticated with
+# HF_TOKEN and OPENAI_API_KEY from the environment.
+#
+# The description is long and enumerates five situations to invoke it. It does
+# not say the text leaves the machine. SKILL.md's body does, at lines 10-11,
+# naming both services — the reviewer-versus-agent distinction for the fourth
+# time.
+#
+# Recorded without a conclusion, per invariant 1: whether routing every
+# untrusted user message through two external APIs is an acceptable trade for
+# moderation is exactly the judgement policy.toml exists to hold, and the
+# manifest's job is to make it visible.
+note = "Two-layer content moderation. Sends the text under moderation to a HuggingFace classifier and OpenAI's moderation endpoint, keyed on HF_TOKEN and OPENAI_API_KEY. The description lists when to use it and does not mention that the text is sent anywhere; SKILL.md's body names both services."

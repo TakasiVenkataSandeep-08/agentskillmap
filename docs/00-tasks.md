@@ -579,7 +579,8 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 56 of 130 bundles** (47 scored, 9 too large to read). `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 61 of 130 bundles** (52 scored, 9 too large to read), with
+  `code_other_marker` complete at 15/15. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -620,12 +621,18 @@ front of; each is a thing this repository currently claims or implies but does n
   capability is under-reported in exactly the population that matters. Whether the code plane
   should constant-fold simple joins is a design question with real over-reach risk, and it is
   now backed by measurement rather than speculation.
-- **The weighted disclosure-delta estimate is 7.4% (95% CI 0–17.3%) against a ~3% criterion.**
-  Computed by the harness as a stratified estimate, and suppressed unless every stratum carries
-  at least five labels. The point estimate exceeds the threshold and the interval includes
-  zero, so the criterion is answerable with more labels rather than unanswerable. The interval
-  is a normal approximation — no simple Wilson analogue exists for a stratified combination —
-  so the per-stratum Wilson intervals remain the real ones.
+- **~~The cut criterion for T7 cannot be evaluated.~~** Answered, provisionally: the weighted
+  disclosure delta is **12.1% (95% CI 1.8–22.5%)** against a ~3% criterion, or 8.8% under a
+  stricter standard that drops the one benign case. Several times the threshold either way, and
+  the interval no longer includes zero. **On current evidence the semantic layer should not be
+  cut.** Qualifications that stand: single annotator, unreviewed, four of five strata partial,
+  and a normal-approximation interval. A second annotator disagreeing with two of the five
+  deltas would change it.
+- **The deltas are not the shape the project expected.** None is a hidden payload. Four of five
+  are skills whose ~100-token description omits that they send data to a third party or write
+  outside themselves — including a content-moderation skill that sends the text it moderates to
+  two external APIs. If that holds up, the semantic layer's value is in *undisclosed egress*
+  rather than in concealed capability, which is a different prompt and a different eval.
 - **The disclosure-delta threshold is unset, and it decides whether T7 ships.** Three deltas so
   far: a benign counter file behind a contentless description, an animation generator calling a
   hosted model with a key its description never mentions, and a Microsoft 365 server with no

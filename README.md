@@ -123,11 +123,13 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **47 bundles are labelled and
-scored, 9 were too large to read, and 74 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **52 bundles are labelled and
+scored, 9 were too large to read, and 69 are not yet labelled**. One stratum,
+`code_other_marker`, is now labelled **completely** (15/15) — it carries 46% of the population
+and was the row the corpus-wide estimate rested on — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=47 the intervals are still wide, which is the honest reading and the reason every rate
+At n=52 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
@@ -135,8 +137,8 @@ carries one:
 | `fs.read.credential` precision | 4/4 (100%, 95% CI 51.0–100%) |
 | `fs.read.credential` recall | 4/8 (50%, 95% CI 21.5–78.5%) |
 | False positives, `code_clean` (headline) | 0/17 (0%, **95% CI 0–18.4%**) |
-| Bundles with any `unresolved` entry | 45/47 (95.7%, 95% CI 85.8–98.8%) |
-| Real disclosure delta | **7.4% weighted** (95% CI 0–17.3%), see below |
+| Bundles with any `unresolved` entry | 50/52 (96.2%, 95% CI 87.0–98.9%) |
+| Real disclosure delta | **12.1% weighted** (95% CI 1.8–22.5%), see below |
 
 **These are not yet quality numbers.** A 95% upper bound of 18.4% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
@@ -150,7 +152,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What forty-seven bundles found
+### What fifty-two bundles found
 
 Three defects, one of them mine.
 
@@ -201,40 +203,54 @@ credential — and the term that fits, `fs.read.outside_bundle`, has no rule and
 So "benign stratum" means *no credential marker*, not *harmless*. The false-positive rate
 measured over it is still the right headline; the name is not a claim about sensitivity.
 
-### The disclosure delta, and the cut criterion
+### The cut criterion: the evidence now says do not cut
 
 `docs/04-semantic-layer.md` says to **cut the semantic layer** if the labelled corpus shows the
-disclosure delta in under ~3% of bundles.
+disclosure delta in under ~3% of bundles. This is the first batch that can answer it.
 
-The sample is deliberately not proportional, so the per-stratum rows cannot be pooled — a
-corpus-wide rate needs them weighted by population:
+The sample is deliberately not proportional, so per-stratum rows cannot be pooled — a
+corpus-wide rate needs them weighted by population. `code_other_marker` carries 46% of that
+population and is now labelled **completely**:
 
-| Stratum | delta | share of population |
-|---|---|---|
-| `code_clean` | 0/17 | 21% |
-| `code_credential` | 0/11 | 22% |
-| `code_other_marker` | 1/9 | **46%** |
-| `disclosure_shape` | 2/10 | 11% |
+| Stratum | delta | labelled | share of population |
+|---|---|---|---|
+| `code_clean` | 0/17 | partial | 21% |
+| `code_credential` | 0/11 | partial | 22% |
+| `code_other_marker` | **3/14** | **complete (15/15)** | **46%** |
+| `disclosure_shape` | 2/10 | partial | 11% |
 
-**Weighted: 7.4% of the code-bearing corpus, 95% CI 0–17.3%.** That is computed by the eval
-harness, not by hand, and it is suppressed entirely unless every stratum carries at least five
-labels — a number resting on two bundles in the stratum holding half the population is worse
-than no number, because it looks exactly like one resting on two hundred.
+**Weighted: 12.1% of the code-bearing corpus, 95% CI 1.8–22.5%.** Computed by the eval harness
+and suppressed unless every stratum carries at least five labels. The interval no longer
+includes zero.
 
-The point estimate is above the cut threshold. The interval includes zero. So the criterion is
-**still not decided**, but it has moved from "unanswerable" to "answerable with more labels",
-and the next batch of `code_other_marker` is what would move it most.
+Under a stricter standard — dropping the one benign delta, a counter file behind a description
+reading "Development skill from everything-claude-code" — it is **8.8%**. Both are several
+times the threshold.
 
-Two caveats that belong next to the number rather than in a footnote. The interval is a normal
-approximation, which is the thing Wilson exists to avoid at small n — there is no simple Wilson
-analogue for a stratified combination, so read it as indicative and the per-stratum Wilson
-intervals as the real ones. And the threshold for what counts as a delta is **unset**: of the
-three found, one is a benign counter file behind a description reading "Development skill from
-everything-claude-code". A stricter standard drops it and lowers the estimate.
+**So on current evidence the layer should not be cut.** That is a real answer to a question
+that has been open since T7, and it is worth naming what still qualifies it: the labels are
+single-annotator and unreviewed; four of five strata are partial; the interval is a normal
+approximation, which is the thing Wilson exists to avoid at small n. A second annotator
+disagreeing with two of the five deltas would change the conclusion, and nothing here prevents
+that.
 
-**A distinction this corpus needed a word for:** *disclosed to the reviewer* is not *disclosed
-to the agent*. One bundle names its API-key requirement at line 67 of a 79-line SKILL.md. A
-reviewer who opens the file learns it; the agent, which sees ~100 tokens of description at
-session start, does not. Both of the repository's definitions take the description as the
-baseline, so it counts — and the line number is recorded so a stricter reading can be applied
-without re-reading the bundle.
+The four non-benign deltas are all the same shape, and it is not the shape the project
+expected. None is a hidden payload. Each is a skill whose ~100-token description omits that it
+sends data to a third party or writes outside itself:
+
+- a CSS-animation generator that calls a hosted model with an API key;
+- a Microsoft 365 server with **no frontmatter at all**, which loads `.env`, exchanges a client
+  secret, and reads mail, calendar and files;
+- a methodology skill whose install script copies itself into another agent's skills directory;
+- a **content-moderation** skill that sends the text it is moderating to two external APIs.
+
+The last is the sharpest: a security skill whose description lists five situations to invoke it
+and never says the text leaves the machine. `SKILL.md`'s body names both services. Whether
+that trade is acceptable is exactly the judgement `policy.toml` exists to hold — the manifest's
+job is to make it visible.
+
+**The distinction that produced four of these:** *disclosed to the reviewer* is not *disclosed
+to the agent*. Each names its behaviour somewhere in `SKILL.md`'s body, which a reviewer who
+opens the file will read and the agent — seeing ~100 tokens at session start — will not. Both
+of the repository's definitions take the description as the baseline, so they count, and every
+label records the line number so a stricter reading can be applied without re-reading anything.
