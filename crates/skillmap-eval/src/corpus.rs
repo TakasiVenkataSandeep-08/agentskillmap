@@ -312,6 +312,18 @@ pub struct Report {
     /// Labelled bundles judged to have a real disclosure delta, per stratum.
     /// The input to `docs/04-semantic-layer.md`'s cut criterion.
     pub disclosure_delta: BTreeMap<String, Rate>,
+    /// Population size per stratum, from `corpus/sample.json`.
+    ///
+    /// Printed beside every per-stratum rate because the sample is **not
+    /// proportional**, and the difference is large enough to invert a
+    /// conclusion. `disclosure_shape` is 11% of the population and a quarter of
+    /// the labelled sample; `code_other_marker` is 46% of the population and a
+    /// fourteenth of it. Pooling the rows produces a number that describes the
+    /// sampling design, and `docs/04-semantic-layer.md`'s cut criterion is a
+    /// corpus-wide rate — so a reader who pools would be answering the right
+    /// question with the wrong arithmetic. Showing the weights is cheaper than
+    /// hoping nobody tries.
+    pub population: BTreeMap<String, usize>,
 }
 
 /// Where a labelled bundle's bytes live.
@@ -328,7 +340,13 @@ pub fn bundle_dir(corpus: &Path, digest: &str) -> PathBuf {
 /// label. `sample_size` is the number of bundles drawn, so the report can say
 /// how much of the sample has been labelled rather than only reporting what has.
 #[must_use]
-pub fn run(labels: &Labels, corpus: &Path, rules: &RuleSet, sample_size: usize) -> Report {
+pub fn run(
+    labels: &Labels,
+    corpus: &Path,
+    rules: &RuleSet,
+    sample_size: usize,
+    population: BTreeMap<String, usize>,
+) -> Report {
     let scored_terms: BTreeSet<&str> = labels.terms_labelled.iter().map(String::as_str).collect();
 
     let mut scanned: Vec<(&Label, Manifest)> = Vec::new();
@@ -423,7 +441,32 @@ pub fn run(labels: &Labels, corpus: &Path, rules: &RuleSet, sample_size: usize) 
             .into_iter()
             .map(|(stratum, (hits, total))| (stratum, Rate::new(hits, total)))
             .collect(),
+        population,
     }
+}
+
+/// `pop N, X% of the sampled population`, or empty when unknown.
+fn weight(report: &Report, stratum: &str) -> String {
+    let Some(size) = report.population.get(stratum) else {
+        return String::new();
+    };
+    // Denominator excludes prose_only: the code plane cannot fire there, so it
+    // is not part of the population any capability rate describes.
+    let total: usize = report
+        .population
+        .iter()
+        .filter(|(name, _)| name.as_str() != "prose_only")
+        .map(|(_, count)| count)
+        .sum();
+    if total == 0 {
+        return String::new();
+    }
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "population counts are in the thousands; this is a printed share"
+    )]
+    let share = *size as f64 / total as f64;
+    format!("   [pop {size}, {:.0}% of population]", share * 100.0)
 }
 
 /// Render a report for a human, and for the README.
@@ -477,7 +520,12 @@ pub fn render(report: &Report) -> String {
         "\n  false-positive rate per stratum (code_clean is the headline):"
     );
     for (stratum, rate) in &report.false_positive_rate {
-        let _ = writeln!(out, "    {stratum:<18} {}", rate.render());
+        let _ = writeln!(
+            out,
+            "    {stratum:<18} {}{}",
+            rate.render(),
+            weight(report, stratum)
+        );
     }
 
     let _ = writeln!(
@@ -491,8 +539,18 @@ pub fn render(report: &Report) -> String {
         "\n  disclosure delta per stratum (docs/04-semantic-layer.md's cut criterion):"
     );
     for (stratum, rate) in &report.disclosure_delta {
-        let _ = writeln!(out, "    {stratum:<18} {}", rate.render());
+        let _ = writeln!(
+            out,
+            "    {stratum:<18} {}{}",
+            rate.render(),
+            weight(report, stratum)
+        );
     }
+    let _ = writeln!(
+        out,
+        "    NOT poolable: the sample is not proportional. A corpus-wide rate needs
+             these weighted, and is currently dominated by the least-sampled row."
+    );
 
     out
 }
@@ -613,7 +671,7 @@ mod tests {
             rules: Vec::new(),
             diagnostics: Vec::new(),
         };
-        let report = run(&labels, &dir, &rules, 130);
+        let report = run(&labels, &dir, &rules, 130, BTreeMap::new());
 
         assert_eq!(report.scored, 0);
         assert_eq!(report.unscoreable, 1);
@@ -636,7 +694,7 @@ mod tests {
             rules: Vec::new(),
             diagnostics: Vec::new(),
         };
-        let rendered = render(&run(&labels, &dir, &rules, 130));
+        let rendered = render(&run(&labels, &dir, &rules, 130, BTreeMap::new()));
         assert!(rendered.contains("someone"), "{rendered}");
         assert!(rendered.contains("UNREVIEWED"), "{rendered}");
     }

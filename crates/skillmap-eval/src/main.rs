@@ -160,9 +160,11 @@ fn corpus_section(root: &Path) -> String {
     // How much of the draw has been labelled at all. Read from the sample rather
     // than assumed, so "we labelled eleven" and "the sample is a hundred and
     // thirty" cannot drift apart.
-    let sample_size = std::fs::read_to_string(root.join("corpus").join("sample.json"))
+    let sample = std::fs::read_to_string(root.join("corpus").join("sample.json"))
         .ok()
-        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok());
+    let sample_size = sample
+        .as_ref()
         .and_then(|value| {
             value
                 .get("selected")
@@ -170,6 +172,22 @@ fn corpus_section(root: &Path) -> String {
                 .map(Vec::len)
         })
         .unwrap_or(0);
+    // Stratum weights, so the report can say the rows are not poolable.
+    let population: std::collections::BTreeMap<String, usize> = sample
+        .as_ref()
+        .and_then(|value| value.get("population"))
+        .and_then(serde_json::Value::as_object)
+        .map(|map| {
+            map.iter()
+                .filter_map(|(name, count)| {
+                    count
+                        .as_u64()
+                        .and_then(|n| usize::try_from(n).ok())
+                        .map(|n| (name.clone(), n))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
 
     let rules = skillmap_rules::load(root);
     corpus::render(&corpus::run(
@@ -177,5 +195,6 @@ fn corpus_section(root: &Path) -> String {
         &root.join("corpus"),
         &rules,
         sample_size,
+        population,
     ))
 }

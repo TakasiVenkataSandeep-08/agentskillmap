@@ -579,7 +579,7 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 46 of 130 bundles** (38 scored, 8 too large to read). `corpus/sample.json` is drawn and committed;
+- **The labelling pass is 50 of 130 bundles** (41 scored, 9 too large to read). `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -620,12 +620,26 @@ front of; each is a thing this repository currently claims or implies but does n
   capability is under-reported in exactly the population that matters. Whether the code plane
   should constant-fold simple joins is a design question with real over-reach risk, and it is
   now backed by measurement rather than speculation.
-- **The disclosure-delta threshold is unset, and it decides whether T7 ships.** The first
-  labelled delta is a benign counter file behind a contentless description. Under the standard
-  used in `corpus/labels.toml` — an undisclosed capability that is *in the taxonomy* — it
-  counts, and the rate is 1/38 (2.6%). Under a stricter one — undisclosed *and* sensitive — it does
-  not, and the rate is 0/38. `docs/04-semantic-layer.md`'s cut criterion is ~3%, so the two
-  readings land on opposite sides. One annotator should not settle this.
+- **The disclosure-delta estimate is hostage to the least-sampled stratum.** The sample is
+  deliberately not proportional, so the per-stratum rows do not pool, and a corpus-wide rate
+  needs stratum weights. Weighted, it is dominated by `code_other_marker` — 46% of the
+  population, and three labelled bundles, interval 6–79%. **That stratum is where the next
+  batch should go**, not the interesting-looking ones. The eval report now prints the weights
+  beside every rate so nobody pools by accident.
+- **The disclosure-delta threshold is unset, and it decides whether T7 ships.** Three deltas so
+  far: a benign counter file behind a contentless description, an animation generator calling a
+  hosted model with a key its description never mentions, and a Microsoft 365 server with no
+  frontmatter at all. A stricter standard — undisclosed *and* sensitive — keeps the last two.
+  Both readings now exceed the ~3% cut threshold, which reverses the previous batch's reading,
+  and neither is a corpus estimate. One annotator should not settle this.
+- **"Disclosed to the reviewer" and "disclosed to the agent" are different, and only the second
+  is what the delta measures.** One bundle names its API-key requirement at line 67 of a 79-line
+  SKILL.md body — visible to anyone who opens the file, invisible in the ~100-token description
+  the agent sees at session start. Both repository definitions take the description as the
+  baseline. Worth stating in `docs/04-semantic-layer.md` rather than leaving to each labeller.
+- **No taxonomy term covers a secret literal committed into source.** One bundle carries a
+  testnet private key as a fallback when the environment variable is unset. Mechanically
+  detectable, worth reporting, and nowhere to put it in the manifest.
 - **The strata are built from credential-shaped markers, so `code_clean` means "no credential
   marker", not "harmless".** One bundle in it reads the user's whole WeChat message history.
   That is correctly not `fs.read.credential`; the term that fits is `fs.read.outside_bundle`,

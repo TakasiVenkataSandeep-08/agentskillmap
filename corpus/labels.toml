@@ -610,3 +610,78 @@ disclosure_delta = false
 # instructions that mention configuring credentials. Nothing is read. The query
 # fix that stopped `cat > .env` from matching leaves this correctly quiet too.
 note = "Prints setup instructions telling the user to configure their own Feishu app credentials. The actual document writing happens through host tools, not through anything in the bundle."
+
+# ── ninth batch ──────────────────────────────────────────────────────────────
+
+[[label]]
+digest = "sha256:814aa6415e00103b4ea6be21aac9b80957095a10356ba45f595be21c972b793f"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = true
+# A distinction this corpus needs and did not have a word for: **disclosed to the
+# reviewer** is not **disclosed to the agent**.
+#
+# The description is "Generate CSS and Framer Motion animations from plain
+# English. Use when you need smooth animations without the math." A reader could
+# take that for a local template generator. The code instantiates an OpenAI
+# client from OPENAI_API_KEY and calls the API.
+#
+# SKILL.md's *body* does say it, at line 67 of 79: "Needs OPENAI_API_KEY
+# environment variable." So a reviewer who opens the file learns it. The agent,
+# which sees only the ~100-token description at session start, does not.
+#
+# Both of the repository's definitions take the description as the baseline —
+# docs/04-semantic-layer.md ("things the ~100-token description does not
+# disclose") and the schema's `disclosure_delta` ("capability present in
+# reference files but not implied by always content"). So: true. A stricter
+# reading that counts anything in SKILL.md as disclosed scores it false, and the
+# line number is recorded so that reading can be applied without re-reading the
+# bundle.
+note = "Generates animation CSS by calling a hosted model with a key from OPENAI_API_KEY, and writes one output file. The description mentions neither; SKILL.md's body names the key requirement at line 67."
+
+[[label]]
+digest = "sha256:85e45ed7c985edfd8678832e677cf03cfdcdb3d9b8c013495e027d313080b052"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["src/index.ts:12"]
+disclosure_delta = true
+# **SKILL.md has no frontmatter at all.** There is no description, so nothing
+# whatsoever is disclosed at session start, and everything the bundle does is a
+# delta by construction. That is a distinct shape from a lazy description and
+# arguably a stronger signal: a skill with no frontmatter is one the agent cannot
+# summarise even to itself.
+#
+# What it does: a full Microsoft 365 MCP server. Calls dotenv's config() at
+# src/index.ts:12, then reads TENANT_ID, CLIENT_ID and CLIENT_SECRET, performs an
+# OAuth client-credentials exchange against login.microsoftonline.com, and hits
+# the Graph API for mail, calendar and files.
+#
+# The fifth dotenv read in the corpus, and the first that the new dotenv rules
+# should catch — worth watching in the recall number rather than asserting here.
+note = "Microsoft 365 MCP server. Loads .env through dotenv, exchanges a client secret for a Graph token, and exposes mail, calendar and file operations. SKILL.md carries no frontmatter, so there is no description at all."
+
+[[label]]
+digest = "sha256:91f4a41ce0ed61a672c7f03224058cef9e31e31dd1f801746205e56274d4404a"
+stratum = "disclosure_shape"
+verdict = "too_large"
+note = "90 KB across nine files, including three watcher implementations and a Telegram handler. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:ba0c9b4e31850c54c956c079b0d20eee24fc2e4ba21fd8fd10deb4caeb7356a8"
+stratum = "disclosure_shape"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# No file is read, so no `fs.read.credential`. What is here instead has no term
+# in the taxonomy at all: a **private key literal committed into the source**, as
+# a fallback when DEPLOYER_PRIVATE_KEY is unset, at scripts/config.mjs:22. It is
+# a Sepolia testnet key, so the exposure is probably nil, and that is a judgement
+# about consequence rather than about what the code does.
+#
+# The gap is real regardless: "embeds a secret literal" is a capability a
+# reviewer would want reported, it is mechanically detectable, and there is
+# nowhere in the manifest to put it. Recorded here because a labelling pass is
+# where a missing term becomes visible with an example attached.
+note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer key from the environment, each with a hardcoded fallback — the key fallback is a literal Sepolia private key at scripts/config.mjs:22. No file access."

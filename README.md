@@ -123,20 +123,20 @@ labels every one.
 
 The labelling pass has started. `corpus/sample.json` draws **130 bundles** by a seeded,
 stratified sample; `corpus/labels.toml` carries the ground truth so far, produced by reading
-each bundle's source without consulting skillmap's output. **38 bundles are labelled and
-scored, 8 were too large to read, and 84 are not yet labelled** — and unlabelled is reported
+each bundle's source without consulting skillmap's output. **41 bundles are labelled and
+scored, 9 were too large to read, and 80 are not yet labelled** — and unlabelled is reported
 as unlabelled, never folded into a denominator as though it had been checked.
 
-At n=38 the intervals are still wide, which is the honest reading and the reason every rate
+At n=41 the intervals are still wide, which is the honest reading and the reason every rate
 carries one:
 
 | Metric | Result |
 |---|---|
-| `fs.read.credential` precision | 3/3 (100%, 95% CI 43.9–100%) |
-| `fs.read.credential` recall | 3/6 (50%, 95% CI 18.8–81.2%) |
+| `fs.read.credential` precision | 4/4 (100%, 95% CI 51.0–100%) |
+| `fs.read.credential` recall | 4/7 (57.1%, 95% CI 25.0–84.2%) |
 | False positives, `code_clean` (headline) | 0/17 (0%, **95% CI 0–18.4%**) |
-| Bundles with any `unresolved` entry | 36/38 (94.7%, 95% CI 82.7–98.5%) |
-| Real disclosure delta | 1/38 — see below |
+| Bundles with any `unresolved` entry | 39/41 (95.1%, 95% CI 83.9–98.7%) |
+| Real disclosure delta | 3/41 — **not poolable**, see below |
 
 **These are not yet quality numbers.** A 95% upper bound of 18.4% on the headline metric means
 the sample still cannot distinguish a good scanner from a mediocre one. They are published
@@ -150,7 +150,7 @@ on the exact line, saying it saw a read whose path it could not resolve. A miss 
 see is categorically different from one they cannot. That was not true two commits ago; see
 the third defect below.
 
-### What thirty-eight bundles found
+### What forty-one bundles found
 
 Three defects, one of them mine.
 
@@ -201,82 +201,42 @@ credential — and the term that fits, `fs.read.outside_bundle`, has no rule and
 So "benign stratum" means *no credential marker*, not *harmless*. The false-positive rate
 measured over it is still the right headline; the name is not a claim about sensitivity.
 
-### The disclosure delta, and the threshold nobody should set alone
+### The disclosure delta: two reasons the cut criterion is still unanswerable
 
 `docs/04-semantic-layer.md` says to **cut the semantic layer** if the labelled corpus shows the
-disclosure delta in under ~3% of bundles. One of 38 is 2.6%, with a 95% interval of 0.5–13.5%.
-The criterion is still unresolvable, and now for a more interesting reason than sample size.
+disclosure delta in under ~3% of bundles. Three of 41 labelled bundles have one. That is 7.3%,
+and quoting it would be wrong twice over.
 
-The single delta is a skill whose description reads "Development skill from
-everything-claude-code" and whose script quietly keeps a counter file under `~/.local/state`.
-Entirely benign. It counts as a delta under the standard used here — *the deep files exercise
-a capability in the taxonomy that the description does not imply* — because a contentless
-description implies nothing.
+**First, the sample is not proportional, so the rows do not pool.** It over-samples the
+interesting strata on purpose:
 
-A stricter reading, where a delta requires the undisclosed capability to be one a reviewer
-would call sensitive, scores it false and puts the rate at 0/38. **Both readings are
-defensible and they point opposite ways on whether a whole layer ships.** That is a decision
-for more than one annotator, and the labels record the reasoning per bundle so the number can
-be recomputed under either.
+| Stratum | delta | share of population |
+|---|---|---|
+| `code_clean` | 0/17 | 21% |
+| `code_credential` | 0/11 | 22% |
+| `code_other_marker` | **1/3** | **46%** |
+| `disclosure_shape` | 2/10 | 11% |
 
-What is gated in CI today is the eval suite: 7 rule-fixture cases and 6 adversarial cases
-pass on every commit, and 2 further adversarial cases from `docs/05-eval.md` are declared and
-reported as pending rather than omitted — one needs a `code.obfuscation` rule, and one needs a
-live model call the gate deliberately never makes. The gate fails on a failing case, on
-coverage shrinking, and on a case regressing to pending. See `eval/baseline.json`.
+A corpus-wide rate needs these weighted — and it is then dominated by `code_other_marker`,
+which carries nearly half the population and which I have labelled **three** bundles of. Its
+interval is 6–79%. The estimate is currently hostage to the least-sampled row, which makes
+that stratum the obvious place to spend the next batch. The eval report prints these weights
+beside every rate so nobody pools them by accident.
 
-## Status
+**Second, the threshold is unset.** Of the three deltas, one is a benign counter file behind a
+description reading "Development skill from everything-claude-code"; one is a CSS-animation
+generator that calls a hosted model with an API key its description never mentions; one is a
+Microsoft 365 server with **no frontmatter at all** — no description, so nothing is disclosed
+at session start — which loads `.env`, exchanges a client secret, and reads mail, calendar and
+files. A stricter reading counting only the last two gives 2/41.
 
-Pre-alpha. The scanner runs, the corpus is harvested, `skillmap lock` / `skillmap ci` work
-end to end, and the binary ships with its own rules through a reproducible, attested release
-pipeline. Four languages have rules (python, shell, javascript, typescript) and one
-capability term has coverage — thirteen terms are in the taxonomy, so most of what the
-manifest *can* describe, nothing yet detects. No version has been tagged. Start with
-`docs/00-tasks.md`, which records what each task actually delivered and what it deliberately
-did not.
+Both readings now sit above 3%, which is a change from the previous batch, and neither is an
+estimate of the corpus. The labels record per-bundle reasoning so the rate can be recomputed
+under either.
 
-### The semantic layer is built, off, and unmeasured
-
-`skillmap-semantic` (tier `advisory`) exists and runs only under `--advisory <model>`, in a
-build that opted into a network client. Its quarantine is proved: scanning the same bundle
-with a model response written to suppress a deterministic finding leaves the deterministic
-half of the manifest byte-identical, and the hostile claims come back reclassified as
-`injection_attempt`.
-
-What it does **not** have is the measurement `docs/04-semantic-layer.md` requires — precision
-and recall per finding kind, a false-positive rate on the benign stratum, and variance across
-n runs. All of those are scored against a labelled corpus, and the corpus is harvested but
-not labelled. The harness for the variance numbers is written and has never been run against
-a live model. Nothing is published in place of them.
-
-That document also specifies a **cut criterion**: if the labels show the disclosure delta in
-under ~3% of bundles, v1.0 should ship without this layer and say so. That criterion cannot
-be evaluated yet, and the nearest proxy currently points toward cutting — every high-signal
-marker that appears *only* in files nothing references sits between 0.4% and 2.9%. Deciding
-it is the strongest argument for doing the labelling pass.
-
-## For contributors
-
-Detection rules are **data**, not Rust. Adding coverage means a tree-sitter query, a TOML
-file, and two fixtures — no Rust required. See `docs/03-rules-authoring.md`.
-
-## Reading order
-
-| File | What it is |
-|---|---|
-| `AGENTS.md` | The twelve invariants. Read first; they constrain everything. |
-| `ARCHITECTURE.md` | Crate layout, data flow, key traits |
-| `docs/00-tasks.md` | Ordered backlog with acceptance criteria |
-| `docs/01-corpus-scan.md` | Step one, and the kill gate |
-| `docs/02-manifest-schema.md` | The spine |
-| `docs/03-rules-authoring.md` | How to add detection |
-| `docs/04-semantic-layer.md` | The quarantined model pass, and what T7 could not measure |
-| `docs/05-eval.md` | The falsifiable quality bar |
-| `docs/06-policy-and-lock.md` | `skillmap.lock`, `policy.toml`, and the exit codes |
-| `docs/07-distribution.md` | Embedded rules, reproducible builds, signing, install paths |
-| `SECURITY.md` | Threat model and disclosure policy |
-| `CONTRIBUTING.md` | Contributor workflow — including adding a rule without writing Rust |
-
-## License
-
-Apache-2.0.
+**A distinction this corpus needed a word for:** *disclosed to the reviewer* is not *disclosed
+to the agent*. The animation generator names its API key requirement at line 67 of a 79-line
+SKILL.md. A reviewer who opens the file learns it; the agent, which sees ~100 tokens of
+description at session start, does not. Both of the repository's definitions take the
+description as the baseline, so it counts — and the line number is recorded so a stricter
+reading can be applied without re-reading the bundle.
