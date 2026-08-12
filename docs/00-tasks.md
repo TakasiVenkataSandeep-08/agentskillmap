@@ -617,10 +617,25 @@ front of; each is a thing this repository currently claims or implies but does n
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
   value work left: `python scripts/label_worklist.py --stratum code_clean --limit 6 --fs-view`.
-- **The labels are single-annotator and unreviewed.** `reviewed_by` in `corpus/labels.toml`
-  is empty. Inter-annotator agreement is unmeasured and unmeasurable from one annotator. The
-  pass has already produced one demonstrated labelling error, corrected in place with the
-  reasoning kept.
+- **~~The labels are single-annotator and unreviewed.~~** Addressed for a quarter of the
+  corpus, and the result argues for finishing the job rather than closing it. A second
+  annotator independently labelled 23 of 92 bundles — a seeded 15% control plus every contested
+  judgement — blind to the label file and without running the scanner. **Raw agreement 18/23
+  (78.3%), and all five disagreements were adjudicated against the first annotator.** Three
+  were one systematic miss: egress through a vendor SDK or wrapper, where no protocol appears
+  at the call site. Sweeping the remaining 69 for that pattern found two more, taking
+  `net.egress` from 43 to 48. **Still open:** 69 bundles are unreviewed, the SDK sweep only
+  catches *named* SDKs so 48 remains a floor, and the second annotator judged capability terms
+  only — every disclosure-delta label, which is the evidence deciding whether T7 ships, remains
+  checked by nobody.
+- **Five terms now carry ground truth and no rule.** The relabelling pass scored `net.egress`
+  48/92, `env.read.secret` 27/92, `process.exec` 5/92, `process.exec.dynamic` 2/92 and
+  `code.dynamic_eval` 1/92, all at recall 0/N because nothing detects them. `net.egress` alone
+  is 52% of the labelled corpus, nearly three times `fs.read.credential`. The labelling landed
+  before any rule deliberately: widening the scored set while a rule already fires would score
+  every genuine detection as a false positive, since an empty `capabilities` array means "not
+  looked for" rather than "not present". `crates/skillmap-eval/tests/gate.rs` now makes
+  shipping a rule for an unmeasured term a build failure.
 - **~~Nothing detects `dotenv`.~~** Closed. Three of the first four real credential reads the
   labelling pass found were `load_dotenv()` or `require('dotenv').config()` — the shape this
   ecosystem actually uses — and no rule matched any of them. Three rules added
