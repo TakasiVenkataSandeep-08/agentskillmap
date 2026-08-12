@@ -776,11 +776,22 @@ front of; each is a thing this repository currently claims or implies but does n
   directory apply to every project and are not checked. Discovery already supports the scope;
   what is missing is an answer to which lockfile they belong in, and guessing would produce a
   lock that differs per machine — invariant 2's most obvious failure mode.
-- **The taxonomy has thirteen terms and the repository has one rule.** T4 built the engine
-  that runs them; it deliberately did not grow coverage, because which capabilities matter is
-  what T3 is for. Invariant 12 forbids shipping a term no rule detects, so v1.0 either grows
-  rules to cover the taxonomy or the taxonomy shrinks to match the rules — decided from the
-  corpus, not from ambition.
+- **~~The taxonomy has thirteen terms and the repository has one rule.~~** Closed, and by
+  doing both halves of what this entry demanded. Nine terms grew rules; two were removed
+  because the corpus could not support them. **Eleven terms, eleven with rules, none
+  uncovered — invariant 12 is satisfied.** Schema 1.1.0 carries the change with a migration
+  note in `docs/02-manifest-schema.md`.
+  `agent.hook.install` went because its real form is a JSON edit and `fs.write.agent_config`
+  covers its instances; `mcp.tool_reference` because it lives in `.mcp.json` and registering
+  a JSON grammar would stop every `.json` file in every bundle reporting
+  `unsupported_language`, moving the published unresolved rate for all 92 bundles for reasons
+  unrelated to detection quality. Removal is provably non-breaking: no manifest has ever
+  contained either term, because no rule ever emitted one.
+  **Eight terms are scored against ground truth at precision 95/95**, with the benign stratum
+  at 0/36. Three ship declared-unmeasured in `terms_detected_unscored` — `code.obfuscation`,
+  `net.fetch_then_execute` and `fs.write.agent_config` — all chain or rarity cases where n
+  cannot support a rate, and the eval prints their bundle counts above the false-positive
+  block they are excluded from.
 - **Four languages have grammars: python, shell, javascript, typescript.** That set is the
   corpus ordering (5.1%, 3.3%, 2.4%, 1.0% of bundles), not a preference. Ruby, Go, Rust and
   the rest still report `unsupported_language`, which is honest. `.tsx` is deliberately absent:

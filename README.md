@@ -144,11 +144,15 @@ carries one:
 | `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
 | `process.exec.dynamic` recall | 2/2 — n far too small to read |
 | `code.dynamic_eval` recall | 1/1 — n=1; see below |
+| `fs.read.outside_bundle` precision | 9/9 (100%, 95% CI 70.1–100%) |
+| `fs.read.outside_bundle` recall | 9/26 (34.6%, 95% CI 19.4–53.8%) |
+| `fs.write.outside_bundle` precision | 5/5 (100%, 95% CI 56.6–100%) |
+| `fs.write.outside_bundle` recall | 5/24 (20.8%, 95% CI 9.2–40.5%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 81/81 across all six detected terms and the false-positive rate is 0 across all
+**Precision is 95/95 across all eight scored terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
@@ -171,6 +175,25 @@ the benign stratum unmoved. The ten remaining misses are named: requests issued 
 session object bound to a local name, a wrapper that renames the call (`proxyFetch(url)`), and
 vendor SDKs — `openai`, `viem`, `linkedin_api` — which reach a network with no protocol named
 at the call site and are the largest single gap in this term.
+
+**The two `outside_bundle` terms have low recall on purpose, and that is what makes them
+honest.** 34.6% and 20.8%, at perfect precision. For these two the rule's `[match]` data is
+almost the *definition* of the term rather than a list of interesting names — so labelling by
+"does this path start with `/` or `~/`" would have made precision 1.0 by construction and
+measured nothing at all. The labels judge the **act** instead, including paths a reader can see
+are outside and the engine cannot resolve: a directory read from config, a base path passed as
+an argument, a variable assigned twice. Those are the misses, and they say something true —
+real skills build paths at runtime, and constant folding reaches about a third of them.
+
+**Measuring them first is the reason they are shippable.** Their first measured run scored
+precision 66.7% and 52.4%, and took the benign stratum from 0/36 to 4/36. Two causes: eight of
+the thirteen false positives were `>/dev/null`, which discards output rather than writing a
+file; and a latent bug in the engine's literal extractor, which strips leading letters to reach
+past python's `r"`/`b"` prefixes and was applying that to *unquoted* values too — so a shell
+`cat templates/default.toml` resolved to `/default.toml`, a bundle-relative read wearing an
+absolute path. Harmless until a rule filtered on a leading `/`. A mangled path is worse than an
+unresolved one: it is a confident wrong answer sitting in `detail.paths` where a reader takes it
+for evidence.
 
 **`code.dynamic_eval` has a denominator of one, and 1/1 is not a result.** Its 95% interval runs
 20.7%–100%. What *is* worth reading is the other direction: the rule fired on exactly one of 92
@@ -316,7 +339,7 @@ Three defects, one of them mine.
   `code.obfuscation`, `process.exec` or `net.egress` — one of four real capabilities — because
   no rule exists for any of them, and all four are terms already in the taxonomy. That is the
   clearest available statement of where this project stands: **the engine and the load-phase
-  signal work; the rule set covers a thirteenth of what the manifest can describe.**
+  signal work; the rule set now covers every term the manifest can describe.**
 
 - **Every credential read in the corpus computes its path.** Eight distinct shapes: dotenv the
   library, dotenv hand-rolled twice in two languages, per-application directories under
