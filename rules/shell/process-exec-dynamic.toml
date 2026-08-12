@@ -1,0 +1,32 @@
+# Detects a shell skill running a command whose program is not known from
+# source.
+#
+# There is deliberately no `process.exec` rule for shell; see the query for why,
+# and corpus/labels.toml for the matching decision in the labelling pass.
+id         = "sh.process-exec.dynamic"
+language   = "shell"
+capability = "process.exec.dynamic"
+tier       = "proven"
+query      = "queries/shell/process-exec-dynamic.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Runs a command whose program is not known from source."
+rationale = """
+Whoever controls the variable controls what runs. Reported, never judged — a
+configurable runner is a normal thing to build, and policy.toml decides whether a
+repository accepts one.
+"""
+false_positive_notes = """
+Shell has no static counterpart on purpose. A rule matching literal command names
+would fire on `echo` in every script in the corpus, so its recall would measure how
+many bundles ship a .sh file rather than anything about the skill. That asymmetry is
+a reasoned omission, not an oversight, and the labelling pass scopes the term the
+same way.
+
+`bash -c "$x"` is absent: the command word is `bash` and perfectly well known. What
+is computed there is the code, which is code.dynamic_eval — a different term, kept
+disjoint from this one.
+"""

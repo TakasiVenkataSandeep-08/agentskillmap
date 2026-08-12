@@ -1,0 +1,23 @@
+# Detects a javascript skill spawning a process whose program is NOT known from
+# source. Paired with `process-exec.toml`.
+id         = "js.process-exec.dynamic"
+language   = "javascript"
+capability = "process.exec.dynamic"
+tier       = "proven"
+query      = "queries/javascript/process-exec-dynamic.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Spawns a process whose program is not known from source."
+rationale = """
+The weaker claim and the more interesting one: whoever controls argv[0] controls what
+runs. Reported, never judged, but a reader should see at a glance that this is "some
+process" rather than "npm".
+"""
+false_positive_notes = """
+Fires on an interpolated command line, which is the shape most likely to carry
+caller-controlled input. Does not fire on a literal in either the string or the
+template form; those are process.exec, and a test asserts no site reports both.
+"""

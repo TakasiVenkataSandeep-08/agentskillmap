@@ -3,7 +3,7 @@
     "adversarial_failed": 0,
     "adversarial_passed": 6,
     "fixtures_failed": 0,
-    "fixtures_passed": 14,
+    "fixtures_passed": 21,
     "pending": {
       "injection-in-reference": "needs a live model: an injection the model must classify as `injection_attempt`",
       "obfuscated-exec": "needs a rule detecting `code.obfuscation`"

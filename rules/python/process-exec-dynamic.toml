@@ -1,0 +1,28 @@
+# Detects a python skill spawning a process whose program is NOT known from
+# source. Paired with `process-exec.toml`.
+id         = "py.process-exec.dynamic"
+language   = "python"
+capability = "process.exec.dynamic"
+tier       = "proven"
+query      = "queries/python/process-exec-dynamic.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Spawns a process whose program is not known from source."
+rationale = """
+The weaker claim, and the more interesting one: a caller who can influence argv[0]
+can run anything. Reported, never judged, but a reader should be able to see at a
+glance that this is "some process" rather than "ffmpeg".
+"""
+false_positive_notes = """
+Fires on `subprocess.run([sys.executable, ...])`, which resolves at runtime to the
+running interpreter. That is a real case from the labelled corpus, and it is
+reported because argv[0] genuinely cannot be named from source — a reader who wants
+to know what ran has to look.
+
+Does not fire on a literal program in either the string or the list form; those are
+process.exec. A test asserts the two queries are disjoint, so no site can report
+both terms.
+"""

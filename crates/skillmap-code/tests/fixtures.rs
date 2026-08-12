@@ -812,3 +812,126 @@ fn a_credential_directory_is_matched_by_the_directory_and_not_by_the_filename() 
         manifest.unresolved
     );
 }
+
+#[test]
+fn the_two_exec_terms_are_disjoint_and_an_fstring_is_never_called_static() {
+    // A rule declares exactly one capability, and the engine cannot choose a
+    // term based on how a capture folded. So `process.exec` and
+    // `process.exec.dynamic` are two queries, and the whole design rests on
+    // their being structurally unable to match the same site. If they overlap,
+    // one call reports both terms and the manifest contradicts itself.
+    //
+    // The load-bearing half is the f-string. An interpolated string parses as
+    // `(string)` exactly like a plain one, so the static query excludes it with
+    // `#not-match?` while the dynamic query matches its `(interpolation)` child.
+    // That only works if tree-sitter actually evaluates the negated predicate —
+    // if it silently ignored it, `subprocess.run(f"rm {path}")` would be
+    // reported as a statically known program, which is the opposite of true and
+    // the more dangerous direction to be wrong in. This asserts it rather than
+    // trusting the version.
+    let rules = rules();
+
+    let terms = |source: &str| -> Vec<String> {
+        let mut found: Vec<String> = analyze(
+            &[SourceFile {
+                path: "run.py",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .iter()
+        .map(|c| c.capability.as_str().to_owned())
+        .collect();
+        found.sort_unstable();
+        found.dedup();
+        found
+    };
+
+    let cases: [(&str, &str); 5] = [
+        ("subprocess.run([\"git\", \"status\"])\n", "process.exec"),
+        ("subprocess.check_output(\"git status\")\n", "process.exec"),
+        ("os.system(\"df -h\")\n", "process.exec"),
+        // `subprocess.run(cmd)` is deliberately absent: it reports nothing, and
+        // why is asserted in the test below.
+        (
+            "subprocess.run([sys.executable, \"x.py\"])\n",
+            "process.exec.dynamic",
+        ),
+        (
+            "subprocess.run(f\"rm -rf {path}\", shell=True)\n",
+            "process.exec.dynamic",
+        ),
+    ];
+
+    for (source, expected) in cases {
+        let found = terms(source);
+        assert_eq!(
+            found,
+            vec![expected.to_owned()],
+            "`{source_trimmed}` must report exactly [{expected}], got {found:?}",
+            source_trimmed = source.trim_end()
+        );
+    }
+}
+
+#[test]
+fn a_bare_identifier_argv_is_not_claimed_to_be_dynamic() {
+    // The correction the corpus forced. `subprocess.run(cmd)` was reported as
+    // `process.exec.dynamic` until three labelled bundles showed why that is
+    // wrong: in each, `cmd` was a single-assignment literal list one line up —
+    // `cmd = ["ffmpeg", "-i", src]` — so argv[0] is `ffmpeg` and perfectly
+    // knowable. The engine can fold that; a tree-sitter query cannot, and it has
+    // no way to tell a name that folds from one that does not.
+    //
+    // So the rule stops claiming. Reporting `dynamic` for a foldable name is a
+    // false statement about how much a reader can know, and it was wrong in
+    // three of the four corpus sites that reached it.
+    //
+    // The cost is a real miss: a genuinely computed `cmd` now reports nothing.
+    // What makes that the better trade is that the shapes which CANNOT fold are
+    // still matched — an attribute, a call, a subscript and an interpolated
+    // command line all still report. Closing the rest needs the engine to fold
+    // argv[0] and choose a term from the result, which it cannot do today
+    // because a rule declares exactly one capability.
+    let rules = rules();
+
+    let manifest = analyze(
+        &[SourceFile {
+            path: "run.py",
+            text: "cmd = [\"ffmpeg\", \"-i\", src]\nsubprocess.run(cmd)\n",
+            entered: true,
+        }],
+        &rules,
+    );
+    assert!(
+        manifest.capabilities.is_empty(),
+        "a foldable argv[0] must not be claimed unknowable: {:?}",
+        manifest.capabilities
+    );
+
+    // The shapes that genuinely cannot fold still report.
+    for source in [
+        "subprocess.run([sys.executable, \"x.py\"])\n",
+        "subprocess.run(config.command)\n",
+        "subprocess.run(build_argv())\n",
+    ] {
+        let found = analyze(
+            &[SourceFile {
+                path: "run.py",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        );
+        assert!(
+            found
+                .capabilities
+                .iter()
+                .any(|c| c.capability.as_str() == "process.exec.dynamic"),
+            "`{}` must still report dynamic",
+            source.trim_end()
+        );
+    }
+}

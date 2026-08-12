@@ -1,0 +1,32 @@
+# Detects a python skill spawning a process whose program is known from source.
+#
+# Paired with `process-exec-dynamic.toml`; the two queries are structurally
+# disjoint and a test asserts it. See queries/python/process-exec.scm.
+id         = "py.process-exec.literal"
+language   = "python"
+capability = "process.exec"
+tier       = "proven"
+query      = "queries/python/process-exec.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Spawns a process whose program is known from source."
+rationale = """
+Ordinary: skills shell out to ffmpeg, git, and systemctl by design. Reported, never
+judged — policy.toml decides. Knowing WHICH program is the useful part, and it is
+what separates this term from process.exec.dynamic.
+"""
+false_positive_notes = """
+Does not fire on an f-string command line: that parses as a plain string node, so
+without the `#not-match?` guard `subprocess.run(f"rm {path}")` would be reported as a
+statically known program — the opposite of true, and the more dangerous direction.
+negative.py pins it, and a dedicated test asserts the two queries never both match.
+
+argv[0] is the question, not the whole command line. `subprocess.run(["ffmpeg", "-i",
+user_path])` is this term: the program is ffmpeg whatever the arguments become.
+
+Python's `exec()` builtin is deliberately absent — that is code.dynamic_eval, a
+different term, and the two rule sets are kept disjoint.
+"""

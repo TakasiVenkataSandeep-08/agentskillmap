@@ -140,19 +140,20 @@ carries one:
 | `net.egress` precision | 39/39 (100%, 95% CI 91.0–100%) |
 | `net.egress` recall | **39/49 (79.6%, 95% CI 66.4–88.5%)** |
 | `env.read.secret` recall | **0/27** — no rule exists yet |
-| `process.exec` recall | 0/5 — no rule exists yet |
+| `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
+| `process.exec.dynamic` recall | 2/2 — n far too small to read |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 52/52 across both detected terms and the false-positive rate is 0 across all
+**Precision is 57/57 across all four detected terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
 That last part is what a broad rule puts at risk. `net.egress` fires on 39 of 92 bundles;
 a rule that common is exactly how a benign stratum gets lit up, and `code_clean` held at 0/36.
 
-**Five more terms have ground truth; one now has a rule.** A second pass over all 92 bundles
+**Five more terms have ground truth; three now have rules.** A second pass over all 92 bundles
 hunted for `net.egress`, `env.read.secret`, `process.exec`, `process.exec.dynamic` and
 `code.dynamic_eval`. The denominators are the finding:
 
@@ -168,6 +169,23 @@ the benign stratum unmoved. The ten remaining misses are named: requests issued 
 session object bound to a local name, a wrapper that renames the call (`proxyFetch(url)`), and
 vendor SDKs — `openai`, `viem`, `linkedin_api` — which reach a network with no protocol named
 at the call site and are the largest single gap in this term.
+
+**`process.exec` and `process.exec.dynamic` ship at n=5 and n=2, and those numbers cannot
+carry an argument.** 3/5 and 2/2 with perfect precision looks good and means very little — the
+95% interval on 3/5 runs from 23% to 88%. They are published because the bar for scoring a term
+is "looked for exhaustively", not "has a usable sample", and suppressing the terms where the
+honest answer is *we looked and there is almost nothing here* would be the more misleading
+choice. The fixture and adversarial suites carry these two terms; the corpus does not.
+
+**Building those two rules corrected them twice.** First, an unconstrained `.exec(` fired on
+`pattern.exec(text)` — a regular expression — and on any object with an `exec` method. Same
+trap as `.get(` and `.fetch(`, caught by the negative fixture. Second, and more interesting:
+`subprocess.run(cmd)` was reported as *dynamic* until three labelled bundles showed `cmd` was a
+single-assignment literal list one line up (`cmd = ["ffmpeg", "-i", src]`). argv[0] is `ffmpeg`
+and perfectly knowable — the engine can fold that, a tree-sitter query cannot, and it has no way
+to tell a name that folds from one that does not. **The rule now declines to claim.** That costs
+a real miss, and it is the right direction: asserting a program is unknowable when it is written
+three words away is a false statement about what a reader can see.
 
 **The labelling deliberately landed before any rule for these terms.** Widening the scored set
 while a rule already fires would score every genuine detection as a false positive, because an

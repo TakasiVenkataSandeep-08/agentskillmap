@@ -1,0 +1,27 @@
+# Detects a typescript skill spawning a process whose program is known from source.
+# Paired with `process-exec-dynamic.toml`; the queries are structurally disjoint
+# and a test asserts it.
+id         = "ts.process-exec.literal"
+language   = "typescript"
+capability = "process.exec"
+tier       = "proven"
+query      = "queries/javascript/process-exec.scm"
+
+[captures]
+site = "@site"
+
+[docs]
+summary = "Spawns a process whose program is known from source."
+rationale = """
+Ordinary: installers run npm, deploy scripts run git. Reported, never judged —
+policy.toml decides. Knowing WHICH program is what separates this from the dynamic
+term.
+"""
+false_positive_notes = """
+Both import forms are matched: `child_process.execSync(...)` and a destructured
+`const { execSync } = require("child_process")` are the same call, and covering only
+the first is an omission this project has shipped three times. Written as a pair.
+
+Does not fire on a template literal carrying a substitution — that is the dynamic
+term, kept disjoint by predicate here and matched structurally there.
+"""
