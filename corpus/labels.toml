@@ -1161,3 +1161,83 @@ verdict = "labelled"
 capabilities = []
 disclosure_delta = false
 note = "Client for a social network for agents. Appends a daily markdown log and keeps a JSON memory of entities and events; the description names the built-in memory management."
+
+# ── fourteenth batch: code_credential ────────────────────────────────────────
+
+[[label]]
+digest = "sha256:779461b16d3f6b51e77aa945569f7adb5d922d289b9512506980971b906bb620"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+note = "Converts an SVG into an Xcode symbolset. Reads the SVG and a template the caller names, writes the symbolset folder and its Contents.json. The credential marker is prose in the setup instructions."
+
+[[label]]
+digest = "sha256:829a64b26029d64cbaf5c921e45cdd3a81ce97f47276ef361f67454ac1f01565"
+stratum = "code_credential"
+verdict = "too_large"
+note = "265 KB across thirty files, including two full boilerplate applications and seven reference documents. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:83bd4813fbac462518dc778215703e7f793f15043962492562952291ea47990e"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# The most significant taxonomy gap the pass has found, and it is not a rule gap.
+#
+# This bundle extracts the agent's own OAuth tokens from the operating system's
+# credential store:
+#
+#   security find-generic-password -s "Claude Code-credentials" -w    (macOS)
+#   secret-tool                                                        (Linux)
+#
+# then greps `accessToken` and `refreshToken` out of the result.
+#
+# `fs.read.credential` is labelled absent, and that is correct by the term's own
+# definition — "reads a known credential path or secret-bearing env var". A
+# keychain is neither a path nor an env var. **There is no term in the taxonomy
+# for reading the OS credential store**, and no rule could report it if there
+# were, because nothing in the manifest can describe it.
+#
+# That is arguably the most direct route to stealing an agent's own
+# authentication, and skillmap currently has no vocabulary for it. Recorded in
+# docs/00-tasks.md's Known gaps with this bundle as the example.
+#
+# Not a delta: the description says "Check Claude Code OAuth usage limits", and
+# the body states plainly that it retrieves the token from the system keychain.
+note = "Reads Claude Code's OAuth access and refresh tokens out of the macOS Keychain, or secret-tool on Linux, and queries the usage endpoint with them. Caches the result in /tmp. Both the description and the body say so."
+
+[[label]]
+digest = "sha256:892439c41c622ebbde3109ed41af755718d714abbae2ea6f35df42cce64d9eb0"
+stratum = "code_credential"
+verdict = "too_large"
+note = "179 KB across twelve files, including a server, a web application and a wallet-connect flow. Beyond the reading budget."
+
+[[label]]
+digest = "sha256:945675caab06d9c409b4059a79760494b3db8ae392053661f699bcb00fc541c2"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = ["fs.read.credential"]
+evidence = ["scripts/setup.js:30"]
+disclosure_delta = false
+# Reads ~/.config/moltmarkets/credentials.json — a per-application directory
+# under ~/.config, the same shape as the wallet skill found earlier and still
+# uncovered by any prefix list. The file is literally named credentials.json.
+note = "Sets up an autonomous prediction-market trading agent. Reads its credentials from ~/.config/moltmarkets/credentials.json and scaffolds a memory directory of JSON and markdown files."
+
+[[label]]
+digest = "sha256:951ccce72a841d7a6429fa6c3259a86695fdf01448ebda25e248cfeb525c7529"
+stratum = "code_credential"
+verdict = "labelled"
+capabilities = []
+disclosure_delta = false
+# No credential read, and a good illustration of how much this sample contains
+# that the rule set has no term firing for. This bundle reads a file or stdin as
+# **code**, writes it to a temp file and executes it, and shells out to
+# `npm install` and `npx playwright install chromium` on first run.
+#
+# That is `process.exec` and `code.dynamic_eval` — both in the taxonomy, neither
+# with a rule. Reported here as absent because they are not in `terms_labelled`,
+# and the manifest reports nothing either.
+note = "Browser automation. Takes a script from a file or stdin, writes it to a temp file beside the skill and runs it with node, installing npm dependencies and a browser on first use."

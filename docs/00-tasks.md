@@ -579,9 +579,9 @@ front of; each is a thing this repository currently claims or implies but does n
 - **Reproducibility is verified within a runner, not across machines.** The release gate builds
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
-- **The labelling pass is 89 of 130 bundles** (75 scored, 14 too large to read). Three strata
+- **The labelling pass is 95 of 130 bundles** (79 scored, 16 too large to read). Three strata
   are complete: `code_clean` 40/40, `code_other_marker` 15/15, `disclosure_shape` 20/20.
-  `code_credential` is at 14/40 and `prose_only` is deliberately unlabelled. `corpus/sample.json` is drawn and committed;
+  `code_credential` is at 20/40 and `prose_only` is deliberately unlabelled. `corpus/sample.json` is drawn and committed;
   `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
   interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
   the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
@@ -601,9 +601,21 @@ front of; each is a thing this repository currently claims or implies but does n
   reported the right capability from the wrong line — flagging a write while missing the read.
   Bundle-level scoring records that as a true positive. Site-level scoring would catch it, and
   needs every label to carry complete evidence rather than one representative citation.
+- **No taxonomy term covers the OS credential store, and this is the largest vocabulary gap
+  found.** A bundle in the sample runs
+  `security find-generic-password -s "Claude Code-credentials" -w` on macOS and `secret-tool`
+  on Linux, then greps `accessToken` and `refreshToken` out of the result — the agent's own
+  OAuth credentials, straight from the keychain. `fs.read.credential` is defined as "a known
+  credential path or secret-bearing env var", and a keychain is neither, so the label is
+  correctly absent and **the manifest has nothing to say about it at all**. That is arguably
+  the most direct route to stealing an agent's authentication. Adding a term is a
+  schema-version event; the example is in `corpus/labels.toml`.
 - **The credential-path prefix list does not cover agent config files.** The labelling pass
   found a bundle reading `~/.openclaw/openclaw.json` and parsing it — and another bundle in the
-  same sample documents putting an API key in exactly that file. Agent config is a credential
+  same sample documents putting an API key in exactly that file. Also uncovered, with several
+  examples now: per-application directories under `~/.config` (`~/.config/solana-skill/config.json`,
+  `~/.config/moltmarkets/credentials.json`) and agent-managed credential directories
+  (`~/.clawdbot/credentials/homebridge.json`). Agent config is a credential
   store in this ecosystem, and `rules/*/credential-read.toml` lists `~/.aws`, `~/.ssh`, `.env`
   and friends but nothing agent-shaped. A data change, once the set of paths is decided from
   the corpus rather than guessed.

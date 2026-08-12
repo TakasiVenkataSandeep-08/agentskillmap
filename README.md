@@ -136,7 +136,7 @@ carries one:
 | Metric | Result |
 |---|---|
 | `fs.read.credential` precision | 6/6 (100%, 95% CI 61.0–100%) |
-| `fs.read.credential` recall | 6/11 (54.5%, 95% CI 28.0–78.7%) |
+| `fs.read.credential` recall | 6/12 (50%, 95% CI 25.4–74.6%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 72/75 (96.0%, 95% CI 88.9–98.6%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
@@ -195,6 +195,14 @@ Three defects, one of them mine.
   which is the modern idiom. Python had both branches from the start. **Fixed**, with fixtures.
   This is the one class of defect this project is least willing to ship: not a missed
   detection, but a missed detection that says nothing.
+
+**The largest vocabulary gap: the OS credential store.** One bundle runs
+`security find-generic-password -s "Claude Code-credentials" -w` on macOS, and `secret-tool` on
+Linux, then greps `accessToken` and `refreshToken` out of the result — the agent's own OAuth
+credentials, straight from the keychain. `fs.read.credential` is defined as "a known credential
+path or secret-bearing env var"; a keychain is neither, so the manifest has **nothing to say
+about it at all**. That is arguably the most direct route to stealing an agent's
+authentication.
 
 **More credential-read shapes, still uncovered: the agent's own config file, and per-skill
 config directories.** One bundle
