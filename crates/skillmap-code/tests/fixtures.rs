@@ -1145,3 +1145,87 @@ fn a_sourced_bundle_file_is_an_import_and_not_an_evaluation() {
         "a whole expansion evaluates content that cannot be seen"
     );
 }
+
+#[test]
+fn every_rule_has_a_fixture_directory_of_its_own() {
+    // Invariant 8 says every RULE ships fixtures. `every_rule_ships_both_fixtures`
+    // checks something weaker and subtly different: that every fixture DIRECTORY
+    // has both files. A rule with no directory at all passes that silently, and
+    // two did — `read-outside-bundle` and `write-outside-bundle` shipped without
+    // fixtures for several commits and nothing noticed.
+    //
+    // A rule's fixture directory is named after its own FILE stem, not after its
+    // id and not after its query. Rules legitimately share a query — both write
+    // terms use `file-write.scm` and typescript reuses javascript's — and each
+    // still owes its own positive and negative, because the two terms filter the
+    // same shape through different path data and a fixture for one proves
+    // nothing about the other. The rule id is not usable either:
+    // `py.net-egress.sdk` lives in `sdk-egress/`.
+    let root = repo_root();
+    let mut missing: Vec<String> = Vec::new();
+
+    for entry in walkdir(&root.join("rules")) {
+        let text = std::fs::read_to_string(&entry).unwrap_or_default();
+        let Some(language) = field(&text, "language") else {
+            continue;
+        };
+        if field(&text, "tier").as_deref() != Some("proven") {
+            continue;
+        }
+        let Some(stem) = entry.file_stem() else {
+            continue;
+        };
+        let dir = root
+            .join("fixtures")
+            .join(&language)
+            .join(stem.to_string_lossy().as_ref());
+        if !dir.is_dir() {
+            missing.push(format!(
+                "{} expects fixtures/{language}/{}/",
+                entry.file_name().unwrap_or_default().to_string_lossy(),
+                stem.to_string_lossy()
+            ));
+        }
+    }
+    missing.sort_unstable();
+    missing.dedup();
+
+    assert!(
+        missing.is_empty(),
+        "these rules ship with no fixture directory (invariant 8):
+  {}",
+        missing.join(
+            "
+  "
+        )
+    );
+}
+
+/// Every `.toml` under `dir`, one level deep, excluding `languages.toml`.
+fn walkdir(dir: &Path) -> Vec<PathBuf> {
+    let mut found = Vec::new();
+    for language in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+        if !language.path().is_dir() {
+            continue;
+        }
+        for rule in std::fs::read_dir(language.path())
+            .into_iter()
+            .flatten()
+            .flatten()
+        {
+            if rule.path().extension().is_some_and(|ext| ext == "toml") {
+                found.push(rule.path());
+            }
+        }
+    }
+    found.sort();
+    found
+}
+
+/// A top-level `key = "value"` from a rule TOML.
+fn field(text: &str, key: &str) -> Option<String> {
+    text.lines()
+        .filter_map(|line| line.split_once('='))
+        .find(|(name, _)| name.trim() == key)
+        .map(|(_, value)| value.trim().trim_matches('"').to_owned())
+}

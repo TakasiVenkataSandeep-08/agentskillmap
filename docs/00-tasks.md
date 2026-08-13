@@ -668,6 +668,27 @@ front of; each is a thing this repository currently claims or implies but does n
   `.beanstalk` and `.fluxa-ai-wallet-mcp`. The fourth is `proxyFetch(url)` — a wrapper that
   renames the call, and the same interprocedural limit that bounds the exec and outside_bundle
   terms.
+- **The `outside_bundle` recall ceiling is structural, not a missing-sink gap.** Write sinks
+  for `mkdir`, `cp`, `mv`, `rm` and their python/js equivalents were added and moved recall by
+  **zero**, which was not the prediction. Reading the misses says why: real skills make their
+  state directory *configurable*, so the path is a function parameter, an env override, a
+  ternary, or all three —
+  `Path(args.export_dir) if args.export_dir else Path(os.environ.get("USAGE_EXPORT_DIR", DEFAULT))`
+  is a representative miss, and every bundle sampled had at least one of those shapes.
+  **Folding cannot fix this, and neither can interprocedural folding**: an env override or a
+  ternary means the path genuinely has more than one possible value, and resolving to one of
+  them would assert something false. What a human labeller does instead is notice that *every*
+  branch is absolute or home-based, so the answer is "outside" regardless of which runs. That
+  is a predicate over the set of possible values rather than a resolution to one — a different
+  analysis from `fold`, and the honest next design if this recall is to move.
+  The sinks were kept anyway: they converted **52 silent misses into visible
+  `unresolved: computed_target` entries** (522 → 574), which is the distinction this project
+  keeps insisting on.
+- **~~invariant 8 was enforced per fixture directory, not per rule.~~** Closed.
+  `every_rule_ships_both_fixtures` checked that every fixture DIRECTORY has both files, which a
+  rule with no directory at all passes silently — and two did: `read-outside-bundle` and
+  `write-outside-bundle` shipped with no fixtures for several commits and nothing noticed.
+  `every_rule_has_a_fixture_directory_of_its_own` now checks the other direction.
 - **`detail.hosts` is promised by the schema and supplied by nothing.** `docs/02-manifest-schema.md`
   says hosts appear "when statically resolvable"; the `net.egress` rules capture no `host`,
   because the engine's host filter returns an empty vector when `host_suffixes` is empty — so
