@@ -149,25 +149,33 @@ carries one:
 | `fs.write.outside_bundle` precision | 14/14 (100%, 95% CI 78.5–100%) |
 | `fs.write.outside_bundle` recall | 14/25 (56.0%, 95% CI 37.1–73.3%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
-| Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
+| Bundles with any `unresolved` entry | 91/92 (98.9%, 95% CI 94.1–99.8%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 106/106 across all eight scored terms and the false-positive rate is 0 across all
+**Precision is 113/113 across all eight scored terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
-That last part is what a broad rule puts at risk. `net.egress` fires on 39 of 92 bundles;
+That last part is what a broad rule puts at risk. `net.egress` fires on 45 of 92 bundles;
 a rule that common is exactly how a benign stratum gets lit up, and `code_clean` held at 0/36.
 
-**Five more terms have ground truth, and all five now have rules.** A second pass over all 92 bundles
-hunted for `net.egress`, `env.read.secret`, `process.exec`, `process.exec.dynamic` and
-`code.dynamic_eval`. The denominators are the finding:
+**Eight terms now have ground truth, and every one of them has a rule.** A second reading pass
+over all 92 bundles hunted for `net.egress`, `env.read.secret`, `process.exec`,
+`process.exec.dynamic` and `code.dynamic_eval`; a third added the two `outside_bundle` terms.
+The denominators are the finding:
 
 ```
-  net.egress            49/92 bundles      env.read.secret      28/92
-  fs.read.credential    18/92              process.exec          5/92
-  process.exec.dynamic   2/92              code.dynamic_eval     1/92
+  net.egress               49/92 bundles     env.read.secret          28/92
+  fs.read.outside_bundle   27/92             fs.write.outside_bundle  25/92
+  fs.read.credential       18/92             process.exec              5/92
+  process.exec.dynamic      2/92             code.dynamic_eval         1/92
 ```
+
+Three more terms ship **declared unmeasured** — `code.obfuscation`,
+`net.fetch_then_execute` and `fs.write.agent_config`. Each is a chain judgement or too rare
+for a rate, each is named in `corpus/labels.toml`, and the eval prints their bundle counts
+directly above the false-positive block they are excluded from. A rule cannot ship for a term
+in neither list: `crates/skillmap-eval/tests/gate.rs` fails the build.
 
 **`net.egress` is in 53% of the labelled corpus — nearly three times `fs.read.credential`.**
 It went from recall 0/49 to **45/49 (91.8%)** at precision 45/45, with the benign stratum
