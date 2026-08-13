@@ -1,0 +1,36 @@
+{
+  "name": "agentskillmap",
+  "version": "0.3.0",
+  "description": "A capability differ for AI agent skills. Records what a skill makes your agent capable of doing, with byte-level evidence, and reports when that changes. Installs the `skillmap` command.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agentskillmap/agentskillmap.git"
+  },
+  "bin": {
+    "skillmap": "bin/skillmap"
+  },
+  "files": [
+    "bin/skillmap",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "security",
+    "supply-chain",
+    "skills",
+    "agent",
+    "claude",
+    "audit"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "optionalDependencies": {
+    "@agentskillmap/darwin-arm64": "0.1.0",
+    "@agentskillmap/darwin-x64": "0.1.0",
+    "@agentskillmap/linux-arm64": "0.1.0",
+    "@agentskillmap/linux-x64": "0.1.0",
+    "@agentskillmap/win32-x64": "0.1.0"
+  }
+}

@@ -31,7 +31,7 @@ edition = "2021"
 # skillmap-corpus needs url -> idna -> icu_*, which require 1.86 or newer.
 rust-version = "1.97"
 license = "Apache-2.0"
-repository = "https://github.com/skillmap/skillmap"
+repository = "https://github.com/agentskillmap/agentskillmap"
 
 [workspace.dependencies]
 # Intra-workspace dependencies carry BOTH a path and a version. The path is what

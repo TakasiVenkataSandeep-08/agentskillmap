@@ -1,8 +1,14 @@
-# skillmap — agent and contributor context
+# agentskillmap — agent and contributor context
 
-> The name is settled: `skillmap`, available on crates.io as `skill-map` and on npm as
-> `skillmap`. The repository was renamed from `skillaudit` in full; if you find the old
-> name anywhere, that is a bug, not a variant spelling.
+> **The project is `agentskillmap`. The binary is `skillmap`.** Both are deliberate: the
+> npm package, the GitHub repository and the Homebrew tap are `agentskillmap`, because
+> `skillmap` is blocked on npm by an existing `skill-map` package and the `skillmap` GitHub
+> organisation has been taken since 2020. What a user types stays short.
+>
+> Internal crate names remain `skillmap-*`. They are never published — `cargo install` is
+> `--git`, see `docs/07-distribution.md` — so renaming thirteen crates would be churn against
+> no reader. Release artifacts stay `skillmap-<target>` for the same reason: they contain the
+> `skillmap` binary.
 
 **This file is canonical.** It is the single source of truth for the invariants, the build
 order, and the definition of done. `CLAUDE.md` points here and adds only Claude-Code-specific

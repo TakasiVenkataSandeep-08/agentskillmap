@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/skillmap/skillmap/security/advisories/new
+    url: https://github.com/agentskillmap/agentskillmap/security/advisories/new
     about: >-
       Vulnerabilities in skillmap itself go through GitHub Security Advisories, not a
       public issue — see SECURITY.md for the full disclosure policy.

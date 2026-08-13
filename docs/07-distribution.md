@@ -88,7 +88,7 @@ Verifying beats asserting; that is the entire lesson.
 ### Verifying a release yourself
 
 ```bash
-git clone https://github.com/skillmap/skillmap && cd skillmap
+git clone https://github.com/agentskillmap/agentskillmap && cd skillmap
 git checkout v0.3.0
 bash scripts/build-release.sh
 sha256sum dist/skillmap
@@ -104,7 +104,7 @@ pinned toolchain (`rust-toolchain.toml`, honoured automatically by rustup).
 GitHub build provenance attestations, sigstore-backed and keyless:
 
 ```bash
-gh attestation verify skillmap-linux-x64.tar.gz --repo skillmap/skillmap
+gh attestation verify skillmap-linux-x64.tar.gz --repo agentskillmap/agentskillmap
 ```
 
 Deliberately **not** a long-lived signing key. A key this project would have to
@@ -127,7 +127,7 @@ npm install --save-dev skillmap
 ```
 
 esbuild's shape: the `skillmap` package contains a Node shim and no binary. Each
-platform's binary lives in its own package (`@skillmap/linux-x64`, …) declaring
+platform's binary lives in its own package (`@agentskillmap/linux-x64`, …) declaring
 `os` and `cpu`, and all five are listed as `optionalDependencies`. npm installs
 the one that matches.
 
@@ -146,7 +146,7 @@ than to `0` — a crashed scan must never read as a passing check.
 ### GitHub Action
 
 ```yaml
-- uses: skillmap/skillmap@v1
+- uses: agentskillmap/agentskillmap@v1
 ```
 
 See `action.yml`. Pin the `ref` input to a tag: leaving it on a branch means the
@@ -156,7 +156,7 @@ repository.
 ### Homebrew
 
 ```bash
-brew install skillmap/skillmap/skillmap
+brew install agentskillmap/agentskillmap/skillmap
 ```
 
 The formula is generated at release time by `scripts/homebrew-formula.sh` from
@@ -171,7 +171,7 @@ to each GitHub release and can be installed from a local file. Recorded in
 ### From source
 
 ```bash
-cargo install --git https://github.com/skillmap/skillmap skillmap-cli
+cargo install --git https://github.com/agentskillmap/agentskillmap skillmap-cli
 ```
 
 **Not `cargo install skillmap-cli` from crates.io**, and this is a real

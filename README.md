@@ -1,6 +1,8 @@
-# skillmap
+# agentskillmap
 
-> Name is a placeholder — check crates.io and npm availability before first publish.
+> The project is **agentskillmap**; the command it installs is **`skillmap`**. The longer name
+> is what was available — `skillmap` is blocked on npm by an existing `skill-map` package and
+> the `skillmap` GitHub organisation was taken in 2020 — and the short one is what you type.
 
 **A capability differ for AI agent skills.** It records what a skill can do, with byte-level
 evidence, and tells you when that changes.
@@ -133,9 +135,9 @@ that gates other people's repositories and not its own is making an untested cla
 | Channel | Command |
 |---|---|
 | npm | `npm install --save-dev skillmap` |
-| GitHub Action | `uses: skillmap/skillmap@v1` — see [`action.yml`](action.yml) |
-| Homebrew | `brew install skillmap/skillmap/skillmap` — formula ships with each release; the tap repo does not exist yet |
-| Source | `cargo install --git https://github.com/skillmap/skillmap skillmap-cli` |
+| GitHub Action | `uses: agentskillmap/agentskillmap@v1` — see [`action.yml`](action.yml) |
+| Homebrew | `brew install agentskillmap/agentskillmap/skillmap` — formula ships with each release; the tap repo does not exist yet |
+| Source | `cargo install --git https://github.com/agentskillmap/agentskillmap skillmap-cli` |
 
 **No `postinstall` script anywhere.** The npm package holds a Node shim and no binary; each
 platform's binary is its own package resolved through `optionalDependencies`, so the bytes
@@ -147,7 +149,7 @@ repositories.
 **Builds are reproducible and the releases are attested.** Two builds of the same commit from
 different directories are byte-identical; the release workflow proves it before publishing
 anything, and refuses to publish a binary containing the path of the machine that built it.
-Verify a download with `gh attestation verify skillmap-linux-x64.tar.gz --repo skillmap/skillmap`,
+Verify a download with `gh attestation verify skillmap-linux-x64.tar.gz --repo agentskillmap/agentskillmap`,
 or rebuild the tag yourself and compare — [`docs/07-distribution.md`](docs/07-distribution.md)
 has the exact steps, and the two bugs that had to be fixed to make the claim true.
 

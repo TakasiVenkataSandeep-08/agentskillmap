@@ -17,7 +17,7 @@ npm install --save-dev skillmap
 ```
 
 This package contains no binary. The binary for your platform arrives as an optional
-dependency (`@skillmap/linux-x64` and friends), which means **there is no `postinstall`
+dependency (`@agentskillmap/linux-x64` and friends), which means **there is no `postinstall`
 script and nothing is downloaded at install time** — the bytes come through npm with the
 same integrity hashes as every other dependency. For a tool whose subject is supply-chain
 risk, that is not a detail.
@@ -39,7 +39,7 @@ does not permit, `3` both, `4` the check could not run.
 
 ## Documentation
 
-<https://github.com/skillmap/skillmap> — the invariants, the manifest schema, the rule format,
+<https://github.com/agentskillmap/agentskillmap> — the invariants, the manifest schema, the rule format,
 and the reasoning behind all of it.
 
 Apache-2.0.

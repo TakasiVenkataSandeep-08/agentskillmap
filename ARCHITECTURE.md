@@ -80,7 +80,7 @@ skillmap/
 ├── skillmap.lock               # this repo's own lock — skillmap gates skillmap
 ├── policy.toml                 # …and its own allowlist, which is empty
 ├── action.yml                  # the published GitHub Action wrapping `skillmap ci`
-├── npm/skillmap/               # the wrapper package; platform packages are generated (T9)
+├── npm/agentskillmap/               # the wrapper package; platform packages are generated (T9)
 ├── eval/                        # committed baseline the CI gate compares against
 ├── schema/                     # JSON Schema for the manifest
 └── .github/workflows/          # CI, release, and the published action
@@ -176,8 +176,8 @@ javascript/typescript, then the long tail. Every unsupported language yields an
 ## Distribution
 
 Rust binary, npm wrapper, esbuild-style: `skillmap` is a thin package whose
-`optionalDependencies` are per-platform packages (`@skillmap/linux-x64`,
-`@skillmap/darwin-arm64`, …) each containing one prebuilt binary. The wrapper resolves and
+`optionalDependencies` are per-platform packages (`@agentskillmap/linux-x64`,
+`@agentskillmap/darwin-arm64`, …) each containing one prebuilt binary. The wrapper resolves and
 execs. No `postinstall` download script — that is itself a supply-chain smell and would be
 indefensible in this project specifically.
 

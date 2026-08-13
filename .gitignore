@@ -3,7 +3,7 @@
 
 # Release staging. scripts/build-release.sh copies the binary to dist/, and
 # scripts/npm-packages.sh assembles the publishable packages under npm-dist/.
-# Both are outputs of a release run; npm/skillmap/ is the committed source they
+# Both are outputs of a release run; npm/agentskillmap/ is the committed source they
 # are built from.
 /dist/
 /npm-dist/

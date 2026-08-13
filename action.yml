@@ -49,7 +49,7 @@ runs:
     - name: Check out skillmap
       uses: actions/checkout@v4
       with:
-        repository: skillmap/skillmap
+        repository: agentskillmap/agentskillmap
         ref: ${{ inputs.ref }}
         path: .skillmap-src
 

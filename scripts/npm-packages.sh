@@ -6,11 +6,11 @@
 # binary and declaring `os` and `cpu`, plus a wrapper package that lists all of
 # them as optionalDependencies. npm installs the one that matches and skips the
 # rest, so nothing has to download anything at install time — which is the whole
-# point, and is stated at length in npm/skillmap/bin/skillmap.
+# point, and is stated at length in npm/agentskillmap/bin/skillmap.
 #
 # These packages are generated rather than committed. Five package.json files
 # differing in two fields each would be five files to keep in sync with the
-# version in npm/skillmap/package.json, and the day they drift is the day npm
+# version in npm/agentskillmap/package.json, and the day they drift is the day npm
 # installs a wrapper that cannot resolve its own binary.
 #
 # Usage:  scripts/npm-packages.sh <version> <artifacts-dir> <output-dir>
@@ -48,10 +48,10 @@ mkdir -p "$OUTPUT"
 # optionalDependencies pin exact versions of the platform packages, so a
 # published wrapper can never pair with a platform package built from different
 # source.
-cp -r "$WORKSPACE/npm/skillmap" "$OUTPUT/skillmap"
-sed -i.bak "s/\"0\.1\.0\"/\"$VERSION\"/g" "$OUTPUT/skillmap/package.json"
-rm -f "$OUTPUT/skillmap/package.json.bak"
-cp "$WORKSPACE/LICENSE" "$OUTPUT/skillmap/LICENSE"
+cp -r "$WORKSPACE/npm/agentskillmap" "$OUTPUT/agentskillmap"
+sed -i.bak -E "s/\"[0-9]+\.[0-9]+\.[0-9]+\"/\"$VERSION\"/g" "$OUTPUT/agentskillmap/package.json"
+rm -f "$OUTPUT/agentskillmap/package.json.bak"
+cp "$WORKSPACE/LICENSE" "$OUTPUT/agentskillmap/LICENSE"
 
 for entry in "${TARGETS[@]}"; do
   target="${entry%%:*}"
@@ -72,7 +72,7 @@ for entry in "${TARGETS[@]}"; do
     exit 1
   fi
 
-  package="$OUTPUT/@skillmap/$target"
+  package="$OUTPUT/@agentskillmap/$target"
   mkdir -p "$package/bin"
   cp "$source_binary" "$package/bin/$binary"
   chmod +x "$package/bin/$binary"
@@ -80,13 +80,13 @@ for entry in "${TARGETS[@]}"; do
 
   cat > "$package/package.json" <<JSON
 {
-  "name": "@skillmap/$target",
+  "name": "@agentskillmap/$target",
   "version": "$VERSION",
   "description": "The skillmap binary for $target. Installed automatically by the \`skillmap\` package; not useful on its own.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/skillmap/skillmap.git"
+    "url": "git+https://github.com/agentskillmap/agentskillmap.git"
   },
   "os": ["$os"],
   "cpu": ["$cpu"],
@@ -94,7 +94,7 @@ for entry in "${TARGETS[@]}"; do
 }
 JSON
 
-  echo "packaged @skillmap/$target"
+  echo "packaged @agentskillmap/$target"
 done
 
 echo

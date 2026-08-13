@@ -424,7 +424,7 @@ def check_prose_paths_resolve(result: CheckResult) -> None:
                 # which is the common case. The gate exists because without it the
                 # check drowns in false positives on illustrative tokens
                 # (`SKILL.md`, `settings.json`, `expected.json`) and on genuine
-                # external references (`anthropics/skills`, `@skillmap/linux-x64`),
+                # external references (`anthropics/skills`, `@agentskillmap/linux-x64`),
                 # and a check that cries wolf gets deleted.
                 continue
 

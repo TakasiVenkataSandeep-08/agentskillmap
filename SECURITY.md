@@ -75,7 +75,7 @@ including the two bugs that stood between the first three and being true.
   builds ran as the same user.
 - **Signed release artifacts, verifiable without trusting the download host.** Keyless
   sigstore attestations bound to the release workflow:
-  `gh attestation verify skillmap-linux-x64.tar.gz --repo skillmap/skillmap`. Deliberately not
+  `gh attestation verify skillmap-linux-x64.tar.gz --repo agentskillmap/agentskillmap`. Deliberately not
   a long-lived key this project would have to store, rotate, and eventually mishandle.
 - **No `postinstall` script in the npm package.** Per-platform binaries ship as
   `optionalDependencies`, so nothing executes at install time and nothing is downloaded
