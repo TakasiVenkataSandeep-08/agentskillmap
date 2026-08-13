@@ -53,6 +53,29 @@ skillmap scan    # print the capability manifest as JSON
 skillmap rules   # list what this build can detect
 ```
 
+**Two places skills live, and the second is the one nobody watches.**
+
+```bash
+skillmap lock --scope user   # ~/.claude/skills — applies to EVERY project
+skillmap ci   --scope user
+```
+
+A project-scope skill is committed, so a pull request already shows it changed —
+skillmap tells you what that change *means*. A user-scope skill is installed with
+one command, applies everywhere, and is never reviewed again. Of 34,284 harvested
+bundles only **9% sit in a project's own agent directory**; most consumption is
+the other kind.
+
+The user lock goes to `~/.skillmap/user.lock`, **never into the repository**:
+`~/.claude/skills` is a different set on every machine, so a committed lock of it
+would fail for everyone except whoever generated it. The policy file follows the
+same rule — a machine-wide check must not change its answer depending on which
+directory you ran it from.
+
+A CI runner has no `~/.claude/skills`, so `--scope user` there finds nothing and
+exits 0. Every run prints the bundle count it looked at, so that zero is visible
+rather than silent. It is a local check, not a gate.
+
 Exit codes: `0` clean, `1` escalation vs the lock, `2` a capability `policy.toml` does not
 permit, `3` both, `4` the check could not run. `4` is separate on purpose — *"could not run"*
 must never read as *"ran and found nothing"*. Full format and semantics:

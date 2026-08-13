@@ -819,10 +819,21 @@ front of; each is a thing this repository currently claims or implies but does n
   `docs/04-semantic-layer.md` warns about. Whether real responses fence often enough to make
   this unusable is a measurement nobody has taken, and the right time to take it is the same
   run that produces the variance numbers.
-- **`skillmap ci` scans `Scope::Project` only.** Skills installed under the user's home
-  directory apply to every project and are not checked. Discovery already supports the scope;
-  what is missing is an answer to which lockfile they belong in, and guessing would produce a
-  lock that differs per machine — invariant 2's most obvious failure mode.
+- **~~`skillmap ci` scans `Scope::Project` only.~~** Closed. `--scope user` scans
+  `~/.claude/skills`, and the corpus is why it moved up the list: of 34,284 harvested
+  bundles only **9% sit in a project's own agent directory** (3,084 across 34 of 170 repos).
+  The rest are published rather than consumed, so project scope was covering the minority
+  case — and specifically the case where a pull request already existed.
+  T2 deferred this because guessing the lockfile location would produce a lock differing per
+  machine, invariant 2's most obvious failure mode. The answer: **the lock follows the scope**,
+  to `~/.skillmap/user.lock`, never the repository. The policy file follows it too — a
+  machine-wide check must not change its answer depending on which directory it ran from, and
+  `<project>/policy.toml` answers a different question. That second half was found by a test,
+  not by design: the escalation test failed because a user-scope run was being judged against
+  the project's policy.
+  A CI runner has no `~/.claude/skills`, so `--scope user` there finds nothing and exits 0.
+  Every run states the bundle count it looked at, so that zero is visible rather than silent —
+  invariant 3 applied to the command line.
 - **~~The taxonomy has thirteen terms and the repository has one rule.~~** Closed, and by
   doing both halves of what this entry demanded. Nine terms grew rules; two were removed
   because the corpus could not support them. **Eleven terms, eleven with rules, none

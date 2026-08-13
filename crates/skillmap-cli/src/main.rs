@@ -33,6 +33,29 @@ const DEFAULT_LOCK: &str = "skillmap.lock";
 /// Default policy file name, in the project root.
 const DEFAULT_POLICY: &str = "policy.toml";
 
+/// Where a **user-scope** lock lives: `~/.skillmap/user.lock`.
+///
+/// Deliberately NOT in the project. `~/.claude/skills` is machine state — a
+/// different set on every developer's laptop — so committing a lock of it would
+/// make `skillmap ci` fail for everyone except whoever generated it, and would
+/// put a byte-identical manifest of a per-machine directory into version
+/// control. Invariant 2's most obvious failure mode, and the reason T2 deferred
+/// this until the answer was decided rather than guessed.
+const USER_LOCK_DIR: &str = ".skillmap";
+const USER_LOCK: &str = "user.lock";
+
+/// Where a **user-scope** policy lives: `~/.skillmap/policy.toml`.
+///
+/// It follows the lock rather than the project for the same reason the lock
+/// does. A machine-wide check must not change its answer depending on which
+/// directory you happened to run it from, and `<project>/policy.toml` describes
+/// what THAT project accepts from its own dependencies — a different question
+/// from what you accept on your own machine.
+///
+/// Absent means unconstrained, not empty: `Policy::load` returns `Option`, and
+/// the distinction is already load-bearing elsewhere.
+const USER_POLICY: &str = "policy.toml";
+
 fn main() -> ExitCode {
     match run() {
         Ok(code) => ExitCode::from(code),
@@ -46,6 +69,11 @@ fn main() -> ExitCode {
 /// Parsed command line.
 struct Args {
     project: PathBuf,
+    /// Which install location to scan.
+    scope: Scope,
+    /// The directory discovery starts from: the project root for
+    /// [`Scope::Project`], the user's home directory for [`Scope::User`].
+    base: PathBuf,
     /// `None` means the rules baked into this binary.
     rules: Option<PathBuf>,
     lock: PathBuf,
@@ -70,8 +98,17 @@ USAGE:
     skillmap version           print the version
 
 OPTIONS:
+    --scope <WHICH>    project | user                [default: project]
+                       `project` scans <project>/.claude/skills and locks to a
+                       file you commit. `user` scans ~/.claude/skills — skills
+                       that apply to EVERY project, and that nobody re-reviews —
+                       and locks to ~/.skillmap/user.lock, which is machine
+                       state and must not be committed.
+                       A CI runner has no ~/.claude/skills, so `--scope user`
+                       there finds nothing. That is a local check, not a gate.
     --project <DIR>    project root to scan          [default: .]
-    --lock <FILE>      lockfile path                 [default: <project>/skillmap.lock]
+    --lock <FILE>      lockfile path                 [default: <project>/skillmap.lock,
+                       or ~/.skillmap/user.lock under --scope user]
     --policy <FILE>    policy path                   [default: <project>/policy.toml]
     --rules <DIR>      load rules from a checkout instead of the ones built in.
                        For developing against an edited rules tree; a release
@@ -134,6 +171,7 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
     let mut lock: Option<PathBuf> = None;
     let mut policy: Option<PathBuf> = None;
     let mut advisory_model: Option<String> = None;
+    let mut scope = Scope::Project;
 
     let mut rest = flags.iter();
     while let Some(flag) = rest.next() {
@@ -143,6 +181,21 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
             "--lock" => &mut lock,
             "--policy" => &mut policy,
             // Not a PathBuf, so it cannot share the slot machinery below.
+            "--scope" => {
+                let Some(value) = rest.next() else {
+                    return Err(format!("`{flag}` needs `project` or `user`"));
+                };
+                scope = match value.as_str() {
+                    "project" => Scope::Project,
+                    "user" => Scope::User,
+                    other => {
+                        return Err(format!(
+                            "unknown scope `{other}`; expected `project` or `user`"
+                        ))
+                    }
+                };
+                continue;
+            }
             "--advisory" => {
                 let Some(value) = rest.next() else {
                     return Err(format!(
@@ -161,13 +214,45 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
     }
 
     let project = project.unwrap_or_else(|| PathBuf::from("."));
+
+    // The discovery root, and the lock that describes it, both follow the scope.
+    let base = match scope {
+        Scope::Project => project.clone(),
+        Scope::User => home_dir().ok_or_else(|| {
+            "cannot find a home directory: neither HOME nor USERPROFILE is set,              so --scope user has nowhere to look. Refusing rather than scanning              an empty set and reporting it clean."
+                .to_owned()
+        })?,
+    };
+    let default_lock = match scope {
+        Scope::Project => project.join(DEFAULT_LOCK),
+        Scope::User => base.join(USER_LOCK_DIR).join(USER_LOCK),
+    };
+    let default_policy = match scope {
+        Scope::Project => project.join(DEFAULT_POLICY),
+        Scope::User => base.join(USER_LOCK_DIR).join(USER_POLICY),
+    };
+
     Ok(Args {
         rules,
-        lock: lock.unwrap_or_else(|| project.join(DEFAULT_LOCK)),
-        policy: policy.unwrap_or_else(|| project.join(DEFAULT_POLICY)),
+        lock: lock.unwrap_or(default_lock),
+        policy: policy.unwrap_or(default_policy),
         advisory_model,
+        scope,
+        base,
         project,
     })
+}
+
+/// The user's home directory, from the environment.
+///
+/// No `dirs` crate: two variables and a filter do not justify a dependency in a
+/// tree whose `SECURITY.md` promises a minimal one, and this is the same trade
+/// the argument parser already makes.
+fn home_dir() -> Option<PathBuf> {
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
+        .filter(|path| !path.as_os_str().is_empty())
 }
 
 /// Load rules, from `--rules` if given and from the binary otherwise.
@@ -298,8 +383,20 @@ fn advisory_provider(args: &Args) -> Result<Option<Box<dyn skillmap_scan::Provid
 fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
     let rules = rules(args)?;
 
-    let discovery = skillmap_resolve::discover(&ClaudeCode, &args.project, Scope::Project)
+    let discovery = skillmap_resolve::discover(&ClaudeCode, &args.base, args.scope)
         .map_err(|error| format!("cannot discover skills: {error}"))?;
+
+    // Said out loud, every run, because a zero here is the quiet failure this
+    // scope invites: a CI runner has no `~/.claude/skills`, so `--scope user`
+    // there would find nothing, exit 0, and read exactly like a clean bill of
+    // health. "Could not look" must never look like "looked and found nothing"
+    // (invariant 3).
+    eprintln!(
+        "skillmap: {} bundle(s) under {} ({:?} scope)",
+        discovery.bundles.len(),
+        args.base.display(),
+        args.scope
+    );
 
     for skipped in &discovery.skipped {
         eprintln!(
@@ -344,6 +441,13 @@ fn write_lock(args: &Args) -> Result<(), String> {
     let json = lock
         .to_json()
         .map_err(|error| format!("cannot serialize the lock: {error}"))?;
+    // `~/.skillmap/` will not exist on a first user-scope run.
+    if let Some(parent) = args.lock.parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)
+                .map_err(|error| format!("cannot create {}: {error}", parent.display()))?;
+        }
+    }
     std::fs::write(&args.lock, json)
         .map_err(|error| format!("cannot write {}: {error}", args.lock.display()))?;
 
