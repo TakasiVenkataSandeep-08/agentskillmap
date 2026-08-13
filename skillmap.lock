@@ -4,13 +4,13 @@
       "capabilities": [],
       "content_digest": "sha256:a9ab0460a0e216920f2fab4fc24f1c9ee073648e7e350e1edfc85c85f52410b4",
       "resolver": "claude-code",
-      "schema_version": "1.0.0"
+      "schema_version": "1.1.0"
     },
     "rule-author": {
       "capabilities": [],
       "content_digest": "sha256:ee7c3215bcb8c1b2dbab47fadb86423bfd1a5e9305851c07a713a81f87ddc0cd",
       "resolver": "claude-code",
-      "schema_version": "1.0.0"
+      "schema_version": "1.1.0"
     }
   }
 }

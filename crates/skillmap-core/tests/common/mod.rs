@@ -108,7 +108,11 @@ pub fn maximal() -> Manifest {
         schema_version: SCHEMA_VERSION.to_owned(),
         tool: Tool {
             name: "skillmap".to_owned(),
-            version: "0.1.0".to_owned(),
+            // Tracks the crate rather than restating it. A hardcoded string
+            // here meant the blessed golden advertised a tool version that had
+            // not existed since the last bump — the same drift class as a
+            // README total nothing recomputes.
+            version: env!("CARGO_PKG_VERSION").to_owned(),
         },
         target: Target {
             kind: BundleKind::Skill,

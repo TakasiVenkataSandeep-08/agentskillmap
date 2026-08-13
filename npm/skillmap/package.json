@@ -1,6 +1,6 @@
 {
   "name": "skillmap",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "A supply-chain auditor for AI agent skills. Answers what a skill makes your agent capable of doing, with byte-level evidence, and diffs that answer across versions.",
   "license": "Apache-2.0",
   "repository": {
