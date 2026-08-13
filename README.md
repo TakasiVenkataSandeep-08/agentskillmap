@@ -229,6 +229,49 @@ half of them. The benign stratum's 95% upper bound is **9.6%**.
 That last part is what a broad rule puts at risk. `net.egress` fires on 45 of 92 bundles;
 a rule that common is exactly how a benign stratum gets lit up, and `code_clean` held at 0/36.
 
+**Those figures are the code plane only.** Capabilities and instruction signals live in
+different fields of the manifest, and every number above iterates `capabilities`. Read the
+`0/36` as *no spurious capability*, not as *nothing fired*.
+
+#### The instruction plane, measured separately
+
+The three shipped `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest
+tier — and had never been counted over the corpus at all. Per signal, on the benign stratum:
+
+| Signal | Benign stratum |
+|---|---|
+| `instruction.config_mutation` | 1/36 (2.8%, 95% CI 0.5–14.2%) |
+| `instruction.exfil` | 1/36 (2.8%, 95% CI 0.5–14.2%) |
+| `instruction.fetch_as_instruction` | 0/36 (0%, 95% CI 0–9.6%) |
+
+**Both firings were read and both are false positives.** One is a test-results document whose
+recommendations list points its human maintainer at `AGENTS.md` as somewhere a daily-routine
+step might live — a roadmap item, not a skill rewriting agent config. The other is a
+network-DLP skill whose threat-model section warns that a compromised skill can POST workspace
+contents to an external server: prose *against* the behaviour, which is the failure mode that
+rule's own `false_positive_notes` predicted and which its negative fixture — this repository's
+threat-model text — guards.
+
+**Writing that paragraph tripped the rule.** The first draft of the sentence above described
+the false positive in the same grammar the rule matches, and
+`no_instruction_rule_fires_on_this_repositorys_own_documentation` failed the build until it
+was rephrased. That is better evidence than either corpus firing: a `pattern`-tier rule cannot
+distinguish describing a behaviour from instructing it, because the tier is a regex over prose
+and nothing more. It is the definition of the tier, not a defect to be narrowed away — which
+is why these findings are quarantined from `capabilities` and why the manifest reports the
+sentence and its byte range rather than a verdict.
+
+Two facts belong next to that table rather than below it. **Across all 92 labelled bundles the
+three signals fired twice in total**, and both times wrongly, so the instruction plane has
+**zero adjudicated true positives on this corpus**. And **its recall is unmeasured**: no
+annotator ever judged the prose, so `capabilities = []` means "not looked for" with respect to
+`instruction.*`, never "not present". A rate against those labels would score every genuine
+detection as a false positive, so none is computed.
+
+What this licenses is narrow and worth stating plainly: the signals are quiet enough not to
+bury a reviewer, and nothing more. `crates/skillmap-eval/tests/instruction_stratum.rs` records
+the adjudicated counts and fails when a rule widens without someone reading the new hits.
+
 **Eight terms now have ground truth, and every one of them has a rule.** A second reading pass
 over all 92 bundles hunted for `net.egress`, `env.read.secret`, `process.exec`,
 `process.exec.dynamic` and `code.dynamic_eval`; a third added the two `outside_bundle` terms.

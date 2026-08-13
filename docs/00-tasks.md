@@ -265,19 +265,53 @@ Decisions worth recording:
 **Done when:** false-positive rate on the benign stratum is measured and published, per
 signal.
 
-**Status: the plane is built and three of five signals ship. T5 is still NOT done — but the
-blocker has moved, and it is no longer a blocker on anything external.**
+**Status: the "done when" is met for all three shipped signals. T5 is done as scoped; two
+signals remain deliberately unshipped and are tracked below rather than counted as met.**
 
-The "done when" above *is* a corpus measurement, and it used to be unreachable: no harvest
-meant no benign stratum. T3 has now run and the stratum exists — `corpus/labels.toml` carries
-**40 `code_clean` bundles**. What is missing is narrower and entirely within reach: the three
-shipped signals are not in `terms_labelled`, so `corpus::run` never scores them, and no
-per-signal false-positive rate is computed or published. The rules could be run over the
-benign stratum today and the hits counted.
+The false-positive rate on the benign stratum is measured per signal and published in the
+README:
 
-**This is the cheapest remaining measurement in the project** and the only thing standing
-between T5 and done. Recording it as "blocked on T3" after T3 shipped would be exactly the
-stale-status failure this file exists to prevent.
+```
+  instruction.config_mutation        1/36 (2.8%, 95% CI 0.5–14.2%)
+  instruction.exfil                  1/36 (2.8%, 95% CI 0.5–14.2%)
+  instruction.fetch_as_instruction   0/36 (0.0%, 95% CI 0.0–9.6%)
+```
+
+**Both firings were read and both are false positives**, each the documented failure mode of
+its own rule: a recommendations list pointing a human maintainer at `AGENTS.md` as somewhere a
+daily-routine step might live, and a network-DLP skill's threat-model section warning that a
+compromised skill can POST workspace contents outward. The second is the case
+`false_positive_notes` predicted in the rule itself.
+
+**Describing the first one tripped the rule.** The initial wording of that sentence matched
+`instruction.config_mutation`, and `no_instruction_rule_fires_on_this_repositorys_own_documentation`
+failed the build until it was rephrased — the FP guard doing its job on its own author. It is
+the sharpest demonstration available that a `pattern`-tier regex cannot separate description
+from instruction, and it argues for the quarantine rather than against the rule.
+
+Three things about this measurement are worth keeping:
+
+- **Nothing had ever counted an instruction finding over the corpus,** and the reason was
+  structural rather than neglect. `Manifest::instructions` is a different field from
+  `Manifest::capabilities`, and `corpus::run` iterates the latter — so every scored term,
+  every precision figure, and the `unmeasured` tally that exists precisely to catch claims
+  without ground truth all walked past the instruction plane without looking at it. A gap a
+  gate cannot see is the kind this repository is supposed to be built against.
+- **Precision and recall are deliberately not computed, and this is not a shortcut.** Every
+  benign-stratum note describes code behaviour; no annotator judged prose. So
+  `capabilities = []` means *not looked for* with respect to `instruction.*`, and scoring
+  against it would book every genuine detection as a false positive — the exact trap the
+  header of `labels.toml` names and `gate.rs` enforces the pairing for. Measuring the firing
+  rate needs no new labels; measuring recall needs a labelling pass that has not happened.
+- **The yield is the uncomfortable part.** Across all 92 labelled bundles the three signals
+  fired **twice in total, both wrong**: zero adjudicated true positives on this corpus. That
+  does not make the plane worthless — recall is unmeasured, so the honest reading is *quiet*,
+  not *useless* — but it is the strongest available argument that the two withheld signals
+  should not ship on enthusiasm.
+
+`crates/skillmap-eval/tests/instruction_stratum.rs` records the adjudicated counts per signal
+and fails when a rule widens without someone reading the new hits. A signal that ships with no
+adjudicated entry fails it too, so the next rule cannot arrive unmeasured.
 
 **Two signals remain deliberately withheld, and their precondition is now satisfiable.** This
 task requires three negative fixtures drawn from real corpus bundles *before* the queries for
