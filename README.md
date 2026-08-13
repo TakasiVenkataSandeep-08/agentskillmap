@@ -2,11 +2,25 @@
 
 > Name is a placeholder — check crates.io and npm availability before first publish.
 
-A supply-chain auditor for AI agent skills. It answers **"what does this skill make my agent
-capable of doing?"** with byte-level evidence, and diffs that answer across versions.
+**A capability differ for AI agent skills.** It records what a skill can do, with byte-level
+evidence, and tells you when that changes.
 
-It is not a linter, not a risk scorer, and not a malware classifier. It emits a capability
-manifest; your `policy.toml` decides what is acceptable.
+Think `npm audit` for the folders your agent runs, not a scanner. The value is the **diff**: a
+skill you approved last month quietly starting to read `~/.aws/credentials` is the thing this
+catches, and the thing a pull request full of prompt edits will not show you.
+
+**What it is not.** Not a linter, not a risk scorer, not a malware classifier, and **not an
+auditor** — a clean report is not an assurance. Recall is measured and published below, and on the
+terms with a usable sample it runs from **44% to 92%** depending on the capability. (Three more
+read 100%, at n=1 and n=2 — those are decoration and the table says so.) It emits a manifest;
+your `policy.toml` decides what is acceptable, and it never uses the words "safe", "malicious"
+or "severity" — a test greps the output to keep it that way.
+
+**Read this before trusting a clean result.** Every precision figure here describes the code
+plane, and **only 10.2% of the 34,284 bundles we harvested ship an executable script at all**.
+For the rest, skillmap reports load phase, disclosure, and three deliberately weak prose
+patterns. The ground truth behind every number is **92 hand-labelled bundles**, 69 of them
+checked by one annotator. The intervals are wide and stated everywhere.
 
 ## Why
 
@@ -19,13 +33,35 @@ The structural gap is progressive disclosure: the agent sees ~100 tokens of desc
 session start. The reviewer reads `SKILL.md`, sees something benign, installs. The payload
 lives in the deep files that only load on trigger, days later, mid-task, unobserved.
 
-Human review of skills is structurally shallower than human review of code. This tool
-closes that gap mechanically.
+Human review of skills is structurally shallower than human review of code. This tool narrows
+that gap mechanically — it does not close it, and the measured numbers below are the honest
+account of how far it gets.
+
+### Who this is for
+
+**Someone operating a skill registry or marketplace.** The harvest found `community/` with
+6,558 bundles, `SkillBank/` with 5,591, `composio-skills/` with 832. Thousands of third-party
+submissions, no realistic human review capacity, and a direct interest in knowing what each one
+can do before listing it. Recall matters less at that scale — 44% on one term still surfaces
+hundreds of real findings — and precision is what decides whether the output is usable at all.
+It is offline, deterministic and has no telemetry, so batch-scanning someone else's code is not
+itself a disclosure.
+
+**Someone who installs skills and wants to know when they change.** Point it at
+`~/.claude/skills`, lock, and re-run. This is the drift case, and it is where a mediocre recall
+still buys you something: you are watching for *changes* in shapes that are covered, not
+enumerating everything that exists.
+
+**Not yet for:** deciding whether an unknown skill is safe to install. A clean report from a
+tool with this recall is not evidence of much, and a determined author evades it easily. The
+known limits are catalogued in `docs/00-tasks.md` — unsupported languages, wrappers the engine
+cannot follow, paths computed at runtime — and that list doubles as an evasion guide, which is
+why it is published rather than buried.
 
 ## The check that matters
 
 ```
-$ skillmap ci
+$ skillmap ci --scope user
 ✗ example-skill  capability escalation vs skillmap.lock
     + fs.read.credential   scripts/collect.py:17   py.credential-read.dotfile
       reads ~/.aws/credentials — added in this update
@@ -37,6 +73,12 @@ $ echo $?
 That is a real run, against `fixtures/projects/v1.1` — a skill whose v1.0 read only project
 files and whose v1.1 also reads `~/.aws/credentials`. `crates/skillmap-cli/tests/escalation.rs`
 asserts every part of it, including that the report fits in eight lines.
+
+**`--scope user` is the interesting half**, and the corpus is why. Of 34,284 harvested bundles
+only **9% sit in a project's own agent directory**; the rest are published rather than
+consumed. A project skill is committed, so somebody was already going to review that diff.
+A user skill under `~/.claude/skills` is installed with one command, applies to every project
+on the machine, and is never looked at again.
 
 Everything else in this repository exists to make that line trustworthy.
 
