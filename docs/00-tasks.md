@@ -668,22 +668,30 @@ front of; each is a thing this repository currently claims or implies but does n
   `.beanstalk` and `.fluxa-ai-wallet-mcp`. The fourth is `proxyFetch(url)` — a wrapper that
   renames the call, and the same interprocedural limit that bounds the exec and outside_bundle
   terms.
-- **The `outside_bundle` recall ceiling is structural, not a missing-sink gap.** Write sinks
-  for `mkdir`, `cp`, `mv`, `rm` and their python/js equivalents were added and moved recall by
-  **zero**, which was not the prediction. Reading the misses says why: real skills make their
-  state directory *configurable*, so the path is a function parameter, an env override, a
-  ternary, or all three —
-  `Path(args.export_dir) if args.export_dir else Path(os.environ.get("USAGE_EXPORT_DIR", DEFAULT))`
-  is a representative miss, and every bundle sampled had at least one of those shapes.
-  **Folding cannot fix this, and neither can interprocedural folding**: an env override or a
-  ternary means the path genuinely has more than one possible value, and resolving to one of
-  them would assert something false. What a human labeller does instead is notice that *every*
-  branch is absolute or home-based, so the answer is "outside" regardless of which runs. That
-  is a predicate over the set of possible values rather than a resolution to one — a different
-  analysis from `fold`, and the honest next design if this recall is to move.
-  The sinks were kept anyway: they converted **52 silent misses into visible
-  `unresolved: computed_target` entries** (522 → 574), which is the distinction this project
-  keeps insisting on.
+- **~~The `outside_bundle` recall ceiling is structural, not a missing-sink gap.~~** Half
+  right. The sinks were indeed not the bottleneck, but the ceiling was not structural either —
+  it was that the engine resolved paths to a single VALUE when the question is about the
+  ROOT. `fs.read.outside_bundle` 37.0% → **44.4%**, `fs.write.outside_bundle` 36.0% → **56.0%**,
+  precision 12/12 and 14/14, benign stratum still 0/36.
+  Three changes, each answering a shape the corpus named:
+  - **`Folded::Rooted`, the mirror of `Folded::Tail`.** A credential rule needs to know what a
+    file is CALLED; an outside-bundle rule needs to know where it is ROOTED. The head survives
+    what the tail does not — `/tmp/groq_temp_$(date +%s).wav` has an unknowable filename and is
+    unambiguously outside — and unlike a suffix, a prefix cannot be undone by appending, so it
+    holds under concatenation as well as joins.
+  - **`${VAR:-default}` folds to the default**, reversing an earlier decision in `fold.rs` that
+    made it `Unknown`. The argument: the default is the bundle's own choice and the override is
+    the operator's, and a manifest describes the bundle. The labels — made by reading source
+    before this existed — already treated it that way, so label and engine now agree for the
+    same reason rather than one having been tuned to the other. Only the default operators
+    qualify; `${VAR#prefix}` rewrites a value rather than supplying a fallback and stays unknown.
+  - **Shell `word` nodes fold as literals.** `$HOME/.local/state` is a concatenation of an
+    expansion and the word `/.local/state`; without this the literal half was dropped and the
+    path resolved to `~` — right root, wrong value, no match. Found because `Rooted` turned the
+    silent failure into a visible `Rooted("~")`.
+  **Still open:** the genuinely multi-valued cases. `Path.cwd()` versus a home default in a
+  ternary, and a path passed in as a function parameter, remain `Unknown` and should — there
+  the engine really cannot establish a single root.
 - **~~invariant 8 was enforced per fixture directory, not per rule.~~** Closed.
   `every_rule_ships_both_fixtures` checked that every fixture DIRECTORY has both files, which a
   rule with no directory at all passes silently — and two did: `read-outside-bundle` and

@@ -1229,3 +1229,57 @@ fn field(text: &str, key: &str) -> Option<String> {
         .find(|(name, _)| name.trim() == key)
         .map(|(_, value)| value.trim().trim_matches('"').to_owned())
 }
+
+#[test]
+fn a_root_is_reported_when_the_filename_is_unknowable() {
+    // `Folded::Rooted`, end to end. The question `outside_bundle` asks is not
+    // "what is this path" but "can it be inside the bundle", and those differ
+    // whenever a path has a knowable root and an unknowable leaf — which the
+    // corpus says is the common shape for state directories.
+    let rules = rules();
+
+    let paths = |source: &str| -> Vec<String> {
+        analyze(
+            &[SourceFile {
+                path: "t.sh",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .iter()
+        .filter_map(|capability| capability.detail.as_ref())
+        .filter_map(|detail| detail.paths.clone())
+        .flatten()
+        .collect()
+    };
+
+    // Known root, unknowable leaf: no suffix can move a path out from under
+    // `/tmp/`, so the root alone settles the question.
+    assert_eq!(
+        paths("T=\"/tmp/x_$(date +%s).wav\"\ncat \"$T\"\n"),
+        vec!["/tmp/x_/<computed>".to_owned()]
+    );
+
+    // `${VAR:-default}` folds to the default: that is the bundle's own choice,
+    // and an override is the operator's.
+    assert_eq!(
+        paths("D=\"${XDG_STATE_HOME:-$HOME/.local/state}/s\"\nmkdir -p \"$D\"\n"),
+        vec!["~/.local/state/s".to_owned()]
+    );
+
+    // A bound variable still beats the default — the file said what it is.
+    assert_eq!(
+        paths("XDG_STATE_HOME=\"/var/lib/x\"\nD=\"${XDG_STATE_HOME:-$HOME/.local/state}\"\nmkdir -p \"$D\"\n"),
+        vec!["/var/lib/x".to_owned()]
+    );
+
+    // A relative root stays inside and reports nothing, which is the whole
+    // point of matching the root rather than assuming.
+    assert!(paths("T=\"out/x_$(date +%s).log\"\ncat \"$T\"\n").is_empty());
+
+    // And a transforming expansion is NOT a default: `${VAR#prefix}` rewrites
+    // the value rather than supplying a fallback, so it stays unknown.
+    assert!(paths("D=\"${SOMEVAR#/opt}\"\nmkdir -p \"$D\"\n").is_empty());
+}

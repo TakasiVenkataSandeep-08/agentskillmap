@@ -268,6 +268,7 @@ fn analyze_file(
             let mut site: Option<Node<'_>> = None;
             let mut paths: Vec<String> = Vec::new();
             let mut suffixed: Vec<String> = Vec::new();
+            let mut rooted: Vec<String> = Vec::new();
             let mut hosts: Vec<String> = Vec::new();
             let mut dynamic = false;
 
@@ -292,6 +293,13 @@ fn analyze_file(
                         // value cannot support.
                         fold::Folded::Tail(value) if !value.is_empty() => {
                             suffixed.push(value);
+                        }
+                        // Head known, tail unknown — the mirror of the case
+                        // above, and only `path_prefixes` may match it. Asking a
+                        // suffix question of it would be asking about a filename
+                        // it does not have.
+                        fold::Folded::Rooted(value) if !value.is_empty() => {
+                            rooted.push(value);
                         }
                         _ => dynamic = true,
                     }
@@ -348,6 +356,25 @@ fn analyze_file(
                     .into_iter()
                     .filter(|value| named(value))
                     .map(|value| format!("{}/{value}", fold::UNKNOWN)),
+            );
+            // A rooted path knows where it starts and not what it is called, so
+            // only a prefix question is fair to ask of it. Tested against the
+            // bare root before the marker is appended, for the same reason the
+            // tail is tested before the marker is prepended.
+            //
+            // This is what lets `/tmp/groq_temp_$(date +%s).wav` be reported as
+            // outside the bundle: the filename is unknowable and irrelevant,
+            // because no suffix can move a path out from under `/tmp/`.
+            paths.extend(
+                rooted
+                    .into_iter()
+                    .filter(|value| {
+                        rule.match_data
+                            .path_prefixes
+                            .iter()
+                            .any(|pattern| value.starts_with(pattern))
+                    })
+                    .map(|value| format!("{value}/{}", fold::UNKNOWN)),
             );
             let hosts = retain_matching(hosts, &rule.match_data.host_suffixes, |value, pattern| {
                 value.ends_with(pattern)

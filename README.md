@@ -144,10 +144,10 @@ carries one:
 | `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
 | `process.exec.dynamic` recall | 2/2 — n far too small to read |
 | `code.dynamic_eval` recall | 1/1 — n=1; see below |
-| `fs.read.outside_bundle` precision | 10/10 (100%, 95% CI 72.2–100%) |
-| `fs.read.outside_bundle` recall | 10/27 (37.0%, 95% CI 21.5–55.8%) |
-| `fs.write.outside_bundle` precision | 9/9 (100%, 95% CI 70.1–100%) |
-| `fs.write.outside_bundle` recall | 9/25 (36.0%, 95% CI 20.2–55.5%) |
+| `fs.read.outside_bundle` precision | 12/12 (100%, 95% CI 75.8–100%) |
+| `fs.read.outside_bundle` recall | 12/27 (44.4%, 95% CI 27.6–62.7%) |
+| `fs.write.outside_bundle` precision | 14/14 (100%, 95% CI 78.5–100%) |
+| `fs.write.outside_bundle` recall | 14/25 (56.0%, 95% CI 37.1–73.3%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |

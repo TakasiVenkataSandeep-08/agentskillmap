@@ -64,6 +64,21 @@ pub enum Folded {
     Exact(String),
     /// The tail resolved and the head did not. Matched against `path_suffixes`.
     Tail(String),
+    /// The **head** resolved and the tail did not. Matched against
+    /// `path_prefixes`, and the exact mirror of [`Folded::Tail`].
+    ///
+    /// This exists because `fs.read.outside_bundle` asks a different question
+    /// from `fs.read.credential`. A credential rule wants to know what a file is
+    /// CALLED, so it needs the tail; an outside-bundle rule wants to know where
+    /// a path is ROOTED, so it needs the head — and the head survives things the
+    /// tail does not. `/tmp/groq_temp_$(date +%s).wav` has an unknowable
+    /// filename and is unambiguously outside the bundle, because no amount of
+    /// unknown suffix can bring a path back under a root it does not start with.
+    ///
+    /// Unlike `Tail`, this survives **concatenation** as well as joins: a prefix
+    /// cannot be undone by appending, whereas `root + ".env"` can produce
+    /// `production.env` and so cannot claim a suffix.
+    Rooted(String),
     /// Nothing usable. The caller reports `unresolved: computed_target`.
     Unknown,
 }
@@ -214,20 +229,81 @@ fn fold_at(node: Node<'_>, source: &str, scope: &Scope<'_>, depth: usize) -> Fol
         // same way `Path.home()` and `os.homedir()` already do — `~`, which is
         // how the rule data spells it.
         //
-        // `${VAR:-default}` folds to UNKNOWN on purpose. Both branches are
-        // reachable and which one runs depends on the environment, so picking
-        // either would be asserting something source cannot establish. That
-        // costs real detections — `${XDG_STATE_HOME:-$HOME/.local/state}` is in
-        // the corpus — and the alternative is a confident guess.
+        // `${VAR:-default}` folds to the DEFAULT, and this reverses an earlier
+        // decision in this file that folded it to UNKNOWN. The old reasoning was
+        // that both branches are reachable so picking either asserts something
+        // source cannot establish. The reversal has an argument rather than a
+        // convenience behind it:
+        //
+        // **The default is the bundle's own choice; the override is the
+        // operator's.** A capability manifest describes what the bundle does as
+        // shipped. If somebody redirects its state directory by setting
+        // `XDG_STATE_HOME`, that is their act and they already know about it —
+        // the manifest is not the place they would learn it.
+        //
+        // The corpus agrees, which is the check that matters: the labels for
+        // these bundles were made by reading the source and judging the act, and
+        // they treat `${XDG_STATE_HOME:-$HOME/.local/state}` as a write under the
+        // home directory. Label and engine now say the same thing for the same
+        // reason, rather than the engine being tuned until they matched.
+        //
+        // Only the DEFAULT operators qualify — `:-`, `-`, `:=`, `=`. The
+        // transforming ones (`#`, `%`, `/`, `^`, `,`) rewrite the value rather
+        // than supply a fallback, and folding those to their operand would be the
+        // confident guess the old comment warned about.
         "simple_expansion" | "expansion" => {
             let mut cursor = node.walk();
             let named: Vec<Node<'_>> = node.named_children(&mut cursor).collect();
             let Some(name) = named.first().filter(|n| n.kind() == "variable_name") else {
                 return Folded::Unknown;
             };
-            // More than the variable itself means a default or an operator.
             if named.len() > 1 {
-                return Folded::Unknown;
+                let raw = text(node);
+                let after = name.end_byte().saturating_sub(node.start_byte());
+                let operator = raw.get(after..).unwrap_or_default();
+                let is_default = operator.starts_with(":-")
+                    || operator.starts_with(":=")
+                    || operator.starts_with('-')
+                    || operator.starts_with('=');
+                if !is_default {
+                    return Folded::Unknown;
+                }
+                // A bound variable beats the default: the file said what it is.
+                if let Some(bound) = scope.get(text(*name)) {
+                    return fold_at(bound, source, scope, depth + 1);
+                }
+                if text(*name) == "HOME" {
+                    return Folded::Exact("~".to_owned());
+                }
+                // Fold every child after the operator, ANONYMOUS ONES INCLUDED.
+                // `${VAR:-$HOME/.local/state}` has one named child in its default
+                // — the `$HOME` expansion — and `/.local/state` is anonymous
+                // text between nodes. Folding only the named children collapsed
+                // this to `~`, which then failed to match a `~/` prefix: right
+                // root, wrong value, and silently no detection.
+                let mut walker = node.walk();
+                let mut seen_operator = false;
+                let mut folded = Folded::Exact(String::new());
+                for child in node.children(&mut walker) {
+                    let raw = text(child);
+                    if !seen_operator {
+                        seen_operator = raw.starts_with(":-")
+                            || raw.starts_with(":=")
+                            || raw == "-"
+                            || raw == "=";
+                        continue;
+                    }
+                    if raw == "}" {
+                        break;
+                    }
+                    let part = if child.is_named() {
+                        fold_at(child, source, scope, depth + 1)
+                    } else {
+                        Folded::Exact(raw.to_owned())
+                    };
+                    folded = join(folded, part, false);
+                }
+                return folded;
             }
             match text(*name) {
                 "HOME" => Folded::Exact("~".to_owned()),
@@ -239,6 +315,16 @@ fn fold_at(node: Node<'_>, source: &str, scope: &Scope<'_>, depth: usize) -> Fol
 
         // Shell `"$DIR/graph.json"` and unquoted `$DIR/graph.json`: a sequence of
         // literal and expansion parts, folded left to right.
+        // A bare shell word is literal text. `$HOME/.local/state` parses as a
+        // concatenation of an expansion and the `word` `/.local/state`, so
+        // without this the literal half was dropped and the whole path resolved
+        // to `~` — right root, wrong value, and no match against a `~/` prefix.
+        //
+        // Safe because `fold` is only ever called on a node a rule captured as a
+        // path, or on the parts of one. A `word` in that position is a path
+        // fragment; it is never a command name or a flag.
+        "word" => Folded::Exact(text(node).to_owned()),
+
         "concatenation" => fold_parts(node, source, scope, depth),
 
         "call" | "call_expression" => fold_call(node, source, scope, depth),
@@ -357,6 +443,19 @@ fn join(left: Folded, right: Folded, separator: bool) -> Folded {
     };
 
     match (left, right) {
+        // A known head with an unknowable tail keeps the head. Appending cannot
+        // move a path out from under its own root, so this holds under
+        // concatenation as well as under a join — which is why it is checked
+        // before the tail-poisoning rule below rather than after it.
+        //
+        // Every arm added here answers a case that was previously `Unknown`, so
+        // nothing that resolved before resolves differently now.
+        (Folded::Exact(a), Folded::Unknown) if !a.is_empty() => Folded::Rooted(a),
+        (Folded::Rooted(a), _) => Folded::Rooted(a),
+        // An empty head contributes nothing, so the right side's root stands.
+        (Folded::Exact(a), Folded::Rooted(b)) => Folded::Rooted(if a.is_empty() { b } else { a }),
+        (Folded::Tail(_) | Folded::Unknown, Folded::Rooted(_)) => Folded::Unknown,
+
         // An unresolvable *tail* poisons everything: the result ends in something
         // unknown, so no suffix claim can be made about it.
         (_, Folded::Unknown) => Folded::Unknown,
@@ -387,7 +486,7 @@ impl Folded {
     #[must_use]
     pub fn value(&self) -> Option<&str> {
         match self {
-            Self::Exact(value) | Self::Tail(value) => Some(value),
+            Self::Exact(value) | Self::Tail(value) | Self::Rooted(value) => Some(value),
             Self::Unknown => None,
         }
     }
@@ -399,6 +498,7 @@ impl Folded {
             Self::Exact(value) => Some(value.clone()),
             Self::Tail(value) if value.is_empty() => None,
             Self::Tail(value) => Some(format!("{UNKNOWN}/{value}")),
+            Self::Rooted(value) => Some(format!("{value}/{UNKNOWN}")),
             Self::Unknown => None,
         }
     }
@@ -509,16 +609,45 @@ mod tests {
     }
 
     #[test]
-    fn an_unresolvable_tail_poisons_but_an_unresolvable_head_does_not() {
-        // The result ends in something unknown: no suffix claim is possible.
+    fn an_unresolvable_tail_poisons_the_suffix_but_not_the_root() {
+        // The result ends in something unknown, so no SUFFIX claim is possible —
+        // but the root survives, and that is a different question. This asserted
+        // `Unknown` until `fs.read.outside_bundle` needed to ask where a path is
+        // rooted rather than what it is called.
         assert_eq!(
             join(Folded::Exact("x".to_owned()), Folded::Unknown, true),
-            Folded::Unknown
+            Folded::Rooted("x".to_owned())
         );
-        // But a join with an unknown head still ends where it says it does.
+        // A join with an unknown head still ends where it says it does.
         assert_eq!(
             join(Folded::Unknown, Folded::Exact(".env".to_owned()), true),
             Folded::Tail(".env".to_owned())
+        );
+        // And the two are genuinely mirrored: an unknown head destroys the root
+        // exactly as an unknown tail destroys the suffix.
+        assert_eq!(
+            join(Folded::Unknown, Folded::Rooted("x".to_owned()), true),
+            Folded::Unknown
+        );
+    }
+
+    #[test]
+    fn a_root_survives_concatenation_where_a_suffix_does_not() {
+        // The asymmetry that justifies a separate variant. Appending cannot move
+        // a path out from under its own root, so `Rooted` holds with the
+        // separator flag false — whereas `Tail` does not, because `root + ".env"`
+        // can produce `production.env`.
+        assert_eq!(
+            join(
+                Folded::Exact("/tmp/wav_".to_owned()),
+                Folded::Unknown,
+                false
+            ),
+            Folded::Rooted("/tmp/wav_".to_owned())
+        );
+        assert_eq!(
+            join(Folded::Unknown, Folded::Exact(".env".to_owned()), false),
+            Folded::Unknown
         );
     }
 
