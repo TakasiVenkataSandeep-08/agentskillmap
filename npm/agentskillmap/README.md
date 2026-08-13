@@ -39,7 +39,7 @@ does not permit, `3` both, `4` the check could not run.
 
 ## Documentation
 
-<https://github.com/agentskillmap/agentskillmap> — the invariants, the manifest schema, the rule format,
+<https://github.com/TakasiVenkataSandeep-08/agentskillmap> — the invariants, the manifest schema, the rule format,
 and the reasoning behind all of it.
 
 Apache-2.0.

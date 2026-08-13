@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/agentskillmap/agentskillmap/schema/manifest-v1.schema.json",
+  "$id": "https://github.com/TakasiVenkataSandeep-08/agentskillmap/schema/manifest-v1.schema.json",
   "title": "skillmap capability manifest",
   "description": "Capability manifest for an AI agent skill bundle. Descriptive only: contains no risk score, grade, or safety judgement by design.",
   "type": "object",

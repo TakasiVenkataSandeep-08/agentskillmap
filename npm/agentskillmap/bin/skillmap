@@ -46,7 +46,7 @@ if (binary === null) {
     `skillmap: no prebuilt binary for ${target}.\n\n` +
       `  - If your platform is not one of darwin-arm64, darwin-x64, linux-arm64,\n` +
       `    linux-x64 or win32-x64, install from source instead:\n` +
-      `      cargo install --git https://github.com/agentskillmap/agentskillmap skillmap-cli\n\n` +
+      `      cargo install --git https://github.com/TakasiVenkataSandeep-08/agentskillmap skillmap-cli\n\n` +
       `  - If it is, this install skipped optional dependencies. npm ci\n` +
       `    --omit=optional and --no-optional both do that, and the binary ships\n` +
       `    as one. Reinstall without them.\n`

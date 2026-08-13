@@ -564,7 +564,7 @@ front of; each is a thing this repository currently claims or implies but does n
   override for developing against an edited tree.
 - **The Homebrew tap repository does not exist.** `scripts/homebrew-formula.sh` generates a
   correct formula from the published checksums and the release workflow attaches it, but
-  `brew install agentskillmap/agentskillmap/skillmap` resolves through `agentskillmap/homebrew-agentskillmap`,
+  `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` resolves through `TakasiVenkataSandeep-08/homebrew-agentskillmap`,
   which has to be created before that command works.
 - **`cargo install skillmap-cli` from crates.io does not work, and that is a decision rather
   than a gap.** Cargo packages only files beneath a package's own directory, and
@@ -579,7 +579,7 @@ front of; each is a thing this repository currently claims or implies but does n
   and a Homebrew formula with four real checksums that **exits non-zero rather than emitting an
   empty `sha256`** when one is missing — the failure mode that shipped once already.
   **Still needed, and none of it is code:** tag a release, publish the npm packages, and create
-  the `agentskillmap/homebrew-agentskillmap` tap. Those need credentials and an account, not engineering.
+  the `TakasiVenkataSandeep-08/homebrew-agentskillmap` tap. Those need credentials and an account, not engineering.
 - **CI syntax-checks the release scripts but does not lint them.** `bash -n` catches parse
   errors; shellcheck would catch more, including some of the class that produced T9's
   silent-failure bug. It is preinstalled on the runners and was left out only because it could

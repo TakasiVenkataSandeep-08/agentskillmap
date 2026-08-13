@@ -195,7 +195,7 @@ jobs:
           cat SHA256SUMS
 
       # Attests the archives, which are what people download. Verify with:
-      #   gh attestation verify skillmap-linux-x64.tar.gz --repo agentskillmap/agentskillmap
+      #   gh attestation verify skillmap-linux-x64.tar.gz --repo TakasiVenkataSandeep-08/agentskillmap
       - uses: actions/attest-build-provenance@v2
         with:
           subject-path: release/skillmap-*

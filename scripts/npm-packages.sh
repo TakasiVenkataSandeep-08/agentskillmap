@@ -86,7 +86,7 @@ for entry in "${TARGETS[@]}"; do
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/agentskillmap/agentskillmap.git"
+    "url": "git+https://github.com/TakasiVenkataSandeep-08/agentskillmap.git"
   },
   "os": ["$os"],
   "cpu": ["$cpu"],

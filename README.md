@@ -135,9 +135,9 @@ that gates other people's repositories and not its own is making an untested cla
 | Channel | Command |
 |---|---|
 | npm | `npm install --save-dev skillmap` |
-| GitHub Action | `uses: agentskillmap/agentskillmap@v1` — see [`action.yml`](action.yml) |
-| Homebrew | `brew install agentskillmap/agentskillmap/skillmap` — formula ships with each release; the tap repo does not exist yet |
-| Source | `cargo install --git https://github.com/agentskillmap/agentskillmap skillmap-cli` |
+| GitHub Action | `uses: TakasiVenkataSandeep-08/agentskillmap@v1` — see [`action.yml`](action.yml) |
+| Homebrew | `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` — formula ships with each release; the tap repo does not exist yet |
+| Source | `cargo install --git https://github.com/TakasiVenkataSandeep-08/agentskillmap skillmap-cli` |
 
 **No `postinstall` script anywhere.** The npm package holds a Node shim and no binary; each
 platform's binary is its own package resolved through `optionalDependencies`, so the bytes
@@ -149,7 +149,7 @@ repositories.
 **Builds are reproducible and the releases are attested.** Two builds of the same commit from
 different directories are byte-identical; the release workflow proves it before publishing
 anything, and refuses to publish a binary containing the path of the machine that built it.
-Verify a download with `gh attestation verify skillmap-linux-x64.tar.gz --repo agentskillmap/agentskillmap`,
+Verify a download with `gh attestation verify skillmap-linux-x64.tar.gz --repo TakasiVenkataSandeep-08/agentskillmap`,
 or rebuild the tag yourself and compare — [`docs/07-distribution.md`](docs/07-distribution.md)
 has the exact steps, and the two bugs that had to be fixed to make the claim true.
 
