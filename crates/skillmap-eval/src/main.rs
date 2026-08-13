@@ -70,9 +70,13 @@ fn main() -> std::process::ExitCode {
     if bless {
         let baseline = Baseline {
             note: "Fixture and adversarial suites only. These are NOT the published \
-                   numbers docs/05-eval.md requires: there is no labeled corpus yet, so \
-                   no precision, recall, or benign-stratum false-positive rate has been \
-                   measured. Re-bless with `cargo run -p skillmap-eval -- --bless`."
+                   numbers docs/05-eval.md requires: precision, recall and the \
+                   per-stratum false-positive rate are computed over corpus/labels.toml \
+                   and published in the README, which \
+                   crates/skillmap-eval/tests/published.rs checks against a fresh \
+                   recompute. They are deliberately not recorded here, because these \
+                   metrics are the fixture and adversarial counts alone. Re-bless with \
+                   `cargo run -p skillmap-eval -- --bless`."
                 .to_owned(),
             corpus_snapshot: None,
             metrics: report.metrics,

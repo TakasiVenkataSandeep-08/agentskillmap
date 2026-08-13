@@ -85,9 +85,16 @@ across two runs on two platforms.
 **Status: done, against a local corpus rather than `anthropics/skills`.** The criterion is
 met by `fixtures/bundles/`, whose blessed manifests are byte-compared on every run and
 schema-validated by `scripts/verify_spec.py`; the two-platform half is CI's `rust` matrix.
-Running against the real `anthropics/skills` corpus is deliberately deferred to **T3**, which
-is the harvester and the task that owns fetching third-party bundles at all. Until T3, no
-part of this repository downloads anything (invariant 9).
+Running against the real `anthropics/skills` corpus was deliberately deferred to **T3**, which
+is the harvester and the task that owns fetching third-party bundles at all. **That deferral
+is discharged:** T3 ran, and `anthropics/skills` is the `baseline` source in
+`corpus/report.md`, parsed by this crate along with 34,284 bundles at large. The parser held
+on real input at a rate worth recording — frontmatter parsed in 100% of head bundles and
+85.7% of the tail, with the failures reported rather than skipped.
+
+The invariant-9 property the deferral protected is unchanged: `skillmap-corpus` is still the
+only crate in the workspace that touches the network, and nothing on the scan path downloads
+anything.
 
 Decisions worth recording:
 
@@ -137,20 +144,28 @@ format-scope decision rule (≥5% presence) has been applied to pick v1 resolver
 
 **This is the kill gate.** If the numbers are boring, publish the negative result and stop.
 
-**Status: the harvester is built and tested; the harvest itself has not been run.**
+**Status: done. The harvest ran; snapshot `2026-08`.**
 
-The pipeline is complete — sources, fetch caching, content-addressed archive, measurement,
-`index.json`, `report.md` — and exercised end to end by tests that use a local `Fetcher`
-instead of the network. What has *not* happened is a real run: that needs a `GITHUB_TOKEN`
-and fetches thousands of third-party repositories, which is the operator's call to make and
-the operator's credentials to use, not something to do on their behalf.
+`corpus/report.md` and `corpus/index.json` describe **34,284 distinct bundles**, deduplicated
+by content digest, with the head/tail split reported separately — 881 from curated sources,
+33,403 from GitHub code search. Every rate carries its denominator, and the lexical table is
+labelled an upper bound above the table rather than in a footnote.
 
-**So the kill-gate decision is still open.** No base rate in this repository has been
-measured against real bundles yet. To run it:
+To reproduce it:
 
 ```bash
 GITHUB_TOKEN=... cargo run -p skillmap-corpus -- --snapshot 2026-08
 ```
+
+**The kill gate resolved to continue, and the numbers that decided it are on the record.**
+10.2% of bundles ship executable scripts and 30.0% carry files no documented path reaches —
+the progressive-disclosure gap this project exists to measure, present in roughly a third of
+the tail rather than in a handful of outliers. Had those come back near zero the honest
+outcome was to publish the negative result and stop; they did not, so T4 onward proceeded.
+
+Two limits on that sample are load-bearing and stated in the report rather than here alone:
+GitHub code search caps at 10 pages of 100 results, so **tail counts are a floor, not an
+estimate**, and only public repositories with an indexed `SKILL.md` are reachable at all.
 
 Decisions worth recording:
 
@@ -196,7 +211,8 @@ The toolchain pin moved to a current stable in this task: `ureq` pulls `url` →
 unported, and the adversarial "sink in dead code" case reports `present` rather than
 `observed`.
 
-**Status: the engine is done. Language breadth is still gated on T3.**
+**Status: done. The engine holds all three clauses, and language breadth now follows the
+harvest rather than waiting on it.**
 
 All three clauses hold, each with a test: the reference triple's fixtures pass, an unported
 language produces `unsupported_language` rather than silence, and the credential read inside
@@ -249,20 +265,30 @@ Decisions worth recording:
 **Done when:** false-positive rate on the benign stratum is measured and published, per
 signal.
 
-**Status: the plane is built and three of five signals ship. T5 is NOT done, and cannot be
-until T3 runs.**
+**Status: the plane is built and three of five signals ship. T5 is still NOT done — but the
+blocker has moved, and it is no longer a blocker on anything external.**
 
-The "done when" above *is* a corpus measurement. There is no benign stratum without the
-harvest, so the false-positive rate is unmeasured and nothing is published. That is the honest
-state, not a technicality to wave through.
+The "done when" above *is* a corpus measurement, and it used to be unreachable: no harvest
+meant no benign stratum. T3 has now run and the stratum exists — `corpus/labels.toml` carries
+**40 `code_clean` bundles**. What is missing is narrower and entirely within reach: the three
+shipped signals are not in `terms_labelled`, so `corpus::run` never scores them, and no
+per-signal false-positive rate is computed or published. The rules could be run over the
+benign stratum today and the hits counted.
 
-**Two signals are deliberately withheld.** This task requires three negative fixtures drawn
-from real corpus bundles *before* the queries for `instruction.silence` and
-`instruction.privilege_claim` are written — they are the signals most likely to earn this
-project attention and most likely to false-positive on ordinary skills that discuss logging
-verbosity or permission handling. Those fixtures do not exist, so those queries are not
-written. `the_two_riskiest_signals_are_deliberately_not_shipped` fails if either appears, so
-shipping them without corpus negatives has to be a deliberate act that deletes an assertion.
+**This is the cheapest remaining measurement in the project** and the only thing standing
+between T5 and done. Recording it as "blocked on T3" after T3 shipped would be exactly the
+stale-status failure this file exists to prevent.
+
+**Two signals remain deliberately withheld, and their precondition is now satisfiable.** This
+task requires three negative fixtures drawn from real corpus bundles *before* the queries for
+`instruction.silence` and `instruction.privilege_claim` are written — they are the signals
+most likely to earn this project attention and most likely to false-positive on ordinary
+skills that discuss logging verbosity or permission handling. When that clause was written
+there was no corpus to draw from. There are now 34,284 bundles, and `instruction.privilege_claim`
+already appears as a ground-truth positive on two of them, so the negatives can be selected
+rather than invented. The fixtures still do not exist, so the queries are still not written.
+`the_two_riskiest_signals_are_deliberately_not_shipped` fails if either appears, so shipping
+them without corpus negatives has to be a deliberate act that deletes an assertion.
 
 Shipped: `instruction.fetch_as_instruction`, `instruction.exfil`,
 `instruction.config_mutation` — each a full triple with a positive and a negative fixture.
@@ -307,7 +333,8 @@ See `docs/05-eval.md`. Three suites: fixture, corpus, adversarial. Per-capabilit
 **Done when:** CI fails on a seeded regression, and the README carries published numbers
 with the corpus version that produced them.
 
-**Status: the gate is done. The published numbers are not, and cannot be until T3 runs.**
+**Status: done. Both clauses hold — the gate fails on seeded regressions, and the README
+carries published numbers naming the corpus snapshot and commit that produced them.**
 
 Clause one holds. `cargo run -p skillmap-eval` runs on both CI platforms and exits non-zero
 on three separate regressions, each seeded by its own test:
@@ -321,17 +348,32 @@ and a gate that only counted failures would wave both through. Deleting a failin
 easiest way to get a green build, so the baseline records how many cases executed and the gate
 treats a fall as a regression.
 
-**Clause two is now partly met.** The harvest ran, and the README carries published numbers
-naming corpus snapshot `2026-08` and the commit that produced it. What it publishes are the
-*corpus base rates* — exact, mechanical, with denominators and the head/tail split — not
-quality metrics.
+**Clause two is now met.** The labelling pass ran. `corpus/labels.toml` carries **115 entries,
+92 of them labelled**, across four strata — `code_clean` (40), `code_credential` (40),
+`code_other_marker` (15), `disclosure_shape` (20) — and the README publishes precision and
+recall per capability from them, together with the per-stratum false-positive rate
+`docs/05-eval.md` names as *the headline metric*.
 
-What is still missing is the labelling pass. `docs/01-corpus-scan.md` calls for ~150
-hand-labelled bundles as ground truth; without them there is no held-out split, no precision
-or recall per capability, and no false-positive rate on a benign stratum — which
-`docs/05-eval.md` names as *the headline metric*. `eval/baseline.json` therefore still carries
-`corpus_snapshot: null`, and the test enforcing that was rewritten: the field stays empty not
-because no corpus exists, but because the eval has never been run against a labelled one.
+At the commit this status describes: **precision 113/113 across eight scored terms, with zero
+false positives in all four strata.** Recall is uneven and published unrounded rather than
+averaged into a flattering single figure — `net.egress` 91.8% and `env.read.secret` 82.1% at
+one end, `fs.write.outside_bundle` 56.0% and `fs.read.outside_bundle` 44.4% at the other. A
+term that misses more than it catches is stated as such; that asymmetry is what licenses the
+README to describe a differ rather than an auditor.
+
+**The publishing half is now gated too.** Invariant 11 says the numbers are published, and
+nothing recomputed them — the table drifted three separate times during the coverage work.
+`crates/skillmap-eval/tests/published.rs` parses the README table and recomputes every rate
+against the labelled corpus, failing on any disagreement. It skips loudly rather than passing
+vacuously where `corpus/raw/` is absent.
+
+**`eval/baseline.json` still carries `corpus_snapshot: null`, and the reason has changed
+again.** It is no longer that no labelled corpus exists — one does, and the eval consumes it
+on every run. It is that this file records `report.metrics`, which holds the fixture and
+adversarial counts alone; the corpus suite prints its rates but does not fold them in.
+Stamping a corpus snapshot onto fixture counts would attach real provenance to numbers the
+corpus did not produce. The corpus rates are gated by `published.rs` instead, so nothing is
+ungated by the omission.
 
 The original blocking statement, kept for the record: published numbers must name the corpus
 version and commit that produced them, and there was no corpus.
@@ -396,15 +438,28 @@ is worth stating precisely rather than rounding up:
 
 Decisions worth recording:
 
-- **The cut criterion could not be evaluated, and was not quietly skipped.** It reads "if T3
-  *labels* show…", and there are no labels. The nearest proxy is the corpus's lexical
-  disclosure-delta column: markers appearing **only** in files no documented path reaches —
-  credential paths 1.6%, secret env vars 1.6%, `eval`/`exec` 2.9%, encoding chains 1.3%,
-  agent-config writes 0.4%, network 9.6%. Every high-signal marker is under the 3% line and
-  the union across markers is unmeasured, so the proxy points at "cut" without being able to
-  say so. The layer therefore ships built, off by default, and unmeasured, and the README
-  says exactly that. **This is the decision the labelling pass exists to make**, and it is
-  the strongest remaining argument for doing it.
+- **The cut criterion has now been evaluated, and it reversed the proxy.** This entry
+  previously recorded that the criterion — *"if T3 labels show disclosure delta in under ~3%
+  of bundles, ship v1.0 without this"* — could not be assessed, and that the nearest
+  available proxy pointed at **cut**: the lexical disclosure-delta column put every
+  high-signal marker under the 3% line (credential paths 1.6%, secret env vars 1.6%,
+  `eval`/`exec` 2.9%, encoding chains 1.3%, agent-config writes 0.4%), with only network at
+  9.6%.
+
+  The labels exist now, and `skillmap-eval` computes the real figure. Among bundles that
+  **have** a description, disclosure delta is **12.9% of the code-bearing corpus**
+  (normal-approximation 95% CI 2.6–23.3%), against a criterion of ~3%. The point estimate
+  says **keep the layer**, not cut it.
+
+  Two caveats belong with that number rather than after it. The strata are **not poolable** —
+  the sample is not proportional, so 12.9% is a weighted estimate and not a raw rate. And the
+  interval's lower bound, 2.6%, sits *below* the 3% line, so the measurement does not settle
+  the question at 95% confidence; it moves the burden of proof rather than discharging it.
+
+  What is worth recording is the direction. The cheap lexical proxy pointed one way and the
+  labelled measurement pointed the other, which is the whole argument for having done the
+  labelling pass. The layer still ships built, off by default, and with its variance
+  unmeasured — that part is unchanged, and is a credentials limitation, not a decision.
 - **The quarantine is enforced three ways, and only one of them is the dependency graph.**
   The `Cargo.toml` has no `skillmap-code` and no `skillmap-instr`, as required — but the
   input type carries the weight. `BundleView` holds a description and file text and has no

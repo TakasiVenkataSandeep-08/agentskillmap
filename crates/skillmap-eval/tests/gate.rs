@@ -166,19 +166,29 @@ fn pending_cases_state_a_reason_naming_what_they_wait_on() {
 
 #[test]
 fn the_baseline_does_not_claim_a_corpus_the_eval_did_not_use() {
-    // A corpus now exists — snapshot `2026-08`, 34,284 bundles, published in the
-    // README. This field still has to stay empty, and the reason has changed:
-    // the corpus is measured but **not labelled**, so the eval has no ground
-    // truth to score against and has never been run over it. Naming a snapshot
-    // here would attach real-looking provenance to numbers that came from the
-    // fixture and adversarial suites alone.
+    // The corpus is now both harvested (snapshot `2026-08`, 34,284 bundles) and
+    // labelled (`corpus/labels.toml`, 92 scored bundles), so the condition this
+    // comment used to name — *"fill this in when a labelled split exists and the
+    // eval actually consumes it"* — is met on both halves. The field still stays
+    // empty, and the reason has changed a second time.
     //
-    // Fill this in when a labelled split exists and the eval actually consumes
-    // it — not when a corpus merely exists.
+    // It is now about what `metrics` contains rather than what exists. The
+    // corpus suite runs on every eval invocation and prints its rates, but only
+    // the fixture and adversarial counts are folded into `report.metrics`, which
+    // is what this file records. Stamping a corpus snapshot onto a set of
+    // fixture counts would attach real provenance to numbers the corpus did not
+    // produce — invariant 4's failure mode, not a bookkeeping nicety.
+    //
+    // The corpus rates are gated, just not here: `published.rs` recomputes every
+    // published rate against the labelled corpus and fails when the README
+    // drifts. Fill this field in only if the corpus metrics are folded into
+    // `metrics` itself.
     let baseline = committed_baseline();
     assert!(
         baseline.corpus_snapshot.is_none(),
-        "the baseline names corpus snapshot {:?}, but the eval has not been run          against a labelled corpus — the harvest alone does not license this field",
+        "the baseline names corpus snapshot {:?}, but `metrics` holds fixture and \
+         adversarial counts only — the corpus rates live in the README, gated by \
+         published.rs",
         baseline.corpus_snapshot
     );
     assert!(
