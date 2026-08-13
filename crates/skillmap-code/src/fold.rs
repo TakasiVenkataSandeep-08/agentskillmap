@@ -96,11 +96,20 @@ impl<'tree> Scope<'tree> {
                 "variable_declarator" => node
                     .child_by_field_name("name")
                     .zip(node.child_by_field_name("value")),
+                // Shell `NAME=value`, including `local NAME=value`.
+                //
+                // Absent until measurement said so: 13 of the 25 corpus misses
+                // for the outside_bundle terms were shell, and every one of them
+                // reached its path through a variable this folder could not see.
+                // The subsystem simply did not speak the language.
+                "variable_assignment" => node
+                    .child_by_field_name("name")
+                    .zip(node.child_by_field_name("value")),
                 _ => None,
             };
 
             if let Some((name, value)) = binding {
-                if name.kind() == "identifier" {
+                if matches!(name.kind(), "identifier" | "variable_name") {
                     if let Some(text) = source.get(name.start_byte()..name.end_byte()) {
                         *counts.entry(text.to_owned()).or_insert(0) += 1;
                         values.insert(text.to_owned(), value);
@@ -136,7 +145,32 @@ fn fold_at(node: Node<'_>, source: &str, scope: &Scope<'_>, depth: usize) -> Fol
     let text = |n: Node<'_>| source.get(n.start_byte()..n.end_byte()).unwrap_or_default();
 
     match node.kind() {
-        "string" | "template_string" => {
+        "string" | "template_string" | "raw_string" => {
+            // A shell string is a sequence of parts: `"${HOME}/.local/share"` is
+            // an expansion followed by literal text. Folding it part by part is
+            // what makes a shell variable usable at all, and it is why this arm
+            // checks for expansion children before falling back.
+            // Any named child means the string is not a literal: an expansion,
+            // a command substitution, an arithmetic expansion. Each has to go
+            // through `fold_parts`, which knows how to say "unknown".
+            //
+            // Checking only for expansions here let `"/tmp/x_$(date +%s).wav"`
+            // fall through to raw extraction, and the command substitution was
+            // spliced into the path as if it were text — a fabricated path in
+            // `detail.paths`, which is the same confident wrong answer the
+            // literal extractor was producing for unquoted shell words. Caught
+            // by reading a corpus finding rather than by a test.
+            let mut cursor = node.walk();
+            let has_parts = node.named_children(&mut cursor).any(|child| {
+                !matches!(
+                    child.kind(),
+                    "string_content" | "string_fragment" | "string_start" | "string_end"
+                )
+            });
+            if has_parts {
+                return fold_parts(node, source, scope, depth);
+            }
+
             let value = crate::literal(node, source);
             // A template string with an interpolation is not a literal. Its
             // static prefix is knowable but its tail is not, which is the wrong
@@ -170,9 +204,42 @@ fn fold_at(node: Node<'_>, source: &str, scope: &Scope<'_>, depth: usize) -> Fol
             )
         }
 
-        "identifier" => scope.get(text(node)).map_or(Folded::Unknown, |value| {
+        "identifier" | "variable_name" => scope.get(text(node)).map_or(Folded::Unknown, |value| {
             fold_at(value, source, scope, depth + 1)
         }),
+
+        // Shell `$VAR` and `${VAR}`.
+        //
+        // `$HOME` is the shell spelling of the home directory, and resolves the
+        // same way `Path.home()` and `os.homedir()` already do — `~`, which is
+        // how the rule data spells it.
+        //
+        // `${VAR:-default}` folds to UNKNOWN on purpose. Both branches are
+        // reachable and which one runs depends on the environment, so picking
+        // either would be asserting something source cannot establish. That
+        // costs real detections — `${XDG_STATE_HOME:-$HOME/.local/state}` is in
+        // the corpus — and the alternative is a confident guess.
+        "simple_expansion" | "expansion" => {
+            let mut cursor = node.walk();
+            let named: Vec<Node<'_>> = node.named_children(&mut cursor).collect();
+            let Some(name) = named.first().filter(|n| n.kind() == "variable_name") else {
+                return Folded::Unknown;
+            };
+            // More than the variable itself means a default or an operator.
+            if named.len() > 1 {
+                return Folded::Unknown;
+            }
+            match text(*name) {
+                "HOME" => Folded::Exact("~".to_owned()),
+                other => scope.get(other).map_or(Folded::Unknown, |value| {
+                    fold_at(value, source, scope, depth + 1)
+                }),
+            }
+        }
+
+        // Shell `"$DIR/graph.json"` and unquoted `$DIR/graph.json`: a sequence of
+        // literal and expansion parts, folded left to right.
+        "concatenation" => fold_parts(node, source, scope, depth),
 
         "call" | "call_expression" => fold_call(node, source, scope, depth),
 
@@ -185,6 +252,45 @@ fn fold_at(node: Node<'_>, source: &str, scope: &Scope<'_>, depth: usize) -> Fol
 
         _ => Folded::Unknown,
     }
+}
+
+/// Fold a node whose children are alternating literal text and expansions.
+///
+/// Shell strings and concatenations are both this shape. Parts are glued left to
+/// right with plain concatenation semantics rather than join semantics, because
+/// `"$DIR/graph.json"` already carries its own separator — inserting another
+/// would produce `~/x//graph.json`.
+///
+/// Quote characters are dropped: they delimit the string and are not part of the
+/// path. Anything that is neither literal text nor a foldable expansion makes the
+/// whole thing unknown, which is the same rule every other arm follows.
+fn fold_parts(node: Node<'_>, source: &str, scope: &Scope<'_>, depth: usize) -> Folded {
+    let mut cursor = node.walk();
+    let mut acc: Option<Folded> = None;
+
+    for part in node.children(&mut cursor) {
+        let text = source
+            .get(part.start_byte()..part.end_byte())
+            .unwrap_or_default();
+        if matches!(text, "\"" | "'" | "$'") {
+            continue;
+        }
+        // The literal pieces of a string are named nodes in some grammars and
+        // anonymous in others, so both are treated as text. Everything else
+        // named — an expansion, a command substitution — is folded, and folding
+        // is what knows how to say "unknown" instead of splicing it in.
+        let folded = match part.kind() {
+            "string_start" | "string_end" => continue,
+            "string_content" | "string_fragment" => Folded::Exact(text.to_owned()),
+            _ if part.is_named() => fold_at(part, source, scope, depth + 1),
+            _ => Folded::Exact(text.to_owned()),
+        };
+        acc = Some(match acc {
+            None => folded,
+            Some(left) => join(left, folded, false),
+        });
+    }
+    acc.unwrap_or(Folded::Unknown)
 }
 
 /// Fold a call expression: joins, constructors, and home-directory lookups.

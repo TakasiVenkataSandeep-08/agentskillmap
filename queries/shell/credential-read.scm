@@ -28,5 +28,12 @@
 ; `unresolved: computed_target` rather than staying silent. Invariant 3.
 (command
   name: (command_name (word) @_cmd)
-  argument: [(simple_expansion) (expansion) (command_substitution)] @dynamic
+  argument: [
+    (simple_expansion)
+    (expansion)
+    (command_substitution)
+    (concatenation)
+    (string (simple_expansion))
+    (string (expansion))
+  ] @dynamic
   (#match? @_cmd "^(cat|less|more|head|tail|source|\.|read)$")) @site

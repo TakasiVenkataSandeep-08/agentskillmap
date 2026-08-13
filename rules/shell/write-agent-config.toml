@@ -6,11 +6,12 @@ tier       = "proven"
 query      = "queries/shell/file-write.scm"
 
 [captures]
-# The shell write query has no computed-target branch: a redirect
-# destination is a word or a string, and an expansion there is already
-# covered by the read rules' dynamic branch.
 site    = "@site"
 path    = "@path"
+# The query gained a computed-target branch when shell folding landed: a
+# redirect destination reached through `$VAR` has to be folded, not extracted
+# literally, or it yields the text `"$GRAPH_FILE"` and matches nothing.
+dynamic = "@dynamic"
 
 # Agent configuration is a credential store and an instruction store in this
 # ecosystem: a skill that writes `CLAUDE.md` or `.mcp.json` is changing what

@@ -3,31 +3,71 @@
 ; The redirect direction is matched explicitly. tree-sitter-bash parses `<`, `>`
 ; and `>>` to one `file_redirect` node, and this repository has already shipped
 ; the consequence of not saying which it wanted: `sh.credential-read.dotfile`
-; reported `cat > .env` — a write — as a credential read. Here the wanted
-; directions are the output ones, and the input one is excluded by naming them.
-
-; `>/dev/null` is discarding output, not writing a file, and it is one of the
-; most common constructs in shell. It was 8 of the 13 false positives the corpus
-; produced for `fs.write.outside_bundle` on this rule's first measured run —
-; `/dev/null` is an absolute path, so the outside-bundle filter matched it
-; perfectly correctly and the claim was still wrong.
+; reported `cat > .env` — a write — as a credential read.
 ;
-; Excluded here rather than in `[match]` because the match modes are all
-; positive: they say which paths are interesting, never which are not. A
-; `#not-match?` in the query is the existing way to say "not this", and it keeps
-; the exclusion next to the shape it qualifies.
+; `>/dev/null` is discarding output, not writing a file, and it was 8 of the 13
+; false positives the corpus produced for `fs.write.outside_bundle` on this
+; rule's first measured run. Excluded with `#not-match?` rather than in `[match]`,
+; because every match mode is positive — they say which paths are interesting,
+; never which are not.
+
+; > path  /  >> path — a literal destination.
 (file_redirect
-  ">"
+  [">" ">>"]
   destination: [(word) (string)] @path
   (#not-match? @path "^/dev/")) @site
 
+; > "$GRAPH_FILE"  /  >> "$DIR/log" — a destination reached through a variable.
+;
+; Captured as `dynamic` rather than `path`, which is the whole point: the `path`
+; role goes through literal extraction and would yield the text `"$GRAPH_FILE"`,
+; matching nothing. The `dynamic` role folds first. Shell folding landed at the
+; same time as this branch and neither is useful without the other — the corpus
+; misses reached their paths through exactly this shape.
 (file_redirect
-  ">>"
-  destination: [(word) (string)] @path
-  (#not-match? @path "^/dev/")) @site
+  [">" ">>"]
+  destination: [
+    (simple_expansion)
+    (expansion)
+    (concatenation)
+    (string (simple_expansion))
+    (string (expansion))
+  ] @dynamic) @site
 
-; tee /etc/thing
+; Commands that create or copy files. `mkdir` and `cp` are how shell scripts
+; write most of what they write, and neither was a sink until the corpus said so.
 (command
   name: (command_name (word) @_cmd)
-  argument: [(word) (string)] @path
-  (#eq? @_cmd "tee")) @site
+  argument: [(word) (string) (raw_string)] @path
+  (#match? @_cmd "^(mkdir|touch|tee|install)$")
+  (#not-match? @path "^-")) @site
+
+(command
+  name: (command_name (word) @_cmd)
+  argument: [
+    (simple_expansion)
+    (expansion)
+    (concatenation)
+    (string (simple_expansion))
+    (string (expansion))
+  ] @dynamic
+  (#match? @_cmd "^(mkdir|touch|tee|install)$")) @site
+
+; cp / mv / ln write their LAST argument. Matching every argument would report
+; the source as a write, which is the same direction error the redirect rule
+; exists to avoid, so the destination is anchored as the final child.
+(command
+  name: (command_name (word) @_cmd)
+  argument: [(word) (string) (raw_string)] @path .
+  (#match? @_cmd "^(cp|mv|ln|rsync)$")) @site
+
+(command
+  name: (command_name (word) @_cmd)
+  argument: [
+    (simple_expansion)
+    (expansion)
+    (concatenation)
+    (string (simple_expansion))
+    (string (expansion))
+  ] @dynamic .
+  (#match? @_cmd "^(cp|mv|ln|rsync)$")) @site

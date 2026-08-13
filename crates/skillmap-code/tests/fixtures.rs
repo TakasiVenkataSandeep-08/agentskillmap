@@ -1103,3 +1103,45 @@ fn a_fetch_without_a_sink_is_egress_and_not_fetch_then_execute() {
         "both halves are still reported separately: {split:?}"
     );
 }
+
+#[test]
+fn a_sourced_bundle_file_is_an_import_and_not_an_evaluation() {
+    // `source "$SCRIPT_DIR/lib.sh"` has a computed head and a literal tail: it
+    // names a specific file inside the bundle, which is an import. Only a WHOLE
+    // expansion — `source "$CONFIG"` — is an evaluation of content nobody can
+    // see. Two corpus bundles source a helper the first way, and the labelling
+    // pass made the same call when it declined to label them.
+    //
+    // Asserted per term rather than by a negative fixture, because the
+    // credential-read rule correctly emits `unresolved: computed_target` on the
+    // same line — it saw a read whose path it could not resolve — and a negative
+    // fixture has to be silent against the entire ruleset.
+    let rules = rules();
+
+    let evaluates = |source: &str| {
+        analyze(
+            &[SourceFile {
+                path: "run.sh",
+                text: source,
+                entered: true,
+            }],
+            &rules,
+        )
+        .capabilities
+        .iter()
+        .any(|capability| capability.capability.as_str() == "code.dynamic_eval")
+    };
+
+    assert!(
+        !evaluates("SCRIPT_DIR=\"$(dirname \"$0\")\"\nsource \"$SCRIPT_DIR/lib.sh\"\n"),
+        "a literal tail names a file in the bundle: that is an import"
+    );
+    assert!(
+        !evaluates("source ./lib.sh\n"),
+        "a literal path is plainly an import"
+    );
+    assert!(
+        evaluates("source \"$CONFIG\"\n"),
+        "a whole expansion evaluates content that cannot be seen"
+    );
+}

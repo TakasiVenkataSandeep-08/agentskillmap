@@ -839,9 +839,9 @@ note = "Uniswap v4 hook tooling against a testnet. Reads RPC URL and deployer ke
 digest = "sha256:2f86f6e03e171f2d797951eafa653971e2dd2ec3e4e9149dede00050444437f9"
 stratum = "code_other_marker"
 verdict = "labelled"
-capabilities = ["net.egress", "fs.write.outside_bundle"]
+capabilities = ["net.egress", "fs.write.outside_bundle", "fs.read.outside_bundle"]
 disclosure_delta = false
-note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote. curl POST to the Groq speech API. Writes a temporary wav into /tmp before playing it."
+note = "Text to speech through a hosted API. Key from GROQ_API_KEY, which the frontmatter declares; writes a temp wav, converts it with ffmpeg, deletes it. The only file it reads is the one it just wrote. curl POST to the Groq speech API. Writes a temporary wav into /tmp before playing it. LABELLING MISS, found by the rule: it reads back the /tmp wav it wrote, and a read of /tmp is outside the bundle just as the write is."
 
 [[label]]
 digest = "sha256:4f31016dcc81254e27adc0f6122076c7116f26f6c9559fd50d55c3e7d992ff80"
@@ -1011,7 +1011,7 @@ note = "73 KB across twelve files, including two ~17 KB generators and a monitor
 digest = "sha256:c0d97695f8bc18733c2df27f94d4123a297843fbcbca044e3f93f065fb502242"
 stratum = "disclosure_shape"
 verdict = "labelled"
-capabilities = ["fs.read.credential", "net.egress", "env.read.secret"]
+capabilities = ["fs.read.credential", "net.egress", "env.read.secret", "fs.write.outside_bundle"]
 evidence = ["scripts/gateway-client.js:37"]
 disclosure_delta = true
 # Reads a gateway token from `.beanstalk/gateway.json`, searched across the
@@ -1025,7 +1025,7 @@ disclosure_delta = true
 # WebSocket to a remote service for "remote monitoring and control" of the local
 # agent, and setup.sh symlinks the client into /usr/local/bin when that directory
 # is writable.
-note = "Connects a local agent to a remote service over a persistent WebSocket for remote monitoring and control. Reads its gateway token from .beanstalk/gateway.json in one of three locations; setup.sh symlinks the client into /usr/local/bin. SKILL.md has no frontmatter. fetch and a persistent WebSocket to the gateway; GATEWAY_TOKEN from the environment."
+note = "Connects a local agent to a remote service over a persistent WebSocket for remote monitoring and control. Reads its gateway token from .beanstalk/gateway.json in one of three locations; setup.sh symlinks the client into /usr/local/bin. SKILL.md has no frontmatter. fetch and a persistent WebSocket to the gateway; GATEWAY_TOKEN from the environment. LABELLING MISS, found by the rule: setup.sh installs the client into /usr/local/bin, which the note described and the label never recorded."
 
 [[label]]
 digest = "sha256:d6094aadd232d0351e12f0b65ed746dc592844f52f36a55fc0347f1a857d930c"

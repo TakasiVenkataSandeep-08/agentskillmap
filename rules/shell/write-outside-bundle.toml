@@ -11,6 +11,10 @@ query      = "queries/shell/file-write.scm"
 [captures]
 site    = "@site"
 path    = "@path"
+# The query gained a computed-target branch when shell folding landed: a redirect
+# destination reached through `$VAR` has to be folded, not extracted literally,
+# or it yields the text `"$GRAPH_FILE"` and matches nothing.
+dynamic = "@dynamic"
 
 # The rare case where the filter IS the definition rather than a list of
 # interesting names: every path inside a bundle is relative and descending, so

@@ -144,15 +144,15 @@ carries one:
 | `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
 | `process.exec.dynamic` recall | 2/2 — n far too small to read |
 | `code.dynamic_eval` recall | 1/1 — n=1; see below |
-| `fs.read.outside_bundle` precision | 9/9 (100%, 95% CI 70.1–100%) |
-| `fs.read.outside_bundle` recall | 9/26 (34.6%, 95% CI 19.4–53.8%) |
-| `fs.write.outside_bundle` precision | 5/5 (100%, 95% CI 56.6–100%) |
-| `fs.write.outside_bundle` recall | 5/24 (20.8%, 95% CI 9.2–40.5%) |
+| `fs.read.outside_bundle` precision | 10/10 (100%, 95% CI 72.2–100%) |
+| `fs.read.outside_bundle` recall | 10/27 (37.0%, 95% CI 21.5–55.8%) |
+| `fs.write.outside_bundle` precision | 9/9 (100%, 95% CI 70.1–100%) |
+| `fs.write.outside_bundle` recall | 9/25 (36.0%, 95% CI 20.2–55.5%) |
 | False positives, `code_clean` (headline) | **0/36 (0%, 95% CI 0–9.6%)** |
 | Bundles with any `unresolved` entry | 90/92 (97.8%, 95% CI 92.4–99.4%) |
 | Real disclosure delta | **12.9% weighted** (95% CI 2.6–23.3%), see below |
 
-**Precision is 101/101 across all eight scored terms and the false-positive rate is 0 across all
+**Precision is 106/106 across all eight scored terms and the false-positive rate is 0 across all
 four code strata** — 92 bundles, not one spurious capability, on a rule set that now fires on
 half of them. The benign stratum's 95% upper bound is **9.6%**.
 
@@ -189,7 +189,7 @@ them would raise recall while lowering what the number means — the same call m
 (`proxyFetch(url)`), which needs the interprocedural analysis this engine does not have.
 
 **The two `outside_bundle` terms have low recall on purpose, and that is what makes them
-honest.** 34.6% and 20.8%, at perfect precision. For these two the rule's `[match]` data is
+honest.** 37.0% and 36.0%, at perfect precision. For these two the rule's `[match]` data is
 almost the *definition* of the term rather than a list of interesting names — so labelling by
 "does this path start with `/` or `~/`" would have made precision 1.0 by construction and
 measured nothing at all. The labels judge the **act** instead, including paths a reader can see
