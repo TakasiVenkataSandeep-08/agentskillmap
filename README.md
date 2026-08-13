@@ -141,9 +141,12 @@ carries one:
 | `net.egress` recall | **45/49 (91.8%, 95% CI 80.8–96.8%)** |
 | `env.read.secret` precision | 23/23 (100%, 95% CI 85.7–100%) |
 | `env.read.secret` recall | **23/28 (82.1%, 95% CI 64.4–92.1%)** |
-| `process.exec` recall | 3/5 (60%, 95% CI 23.1–88.2%) — n too small to read |
-| `process.exec.dynamic` recall | 2/2 — n far too small to read |
-| `code.dynamic_eval` recall | 1/1 — n=1; see below |
+| `process.exec` precision | 3/3 (100%, 95% CI 43.9–100%) |
+| `process.exec` recall | 3/5 (60.0%, 95% CI 23.1–88.2%) — n too small to read |
+| `process.exec.dynamic` precision | 2/2 (100%, 95% CI 34.2–100%) |
+| `process.exec.dynamic` recall | 2/2 (100.0%, 95% CI 34.2–100%) — n far too small to read |
+| `code.dynamic_eval` precision | 1/1 (100%, 95% CI 20.7–100%) |
+| `code.dynamic_eval` recall | 1/1 (100.0%, 95% CI 20.7–100%) — n=1; see below |
 | `fs.read.outside_bundle` precision | 12/12 (100%, 95% CI 75.8–100%) |
 | `fs.read.outside_bundle` recall | 12/27 (44.4%, 95% CI 27.6–62.7%) |
 | `fs.write.outside_bundle` precision | 14/14 (100%, 95% CI 78.5–100%) |

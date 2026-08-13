@@ -711,6 +711,21 @@ front of; each is a thing this repository currently claims or implies but does n
   the only rules in the tree with no `[match]` block, because the path is a property of the API
   rather than of the call site, and the engine already supported that. A gap found by
   measurement and closed with a `.toml` and a `.scm`, which is invariant 7 paying for itself.
+- **~~The published numbers were prose that nothing recomputed.~~** Closed.
+  `crates/skillmap-eval/tests/published.rs` parses the README's metric table and checks it.
+  Invariant 11 says precision and recall are *published in the README*; the computing half was
+  gated and the publishing half was not, and the table drifted three separate times during the
+  coverage work — a precision total two rule-sets out of date, an unresolved rate from before a
+  rule changed it, and a denominators block that called itself "the denominators" while listing
+  six of eight terms.
+  The checks split by what CI can see. `corpus/labels.toml` is committed, so the denominators,
+  the term list and the table's own arithmetic are verified on every push. `corpus/raw/` is
+  gitignored, so the per-row comparison against a freshly computed report runs only where the
+  archive exists — and **skips loudly** rather than passing vacuously, because a green tick for
+  a check that did not run is the exact failure this repository keeps naming. A fifth test
+  asserts the table parses at all, since every other check iterates parsed rows and an
+  unreadable table would satisfy all of them.
+  All five were watched failing on seeded errors before being trusted.
 - **Scoring is per bundle, not per evidence site.** The pass found a bundle where the scanner
   reported the right capability from the wrong line — flagging a write while missing the read.
   Bundle-level scoring records that as a true positive. Site-level scoring would catch it, and
