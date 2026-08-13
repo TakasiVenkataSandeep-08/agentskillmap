@@ -566,11 +566,20 @@ front of; each is a thing this repository currently claims or implies but does n
   correct formula from the published checksums and the release workflow attaches it, but
   `brew install skillmap/skillmap/skillmap` resolves through `skillmap/homebrew-skillmap`,
   which has to be created before that command works.
-- **`cargo install skillmap-cli` from crates.io does not work**, and the build fails loudly
-  rather than producing a ruleless binary. Cargo packages only files beneath a package's own
-  directory, and `skillmap-rules` embeds `rules/` and `queries/` from the workspace root.
-  `cargo install --git` works. See `docs/07-distribution.md` for why moving the trees into the
-  crate, or committing a synchronized copy, are both worse than the gap.
+- **`cargo install skillmap-cli` from crates.io does not work, and that is a decision rather
+  than a gap.** Cargo packages only files beneath a package's own directory, and
+  `skillmap-rules` embeds `rules/` and `queries/` from the workspace root. Both fixes are worse
+  than the gap — see `docs/07-distribution.md` — and none of the four advertised install
+  channels needs the registry: npm, Homebrew and the GitHub Action all ship a **binary**, and
+  `cargo install --git` builds from a checkout where the workspace layout is intact.
+  **Verified end to end:** a binary installed with `cargo install --path` carries all 46 rules,
+  runs from a directory with no rules tree, and correctly reports `net.egress` on a skill
+  planted there. The packaging scripts were exercised against a synthetic dist: five npm
+  platform packages plus a wrapper with correct `optionalDependencies` and no `postinstall`,
+  and a Homebrew formula with four real checksums that **exits non-zero rather than emitting an
+  empty `sha256`** when one is missing — the failure mode that shipped once already.
+  **Still needed, and none of it is code:** tag a release, publish the npm packages, and create
+  the `skillmap/homebrew-skillmap` tap. Those need credentials and an account, not engineering.
 - **CI syntax-checks the release scripts but does not lint them.** `bash -n` catches parse
   errors; shellcheck would catch more, including some of the class that produced T9's
   silent-failure bug. It is preinstalled on the runners and was left out only because it could

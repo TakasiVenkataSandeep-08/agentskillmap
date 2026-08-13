@@ -88,7 +88,7 @@ struct Args {
 }
 
 const USAGE: &str = "\
-skillmap — a supply-chain auditor for AI agent skills
+skillmap — a capability differ for AI agent skills
 
 USAGE:
     skillmap lock  [OPTIONS]   write skillmap.lock from the skills in a project

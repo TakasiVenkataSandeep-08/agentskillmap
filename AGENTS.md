@@ -16,9 +16,12 @@ instructions are legible to exactly one vendor, is arguing against itself.
 
 ## What this is
 
-A supply-chain auditor for AI agent skills (`SKILL.md` bundles). It answers **"what does this
-skill make my agent capable of doing?"** — with byte-level evidence — and diffs that answer
-across versions.
+A capability differ for AI agent skills (`SKILL.md` bundles). It records **"what does this
+skill make my agent capable of doing?"** — with byte-level evidence — and reports when that
+answer changes.
+
+Deliberately not an *auditor*: recall is measured, published, and well short of complete, so a
+clean report is not an assurance. The README carries the numbers and says so above the fold.
 
 It is **not** a linter, **not** a risk scorer, and **not** a malware classifier.
 
