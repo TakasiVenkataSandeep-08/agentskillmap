@@ -635,6 +635,139 @@ Decisions worth recording:
 
 ---
 
+## T10 — the fenced-block gap
+
+Depends on nothing in the engine and everything in the labelling discipline. This is the one
+task whose motivation came from outside the repository.
+
+**The gap, measured rather than argued.** A payload delivered in a fenced code block inside
+`SKILL.md` is invisible to every plane. The identical bytes in a script file are caught
+cleanly:
+
+```
+  curl … | bash  in a fenced block in SKILL.md   ->  capabilities: [], instructions: []
+  the same line  in scripts/init.sh              ->  net.fetch_then_execute, net.egress,
+                                                     code.dynamic_eval
+```
+
+The rules work. They are never handed the bytes. `inventory` shows why:
+`[('SKILL.md', 'markdown')]` and nothing else — fence bodies are never extracted as code.
+
+**Why this is worth a task rather than a Known-gaps line.** The dominant documented attack on
+this ecosystem delivers exactly this way: a *Prerequisites* section telling the agent an
+initialisation script must be run, with the command in a fence. The campaign put on the order
+of a thousand malicious skills into a public marketplace, and a contemporaneous audit of one
+registry found ~12% of listings malicious. A scanner silent on that delivery vector is silent
+on the thing the category exists for. Vendor write-ups and the incident analyses are external
+sources, not evidence this repository produced; what is measured here is the corpus below.
+
+**The nearest existing signal cannot be stretched to cover it.**
+`instruction.fetch_as_instruction` matches `(inline)` nodes — prose — so it structurally never
+sees inside a `fenced_code_block`. Its patterns also require the fetch and the execution in
+one sentence, and the shape in question splits them: the prose says *run the setup script*,
+the fence holds the pipe. Widening those patterns would not reach the fence; it would only
+make the prose rule noisier.
+
+### The obvious fix is the wrong fix, and the corpus says so
+
+Extracting every fence and analysing it as a source file was measured before being rejected.
+
+```
+  labelled bundles with a tagged fence      96/115 (83%)
+  corpus sample with a tagged fence      3037/5902 (51%)
+  untagged fences in the labelled set          939
+  labelled bundles whose bash fence holds
+    a sink-ish token                          31/115
+```
+
+Three separate objections, each independently sufficient:
+
+- **Invariant 1.** A usage example showing `curl https://api.example.com` would make the
+  manifest claim the skill egresses. It documents egress. Those are different claims and the
+  manifest must not conflate them.
+- **The labels stop being ground truth.** Every label was assigned by reading *code files*.
+  Extending analysis to fences changes what "the bundle does" means, so up to 31 labelled
+  bundles could gain capabilities their labels deny and the benign stratum's 0/36 almost
+  certainly breaks. Shipping that before relabelling is the precision-collapse failure the
+  governing principle exists to prevent.
+- **It is the `mcp.tool_reference` trap exactly.** 939 untagged fences have no determinable
+  language, so invariant 3 demands an `unresolved` entry for each, moving the published
+  unresolved rate for nearly every bundle for reasons unrelated to detection quality. That is
+  the documented reason `mcp.tool_reference` was removed from the taxonomy rather than
+  covered, and it applies here unchanged.
+
+### The design
+
+**A fourth instruction-plane signal at `tier = "pattern"`** — not a capability term, not the
+code plane. A markdown query matching a `fenced_code_block` whose info string is in the shell
+family and whose body carries a fetch-then-execute shape.
+
+The claim it makes is the one that is actually true: *the prose in this bundle directs
+execution of a command it supplies.* Not *this bundle egresses*.
+
+Writing that sentence tripped `instruction.fetch_as_instruction`, and the repository's own FP
+guard failed the build until it was rephrased — the second time in two commits that describing
+a behaviour matched the rule for instructing it. It is the argument for keeping this signal at
+`pattern` tier and in the `instructions` branch, made by the thing itself rather than asserted.
+
+- **No blending (invariant 5).** Pure `pattern` tier, lands in `instructions`, never in
+  `capabilities`. A consumer trusting only `proven` still drops two keys. No dependency on
+  `skillmap-code`, so the crate graph keeps enforcing the separation.
+- **No new analysis unit,** therefore no new `unresolved` entries and no movement in the
+  published unresolved rate — the objection that sinks the extraction design does not apply.
+- **Provenance is free (invariant 4).** The fence node's byte range already points at real
+  bytes in `SKILL.md`; no synthetic paths, no offset arithmetic, no inventory entry for a
+  thing that is not a file.
+- **Rules stay data (invariant 7).** One `.scm` pattern and a TOML file. No Rust.
+
+**It must not become a verdict.** Of the 185 corpus bundles carrying `fetch | shell`, most are
+legitimate installer instructions for real tools. Nothing in this repository can distinguish
+an attacker-controlled URL from a well-known one, and invariant 1 says it should not try. The
+signal reports the directive and its bytes; `policy.toml` decides whether a repository
+tolerates it.
+
+### The base rate, and why a targeted draw is mandatory
+
+Over all 34,302 harvested `SKILL.md` files:
+
+```
+  with a shell fence                 11871  (34.6%)
+  fetch | shell                        185  (0.54%)
+  fetch of a .sh/.py installer          64
+  combined positives                   249  (0.73%)
+```
+
+The existing labelled sample contains **two** such bundles. A rate computed on two is not a
+rate, so this term cannot be measured on the current sample and a `fence_directive` stratum
+has to be drawn. That is a sampling decision governed by `docs/01-corpus-scan.md`, and the
+stratum is not proportional, so its numbers are reported per stratum and never pooled.
+
+**Done when:** the signal's false-positive rate on the benign stratum is measured and
+published per signal, alongside the three that already are, and a positive stratum exists
+large enough for the interval to mean something.
+
+### Order, and the one clause that cannot move
+
+1. **Labelling lands first.** Draw ~40 positives from the 249 plus negatives from the 11,871
+   shell-fence population, so ordinary usage examples are represented rather than assumed
+   harmless. Add the term to `vocabulary` and `terms_labelled` **before** any rule exists —
+   precision is 0/0 and recall an honest 0/N while nothing detects it. Doing it afterwards
+   scores every genuine detection as a false positive, because an empty array means "not
+   looked for", not "not present". `crates/skillmap-eval/tests/gate.rs` enforces the pairing.
+2. **Then the rule triple**, with a negative fixture drawn from a real legitimate installer in
+   the corpus rather than invented. That is the hardest false positive this rule faces, and
+   invariant 8 does not accept a plausible-looking stand-in for it.
+3. **Then measure, publish, and gate.** The per-signal row joins the README table, and
+   `crates/skillmap-eval/tests/instruction_stratum.rs` gains its adjudicated entry — that file
+   already fails when a signal ships without one, so this step cannot be skipped quietly.
+
+**Status: scoped, not started.** The measurements above are real and reproducible from
+`corpus/raw/`; no rule, no label and no fixture exists yet. Sequenced ahead of the remaining
+T9 distribution items, because a scanner that is silent on this delivery vector is silent on
+the case the category is named for, and that is the first thing a security reader will test.
+
+---
+
 ## Cross-cutting, every task
 
 The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of the above.
@@ -645,6 +778,13 @@ The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of 
 
 Tracked here rather than left to be rediscovered. None is a blocker for the task it sits in
 front of; each is a thing this repository currently claims or implies but does not yet have.
+
+- **A payload in a fenced code block inside `SKILL.md` is invisible to every plane**, while the
+  identical bytes in a script file are caught. This is the largest detection gap in the
+  repository and it has its own task — **T10** above — because closing it correctly needs a
+  drawn stratum and a labelling pass, not a parser tweak. The naive fix breaks invariant 1 and
+  moves the unresolved rate for nearly every bundle; the measurements behind both claims are
+  in T10.
 
 - **~~`policy.toml` has no format spec.~~** Closed by T8: `docs/06-policy-and-lock.md`.
 - **~~`skillmap.lock` is specified in one sentence.~~** Closed by the same document — fields,
