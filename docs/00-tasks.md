@@ -678,13 +678,20 @@ front of; each is a thing this repository currently claims or implies but does n
   the same commit twice from two directories and compares. Two independent machines agreeing
   is the stronger claim and needs a second builder this project does not have.
 - **The labelling pass covers every code-bearing stratum completely**: `code_clean` 40/40,
-  `code_credential` 40/40, `code_other_marker` 15/15, `disclosure_shape` 20/20. 115 of 130
-  bundles labelled, 90 scored, 25 too large to read. `prose_only` (15) is deliberately
-  unlabelled — no supported-language file by construction, so a label there records the
-  stratum definition rather than a reading.
-- **Recall is 61.1%**, from 38.9% before constant folding, with **zero new false positives**
-  across 92 labelled bundles. Eighteen labelled bundles read a credential; the rules catch
-  eleven.
+  `code_credential` 40/40, `code_other_marker` 15/15, `disclosure_shape` 20/20 — every drawn
+  bundle read and dispositioned. Of those 115 entries, **92 are scored and 23 are `too_large`
+  to read within one label's budget**; the scored population per stratum is `code_clean` 36,
+  `code_credential` 28, `code_other_marker` 14, `disclosure_shape` 14. `prose_only` (15) is
+  deliberately unlabelled — no supported-language file by construction, so a label there
+  records the stratum definition rather than a reading.
+- **~~Recall is 61.1%, and the rules catch eleven of eighteen credential reads.~~** Superseded
+  twice over, and left here struck rather than edited because the number was published while
+  it was true. `fs.read.credential` is **13/18 (72.2%)** after `path_contains` and a widened
+  `~/.config/` prefix. More to the point, a single "recall" figure stopped being meaningful
+  once seven more terms shipped: the eight scored terms range from `net.egress` at 91.8% to
+  `fs.read.outside_bundle` at 44.4%, and averaging them would hide exactly the spread a
+  reviewer needs. The per-term table in the README is the number now; there is no headline
+  recall and there should not be one.
 - **~~Every credential read computes its path, and the rules match literals.~~** Addressed.
   `skillmap-code::fold` resolves literals, path joins, home-directory lookups, `Path(x)` and
   identifiers bound exactly once per file, then matches fully-resolved paths by location or
@@ -711,10 +718,12 @@ front of; each is a thing this repository currently claims or implies but does n
     real design question with real over-reach risk, and it is now backed by three examples
     rather than none.
   `corpus/sample.json` is drawn and committed;
-  `corpus/labels.toml` holds the ground truth so far. Every published rate carries a Wilson
-  interval, and at this n the headline false-positive bound is 22.8% — still wide enough that
-  the sample cannot distinguish a good scanner from a mediocre one. Continuing it is the highest-
-  value work left: `python scripts/label_worklist.py --stratum code_clean --limit 6 --fs-view`.
+  `corpus/labels.toml` holds the ground truth. Every published rate carries a Wilson interval,
+  and the benign stratum's upper bound has tightened from 22.8% at the n this entry was written
+  to **9.6% at 0/36** — narrow enough to say the rule set does not light up ordinary bundles,
+  and still too wide to separate a good scanner from a very good one. The labelling pass itself
+  is no longer the highest-value work left, because it is complete for every code-bearing
+  stratum; what remains of it is the review backlog in the next entry.
 - **~~The labels are single-annotator and unreviewed.~~** Addressed for a quarter of the
   corpus, and the result argues for finishing the job rather than closing it. A second
   annotator independently labelled 23 of 92 bundles — a seeded 15% control plus every contested
@@ -727,9 +736,10 @@ front of; each is a thing this repository currently claims or implies but does n
   only — every disclosure-delta label, which is the evidence deciding whether T7 ships, remains
   checked by nobody.
 - **~~Five terms now carry ground truth and no rule.~~** One of the five closed. `net.egress`
-  ships for all four languages at **39/49 recall (79.6%), precision 39/39, zero false
-  positives** across every stratum — including `code_clean` at 0/36, which is the number a rule
-  firing on half the corpus puts at risk. Its first run also caught a labelling error: a bundle
+  shipped for all four languages at 39/49 recall (79.6%), precision 39/39, zero false
+  positives across every stratum — including `code_clean` at 0/36, which is the number a rule
+  firing on half the corpus puts at risk. *(That recall is the figure at the time; vendor-SDK
+  detection later took it to **91.8%** — see the `net.egress` misses entry below.)* Its first run also caught a labelling error: a bundle
   whose note said it *"refreshes the JWT against a remote API"* carried no `net.egress` term.
   The scanner was right; the denominator moved 48 → 49.
   **Now also closed:** `process.exec` 3/5 and `process.exec.dynamic` 2/2 (both n far too small
@@ -740,8 +750,12 @@ front of; each is a thing this repository currently claims or implies but does n
   fired on exactly one of 92 bundles and that one was right, so its false-positive rate is a
   real measurement even though its recall is not. The term is carried by the fixture and
   adversarial suites.
-  **Six of thirteen terms now have rules, at precision 81/81 and a benign-stratum
-  false-positive rate of 0/36.** The remaining seven are T7's endgame.
+  **~~Six of thirteen terms now have rules, at precision 81/81 and a benign-stratum
+  false-positive rate of 0/36. The remaining seven are T7's endgame.~~** That endgame is
+  finished: **11 terms, 11 with rules**, precision **113/113** across the eight scored terms,
+  benign stratum still 0/36. Which two terms were removed and why is recorded once, in the
+  taxonomy entry near the end of this section — not restated here, because a second copy is a
+  second copy that drifts.
 - **`env.read.secret`'s five misses are three shapes.** Three are shell, deferred on purpose:
   `$SECRET_VAR` expansion is indistinguishable from a mention, and appears in comments and
   heredocs, so shell is where a name-regex rule produces its worst noise. It ships after the
@@ -933,18 +947,21 @@ front of; each is a thing this repository currently claims or implies but does n
   Every run states the bundle count it looked at, so that zero is visible rather than silent —
   invariant 3 applied to the command line.
 - **~~The taxonomy has thirteen terms and the repository has one rule.~~** Closed, and by
-  doing both halves of what this entry demanded. Nine terms grew rules; two were removed
-  because the corpus could not support them. **Eleven terms, eleven with rules, none
-  uncovered — invariant 12 is satisfied.** Schema 1.1.0 carries the change with a migration
-  note in `docs/02-manifest-schema.md`.
+  doing both halves of what this entry demanded. Nine terms grew rules; two were removed, and
+  in neither case for want of a rule that could have been written — the reasons are below and
+  are different from each other. **Eleven terms, eleven with rules, none uncovered —
+  invariant 12 is satisfied for capability terms.** Schema 1.1.0 carries the change with a
+  migration note in `docs/02-manifest-schema.md`.
   `agent.hook.install` went because its real form is a JSON edit and `fs.write.agent_config`
   covers its instances; `mcp.tool_reference` because it lives in `.mcp.json` and registering
   a JSON grammar would stop every `.json` file in every bundle reporting
   `unsupported_language`, moving the published unresolved rate for all 92 bundles for reasons
   unrelated to detection quality. Removal is provably non-breaking: no manifest has ever
   contained either term, because no rule ever emitted one.
-  **Eight terms are scored against ground truth at precision 95/95**, with the benign stratum
-  at 0/36. Three ship declared-unmeasured in `terms_detected_unscored` — `code.obfuscation`,
+  **Eight terms are scored against ground truth at precision 113/113** — 95/95 when this line
+  was first written, before the vendor-SDK and `Folded::Rooted` work added detections without
+  adding a single false positive — with the benign stratum at 0/36. Three ship
+  declared-unmeasured in `terms_detected_unscored` — `code.obfuscation`,
   `net.fetch_then_execute` and `fs.write.agent_config` — all chain or rarity cases where n
   cannot support a rate, and the eval prints their bundle counts above the false-positive
   block they are excluded from.
