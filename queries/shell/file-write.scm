@@ -29,6 +29,7 @@
   destination: [
     (simple_expansion)
     (expansion)
+    (command_substitution)
     (concatenation)
     (string (simple_expansion))
     (string (expansion))
@@ -47,6 +48,7 @@
   argument: [
     (simple_expansion)
     (expansion)
+    (command_substitution)
     (concatenation)
     (string (simple_expansion))
     (string (expansion))
@@ -66,6 +68,7 @@
   argument: [
     (simple_expansion)
     (expansion)
+    (command_substitution)
     (concatenation)
     (string (simple_expansion))
     (string (expansion))

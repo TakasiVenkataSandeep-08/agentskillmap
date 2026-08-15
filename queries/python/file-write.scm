@@ -14,7 +14,7 @@
 
 (call
   function: (identifier) @_fn
-  arguments: (argument_list . [(identifier) (attribute) (call) (binary_operator)] @dynamic (string) @_mode)
+  arguments: (argument_list . [(identifier) (attribute) (subscript) (call) (binary_operator)] @dynamic (string) @_mode)
   (#eq? @_fn "open")
   (#match? @_mode "[wax+]")) @site
 
@@ -63,7 +63,7 @@
   function: (attribute
     object: (identifier) @_mod
     attribute: (identifier) @_fn)
-  arguments: (argument_list . [(identifier) (attribute) (call) (binary_operator) (subscript)] @dynamic)
+  arguments: (argument_list . [(identifier) (attribute) (subscript) (call) (binary_operator)] @dynamic)
   (#match? @_mod "^(os|shutil)$")
   (#match? @_fn "^(makedirs|mkdir|remove|unlink|rename|replace|rmtree|rmdir)$")) @site
 
@@ -82,6 +82,6 @@
   function: (attribute
     object: (identifier) @_mod
     attribute: (identifier) @_fn)
-  arguments: (argument_list . (_) [(identifier) (attribute) (call) (binary_operator)] @dynamic)
+  arguments: (argument_list . (_) [(identifier) (attribute) (subscript) (call) (binary_operator)] @dynamic)
   (#eq? @_mod "shutil")
   (#match? @_fn "^(copy|copy2|copyfile|copytree|move)$")) @site

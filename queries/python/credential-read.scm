@@ -21,7 +21,7 @@
 ; `unresolved: computed_target` instead of staying silent. Invariant 3.
 (call
   function: (identifier) @_fn
-  arguments: (argument_list . [(identifier) (binary_operator) (call)] @dynamic)
+  arguments: (argument_list . [(identifier) (attribute) (subscript) (call) (binary_operator)] @dynamic)
   (#eq? @_fn "open")) @site
 
 ; `p.read_text()` where `p` is a variable, not `Path("literal").read_text()`.

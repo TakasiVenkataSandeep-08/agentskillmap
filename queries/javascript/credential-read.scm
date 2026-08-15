@@ -20,7 +20,7 @@
 (call_expression
   function: (member_expression
     property: (property_identifier) @_fn)
-  arguments: (arguments . [(identifier) (template_string) (binary_expression) (call_expression)] @dynamic)
+  arguments: (arguments . [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#match? @_fn "^(readFile|readFileSync|createReadStream|openSync)$")) @site
 
 ; The same, after a destructuring import: `import { readFileSync } from 'fs'`.
@@ -38,5 +38,5 @@
 ; rule; JavaScript and TypeScript did not.
 (call_expression
   function: (identifier) @_fn
-  arguments: (arguments . [(identifier) (template_string) (binary_expression) (call_expression)] @dynamic)
+  arguments: (arguments . [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#match? @_fn "^(readFile|readFileSync|createReadStream|openSync)$")) @site

@@ -15,7 +15,7 @@
   function: (member_expression
     object: (identifier) @_mod
     property: (property_identifier) @_fn)
-  arguments: (arguments . [(identifier) (member_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
+  arguments: (arguments . [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#eq? @_mod "fs")
   (#match? @_fn "^(writeFile|writeFileSync|appendFile|appendFileSync|outputFile|outputFileSync)$")) @site
 
@@ -27,7 +27,7 @@
 
 (call_expression
   function: (identifier) @_fn
-  arguments: (arguments . [(identifier) (member_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
+  arguments: (arguments . [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#match? @_fn "^(writeFileSync|appendFileSync|outputFileSync)$")) @site
 
 ; fs.mkdirSync(dir) / fs.rmSync(p) / fs.unlinkSync(p)
@@ -47,7 +47,7 @@
   function: (member_expression
     object: (identifier) @_mod
     property: (property_identifier) @_fn)
-  arguments: (arguments . [(identifier) (member_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
+  arguments: (arguments . [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#eq? @_mod "fs")
   (#match? @_fn "^(mkdir|mkdirSync|rm|rmSync|rmdir|rmdirSync|unlink|unlinkSync|truncate|truncateSync)$")) @site
 
@@ -59,7 +59,7 @@
 
 (call_expression
   function: (identifier) @_fn
-  arguments: (arguments . [(identifier) (member_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
+  arguments: (arguments . [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#match? @_fn "^(mkdirSync|rmSync|rmdirSync|unlinkSync)$")) @site
 
 ; fs.copyFileSync(src, dst) / fs.renameSync(from, to) — the SECOND argument is
@@ -76,6 +76,6 @@
   function: (member_expression
     object: (identifier) @_mod
     property: (property_identifier) @_fn)
-  arguments: (arguments . (_) [(identifier) (member_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
+  arguments: (arguments . (_) [(identifier) (member_expression) (subscript_expression) (call_expression) (template_string) (binary_expression)] @dynamic)
   (#eq? @_mod "fs")
   (#match? @_fn "^(copyFile|copyFileSync|cp|cpSync|rename|renameSync)$")) @site

@@ -15,12 +15,12 @@
         },
         "evidence": [
           {
-            "end_byte": 101,
+            "end_byte": 112,
             "file": "positive.py",
             "rule_id": "py.credential-read.dotfile",
             "snippet_sha256": "sha256:bf1311b21d390553a60f05800eb8b0024e861ff904dba6d6b0bb8ee79ee35eec",
-            "start_byte": 75,
-            "start_line": 5
+            "start_byte": 86,
+            "start_line": 6
           }
         ],
         "reachability": "present"
@@ -34,12 +34,12 @@
         },
         "evidence": [
           {
-            "end_byte": 101,
+            "end_byte": 112,
             "file": "positive.py",
             "rule_id": "py.read-outside-bundle.sink",
             "snippet_sha256": "sha256:bf1311b21d390553a60f05800eb8b0024e861ff904dba6d6b0bb8ee79ee35eec",
-            "start_byte": 75,
-            "start_line": 5
+            "start_byte": 86,
+            "start_line": 6
           }
         ],
         "reachability": "present"
@@ -47,18 +47,46 @@
     ],
     "unresolved": [
       {
-        "end_byte": 245,
+        "end_byte": 256,
         "file": "positive.py",
         "reason": "computed_target",
-        "start_byte": 233,
-        "start_line": 10
+        "start_byte": 244,
+        "start_line": 11
       },
       {
-        "end_byte": 245,
+        "end_byte": 635,
         "file": "positive.py",
         "reason": "computed_target",
-        "start_byte": 233,
-        "start_line": 10
+        "start_byte": 618,
+        "start_line": 22
+      },
+      {
+        "end_byte": 784,
+        "file": "positive.py",
+        "reason": "computed_target",
+        "start_byte": 758,
+        "start_line": 26
+      },
+      {
+        "end_byte": 256,
+        "file": "positive.py",
+        "reason": "computed_target",
+        "start_byte": 244,
+        "start_line": 11
+      },
+      {
+        "end_byte": 635,
+        "file": "positive.py",
+        "reason": "computed_target",
+        "start_byte": 618,
+        "start_line": 22
+      },
+      {
+        "end_byte": 784,
+        "file": "positive.py",
+        "reason": "computed_target",
+        "start_byte": 758,
+        "start_line": 26
       }
     ]
   }
