@@ -8,20 +8,26 @@
 //! that exists precisely to catch claims without ground truth — all of it walks
 //! past the instruction plane without looking at it.
 //!
-//! **This file does not compute precision, and the omission is deliberate.**
-//! `corpus/labels.toml` records `capabilities = []` on the benign stratum
-//! meaning *the annotator found no capability term*; every note in that stratum
-//! describes code behaviour — what was read, what was called. No annotator ever
-//! judged the prose. So an empty `capabilities` array is "not looked for" with
-//! respect to `instruction.*`, not "not present", and scoring against it would
-//! book every genuine detection as a false positive. That is the exact failure
-//! the header of `labels.toml` warns about and `gate.rs` enforces the pairing
-//! for.
+//! **Three of the four signals have no precision, and that is deliberate.**
+//! `corpus/labels.toml` records `capabilities = []` on the original strata
+//! meaning *the annotator found no capability term*; every note there describes
+//! code behaviour — what was read, what was called. No annotator judged the
+//! prose. So an empty `capabilities` array is "not looked for" with respect to
+//! `instruction.*`, not "not present", and scoring against it would book every
+//! genuine detection as a false positive. That is the exact failure the header
+//! of `labels.toml` warns about and `gate.rs` enforces the pairing for.
 //!
 //! What *is* measurable without new labels is the firing rate: how often each
 //! signal fires on bundles a human read and judged benign. That is a candidate
 //! false-positive rate — an upper bound, since a benign bundle may legitimately
 //! contain prose that instructs a config write. Reported as such.
+//!
+//! **The fourth signal is different, and the difference is the point.**
+//! `instruction.exec_directive` has real precision and recall because T10 drew
+//! two strata and labelled them *before* the rule was written. The contrast
+//! between it and the other three is the argument for doing that for each of
+//! them: draw, label, then write, and a rate follows. Until then they have a
+//! firing rate and nothing more.
 
 #![allow(
     clippy::unwrap_used,
@@ -299,4 +305,67 @@ fn the_exec_directive_signal_is_scored_against_its_own_ground_truth() {
         "the exec_directive score moved. Re-read the changed bundles, update the \
          README's published rate, and change these numbers deliberately"
     );
+}
+
+/// The denominators the published rates do not carry, printed on demand.
+///
+/// **Ignored on purpose, and it asserts nothing.** It is a measuring
+/// instrument, not a gate: every number here is a distribution that moves
+/// whenever a rule or a label changes, so asserting on one would produce a test
+/// that fails for being out of date rather than because anything is wrong.
+///
+/// It exists because a critical reading of this project kept needing figures
+/// that were nowhere in the repository, and re-deriving them by hand each time
+/// invites getting them wrong. What it answers:
+///
+/// - **How often is the analysis incomplete?** 84% of scanned bundles carry at
+///   least one `unresolved` entry, ~4.5 computed targets each. That figure
+///   belongs beside "zero false positives" every time it is quoted; the first
+///   without the second overstates what was established.
+/// - **How strong is the reachability claim?** Roughly 40% of reported
+///   capabilities are `present` rather than `observed` — the code is there and
+///   nothing proved it runs.
+/// - **What is named but not analysed?** The `parsed_as` tally shows JSON, Rust
+///   and YAML files sitting in the inventory with no grammar behind them.
+///
+/// Run it with `cargo test -p skillmap-eval --test instruction_stratum --
+/// --ignored --nocapture`.
+#[test]
+#[ignore = "diagnostic, not a gate: prints distributions for review"]
+fn reachability_and_coverage_distribution() {
+    let root = repo_root();
+    let Ok(labels) = corpus::Labels::load(&root.join("corpus/labels.toml")) else {
+        return;
+    };
+    let rules = skillmap_rules::load(&root);
+    let mut reach: BTreeMap<String, usize> = BTreeMap::new();
+    let mut unres: BTreeMap<String, usize> = BTreeMap::new();
+    let mut parsed: BTreeMap<String, usize> = BTreeMap::new();
+    let (mut bundles, mut with_unres) = (0usize, 0usize);
+    for label in &labels.labels {
+        if label.verdict != corpus::Verdict::Labelled {
+            continue;
+        }
+        let dir = corpus::bundle_dir(&root.join("corpus"), &label.digest);
+        let Ok(m) = skillmap_scan::analyze(&dir, &rules) else {
+            continue;
+        };
+        bundles += 1;
+        if !m.unresolved.is_empty() {
+            with_unres += 1;
+        }
+        for c in &m.capabilities {
+            *reach.entry(format!("{:?}", c.reachability)).or_insert(0) += 1;
+        }
+        for u in &m.unresolved {
+            *unres.entry(format!("{:?}", u.reason)).or_insert(0) += 1;
+        }
+        for f in &m.inventory {
+            *parsed.entry(f.parsed_as.clone()).or_insert(0) += 1;
+        }
+    }
+    println!("\n  bundles scanned: {bundles}, with >=1 unresolved: {with_unres}");
+    println!("  reachability of reported capabilities: {reach:?}");
+    println!("  unresolved reasons: {unres:?}");
+    println!("  files by parsed_as: {parsed:?}");
 }
