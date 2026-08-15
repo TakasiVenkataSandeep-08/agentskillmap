@@ -88,8 +88,8 @@ Verifying beats asserting; that is the entire lesson.
 ### Verifying a release yourself
 
 ```bash
-git clone https://github.com/TakasiVenkataSandeep-08/agentskillmap && cd skillmap
-git checkout v0.3.0
+git clone https://github.com/TakasiVenkataSandeep-08/agentskillmap && cd agentskillmap
+git checkout v0.4.0
 bash scripts/build-release.sh
 sha256sum dist/skillmap
 ```
