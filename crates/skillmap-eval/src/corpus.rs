@@ -116,6 +116,18 @@ pub struct Labels {
     /// second. Ordering is the whole safety property.
     #[serde(default)]
     pub terms_detected_unscored: Vec<String>,
+    /// Strata over which [`Self::terms_labelled`] were looked for
+    /// exhaustively.
+    ///
+    /// Empty means every stratum, which is what it meant before a second
+    /// labelling target existed. A non-empty list excludes strata drawn to
+    /// study a *different* term: those bundles were read for that term, not for
+    /// these, so their `capabilities` arrays are silent by omission rather than
+    /// by observation. Scoring them anyway turns each genuine detection into a
+    /// false positive — measured, not hypothetical: adding eleven such bundles
+    /// took published precision from 113/113 to 113/119 in one run.
+    #[serde(default)]
+    pub strata_scored: Vec<String>,
     /// One entry per labelled bundle.
     #[serde(default, rename = "label")]
     pub labels: Vec<Label>,
@@ -169,6 +181,20 @@ impl std::fmt::Display for Error {
 }
 
 impl Labels {
+    /// Whether a stratum's bundles are ground truth for the capability terms in
+    /// [`Self::terms_labelled`].
+    ///
+    /// Empty [`Self::strata_scored`] means every stratum, so a label file
+    /// written before a second labelling target existed keeps its meaning.
+    #[must_use]
+    pub fn scores_capabilities_for(&self, stratum: &str) -> bool {
+        self.strata_scored.is_empty()
+            || self
+                .strata_scored
+                .iter()
+                .any(|scored| scored.as_str() == stratum)
+    }
+
     /// Read and validate `corpus/labels.toml`.
     ///
     /// # Errors
@@ -416,6 +442,17 @@ pub fn run(
     for label in &labels.labels {
         if label.verdict != Verdict::Labelled {
             unscoreable += 1;
+            continue;
+        }
+        // A bundle drawn for a *different* term is not ground truth for these
+        // ones. Its `capabilities` array records what the labeller looked for,
+        // and a stratum drawn to study one signal was never read exhaustively
+        // for the eight scored here — so an absent term means "not looked for",
+        // and scoring it would book every genuine detection as a false
+        // positive. That is the same failure `terms_labelled` guards against,
+        // reached by widening the bundle set instead of the term list, and it
+        // cost six spurious false positives the first time this happened.
+        if !labels.scores_capabilities_for(&label.stratum) {
             continue;
         }
         let dir = bundle_dir(corpus, &label.digest);

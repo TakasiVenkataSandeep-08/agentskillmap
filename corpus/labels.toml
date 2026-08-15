@@ -149,8 +149,30 @@ sample_seed = "skillmap-labels-1"
 labeller = "claude-opus-5"
 reviewed_by = "claude-opus-5 (independent second pass, 23 of 92 bundles)"
 
-# Capability terms a labeller may assign, from docs/02-manifest-schema.md.
+# Terms a labeller may assign, from docs/02-manifest-schema.md.
 # Constrained so a typo fails the load rather than silently scoring nothing.
+#
+# All but the last are capability terms and land in `capabilities` in the
+# manifest. `instruction.exec_directive` is an INSTRUCTION-plane signal for T10
+# and lands in `instructions` — a different branch, a weaker tier, and a
+# different claim: about what the prose tells the agent to do, not about what
+# the bundle's own code does.
+#
+# **Definition, because a term without one produces labels nobody can
+# reproduce.** Assign `instruction.exec_directive` when the bundle's prose
+# directs the agent to run a command that **fetches remote content and executes
+# it** — `curl … | sh`, or fetching a `.sh`/`.py` and then running it.
+#
+# The narrowness is deliberate and was found by labelling. A first draft read
+# "directs execution of a command it supplies", which is satisfied by
+# `python scripts/build.py` in any ordinary usage section — a definition that
+# fires on nearly every skill describes nothing. What separates the shape worth
+# reporting is that the code being executed **is not in the bundle and is not
+# reviewable**: it arrives from a URL at run time, so no amount of reading the
+# bundle tells you what will run.
+#
+# It is in this list because a labeller needs to be able to assign it; see the
+# note below `terms_labelled` for why it is not scored yet.
 vocabulary = [
   "process.exec",
   "process.exec.dynamic",
@@ -163,6 +185,7 @@ vocabulary = [
   "code.dynamic_eval",
   "code.obfuscation",
   "env.read.secret",
+  "instruction.exec_directive",
 ]
 
 # Terms looked for exhaustively, and therefore the only terms precision and
@@ -222,6 +245,71 @@ terms_labelled = [
   "fs.read.outside_bundle",
   "fs.write.outside_bundle",
 ]
+
+# The strata over which the terms above were looked for exhaustively — the
+# original five-stratum draw, and only those.
+#
+# This list exists because omitting it was wrong in a measurable way. T10's
+# `fence_directive` bundles were read for one instruction signal, not for the
+# eight capability terms above; scoring them anyway read their silence as
+# observation and turned genuine detections into false positives, taking
+# published precision from 113/113 to 113/119 in a single run. The bundles were
+# fine and the labels were fine — the harness was scoring ground truth that had
+# never been gathered.
+#
+# `prose_only` is absent because it is deliberately unlabelled, and the two T10
+# strata are absent until a pass reads them for capability terms as well.
+strata_scored = [
+  "code_clean",
+  "code_credential",
+  "code_other_marker",
+  "disclosure_shape",
+]
+
+# ── T10 in progress: why `instruction.exec_directive` is NOT in the list above ──
+#
+# The governing principle says a term's labelling lands before its first rule,
+# and widening `terms_labelled` is free while nothing detects the term. Both
+# still hold — no rule for this term exists. What does not hold yet is the
+# precondition the list itself states: **"looked for exhaustively."**
+#
+# `terms_labelled` is scored across every labelled bundle. The 92 bundles above
+# were read for capability terms in code files; none was read for a directive in
+# a fenced block. Adding the term now would score all 92 as negatives by
+# omission — an empty array meaning "not looked for" read as "not present" —
+# which is the precision-collapse failure this file's header describes, arriving
+# by a different door.
+#
+# So the term is assignable (it is in `vocabulary`) and is being labelled on the
+# two strata drawn for it. It joins `terms_labelled` when either the existing 92
+# have been passed over for it, or the harness scores per stratum rather than
+# globally. That decision belongs to T10 phase 3, with the rule, and it is a
+# decision — not a step to be skipped because the list looks short.
+#
+# ── The two strata drawn for it ────────────────────────────────────────────────
+#
+# Drawn by `scripts/draw_fence_stratum.py`, seed `skillmap-fence-1`, into
+# `corpus/sample-fence.json`. Supplementary rather than a sixth `Stratum`
+# variant: the five in `skillmap-corpus` are disjoint by construction, so
+# inserting one would reclassify bundles already in `code_clean` and
+# `code_other_marker` and move published per-stratum rates for reasons unrelated
+# to detection. Already-labelled digests are excluded, so no bundle appears in
+# two denominators.
+#
+#   fence_directive  40 drawn from 247 — SKILL.md has a shell fence that pipes a
+#                    fetch into a shell, or fetches a .sh/.py and runs it.
+#   fence_control    40 drawn from 11534 — a shell fence and neither shape.
+#                    Ordinary usage examples: the false positives this signal
+#                    will actually face. Drawing controls from the whole corpus
+#                    would pad the denominator with bundles that were never at
+#                    risk of a false positive.
+#
+# **The draw selects a shape, never a verdict.** A skill documenting
+# `curl … | sh` to install a real tool is doing something ordinary, and most
+# positives are expected to be exactly that. Whether a directive is benign is
+# the labeller's judgement per bundle, and `policy.toml` decides what a
+# repository tolerates. Invariant 1 applies here more sharply than anywhere else
+# in the taxonomy.
 
 # ── code_clean ───────────────────────────────────────────────────────────────
 
@@ -1624,3 +1712,106 @@ disclosure_delta = false
 # telling the user what to add. A lexical scanner sees `~/.ssh/` and fires; the
 # code plane correctly does not, because nothing opens it.
 note = "Sets up text-to-speech playback on a remote device over SSH. Validates its configuration variables against strict patterns before use, tests the SSH connection, and prints instructions mentioning ~/.ssh/config without reading it. ssh and scp to a configured host, and the script names the protocol itself. The earlier reading stands: the ~/.ssh references are connection tests and printed advice, not reads. Writes into $CLAWDBOT_WORKSPACE, defaulting to $HOME/clawd."
+
+# ── fence_directive ──────────────────────────────────────────────────────────
+#
+# T10's positive stratum, drawn by `scripts/draw_fence_stratum.py` (seed
+# `skillmap-fence-1`). Labelling in progress; entries are added as they are
+# read, so the absence of a digest here means "not yet read", not "nothing
+# found".
+#
+# **`disclosure_delta` is deliberately omitted on every entry in this stratum
+# and in `fence_control`.** The field defaults to `false`, and writing it would
+# assert an assessment nobody made: these bundles were read for the directive
+# shape, not for whether the body asks for behaviour the description omits.
+# T7's cut criterion is computed from that field, so a default silently read as
+# a judgement would move a published number using labels that never looked.
+# Assessing it here is a separate pass.
+
+[[label]]
+digest = "sha256:09b156a6eb251ed9683f7378b6cd44eddd3ab6f4b4c24a1a04015fdcf57b2cd7"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:306"]
+note = "Container-hardening guide. Fetches the Trivy and Grype installer scripts to a temp dir, prints the first 160 lines with sed for review, then runs them. Remote code is executed, so the term applies — but the deliberate review step is the careful form of this shape, not the piped one."
+
+[[label]]
+digest = "sha256:09e74f5e7418dc0a81b93f09c4e0b0cdc20c0640da966bc680af942cca18f43b"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:57"]
+note = "Setup section pipes two installer scripts straight into a shell, one from a personal GitHub repository and one from a well-known vendor. No review step and no checksum."
+
+[[label]]
+digest = "sha256:0f3d5762a43206923eb3c2746c0fe9b4ec78697781b6762bdaf95304b7dad124"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:72"]
+note = "DeFi borrowing skill. Setup pipes a well-known Ethereum toolchain installer into bash and then runs its updater. Ships its own shell scripts besides."
+
+[[label]]
+digest = "sha256:1024cfb0f5fd2d5c6874841fb014cdc60de512b0a07f163abb6421d39d34d9df"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:17"]
+note = "Quick-start pipes a vendor CLI installer into bash and then logs in. SKILL.md is the whole bundle."
+
+[[label]]
+digest = "sha256:130dcf969890b89fc2bb0503165a0d4cde6c62997182f1e33881837c7e3589d0"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:130"]
+note = "Security-hardening skill whose recommended step pipes a well-known VPN vendor's installer into a shell. The bundle's own subject is hardening, which is the irony a lexical rule cannot see."
+
+[[label]]
+digest = "sha256:16d5401021a23a1e087a17b649d35cef33fcd8f73479e108c2d71a527e648193"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:47"]
+note = "Media-generation CLI. Fetches the installer to a file, pages it with less for review, then runs it; the prose notes the installer verifies a SHA-256 from a published manifest. Remote execution with two mitigations stated."
+
+[[label]]
+digest = "sha256:18ab66c9ae21f150f0dcd60e1659d5ec21a6643cb94745b576a3336da3a82303"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:21"]
+note = "Quick start pipes a vendor CLI endpoint into a shell and then logs in. The host is a bare .sh domain, which reads as a script suffix to a naive matcher."
+
+[[label]]
+digest = "sha256:19cdf7691c8a7fca9c37e95be672c44b96e76747fb3d07c70d0e687266286ce0"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:8"]
+note = "Three install variants, each piping the same endpoint into bash, two of them passing a wallet address as a positional argument to the fetched script. No frontmatter description at all."
+
+[[label]]
+digest = "sha256:214dc0994a9b52db1973c3135b96f5cdf83d7df84b2d854e906a98046cb775dc"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:108"]
+note = "Notification listener. Fetches a shell script into ~/bin, chmods it executable and invokes it by name later; the same step exports an API key into the shell profile. Fetch-then-execute split across three lines rather than a pipe."
+
+[[label]]
+digest = "sha256:2269a478eef64951200a9efc37ed17cc65cbef25184ac4ff57720a1966656d7e"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:73"]
+note = "Service-mesh template pipes a vendor install endpoint into a shell, with TLS version and protocol pinned on the curl invocation."
+
+[[label]]
+digest = "sha256:2bea5251e0903f3bdefb835ee6d7cf8fea8c702b265f19841ee765338e6bc613"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Video-generation skill that calls a REST API over curl throughout. Nothing is fetched and executed: every match is an API host on a .sh top-level domain, which the draw's installer heuristic read as a shell-script suffix. A drawn candidate that the reading rejects."

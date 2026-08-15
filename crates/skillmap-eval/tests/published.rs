@@ -203,10 +203,16 @@ fn the_denominators_block_matches_the_labels() {
     let section = measured_section();
 
     let mut counts: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
-    let scored = labels
-        .labels
-        .iter()
-        .filter(|label| matches!(label.verdict, corpus::Verdict::Labelled));
+    // The denominator is the *scored* population, not every labelled bundle.
+    // A stratum drawn to study a different term contributes labels that were
+    // never read for these ones, so counting them would inflate every
+    // denominator here while the README kept quoting the real one — which is
+    // exactly what happened when T10's first eleven labels landed and this test
+    // started demanding `49/103`.
+    let scored = labels.labels.iter().filter(|label| {
+        matches!(label.verdict, corpus::Verdict::Labelled)
+            && labels.scores_capabilities_for(&label.stratum)
+    });
     let mut population = 0usize;
     for label in scored {
         population += 1;

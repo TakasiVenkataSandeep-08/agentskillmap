@@ -305,3 +305,74 @@ fn the_quiet_cases_are_genuinely_quiet() {
         );
     }
 }
+
+#[test]
+fn a_bundle_drawn_for_another_term_never_enters_a_capability_denominator() {
+    // The regression this exists for was measured, not imagined. T10 drew a
+    // `fence_directive` stratum and labelled eleven bundles for one instruction
+    // signal. Those bundles were never read for the eight capability terms, so
+    // their `capabilities` arrays were silent by omission — and `corpus::run`
+    // scored them anyway, reading silence as observation and turning genuine
+    // detections into false positives. Published precision went 113/113 to
+    // 113/119 in one run, with nothing wrong in either the bundles or the
+    // labels.
+    //
+    // It is the failure `terms_labelled` guards against, reached by widening
+    // the *bundle set* rather than the term list. `strata_scored` is the guard
+    // for that direction and this is the test that keeps it honest.
+    let root = repo_root();
+    let Ok(labels) = skillmap_eval::corpus::Labels::load(&root.join("corpus/labels.toml")) else {
+        return;
+    };
+
+    assert!(
+        !labels.strata_scored.is_empty(),
+        "corpus/labels.toml declares no strata_scored, so every stratum is scored \
+         for every capability term — including any drawn to study a different one"
+    );
+
+    // Every stratum carrying labels is either scored for capability terms, or
+    // deliberately excluded. A stratum in neither position is one somebody added
+    // without deciding what it means, which is how the 113/119 run happened.
+    let mut unaccounted = std::collections::BTreeSet::new();
+    for label in &labels.labels {
+        if !labels.scores_capabilities_for(&label.stratum) {
+            unaccounted.insert(label.stratum.clone());
+        }
+    }
+    for stratum in &unaccounted {
+        assert!(
+            !labels.strata_scored.contains(stratum),
+            "{stratum} is both scored and not scored"
+        );
+    }
+
+    // And the scored population is exactly the bundles from scored strata, so a
+    // future stratum cannot quietly join a denominator it was not read for.
+    let expected = labels
+        .labels
+        .iter()
+        .filter(|label| {
+            label.verdict == skillmap_eval::corpus::Verdict::Labelled
+                && labels.scores_capabilities_for(&label.stratum)
+        })
+        .count();
+    let rules = skillmap_rules::load(&root);
+    let report = skillmap_eval::corpus::run(
+        &labels,
+        &root.join("corpus"),
+        &rules,
+        labels.labels.len(),
+        std::collections::BTreeMap::new(),
+    );
+    if report.scored == 0 {
+        eprintln!("SKIPPED: corpus/raw/ is absent; the scored population was not recomputed.");
+        return;
+    }
+    assert_eq!(
+        report.scored, expected,
+        "the scored population is {} but only {expected} labelled bundles come from a \
+         stratum read for the capability terms",
+        report.scored
+    );
+}
