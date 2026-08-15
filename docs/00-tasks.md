@@ -811,6 +811,109 @@ the requirement would trade a measured 0/36 benign rate for one recovered miss.
 
 ---
 
+## T11 — the prose-only majority
+
+Depends on T10, which built this pipeline for one narrow shape and proved the pieces work.
+
+**The gap, measured.** Every precision and recall figure this project publishes comes from the
+**14.6%** of the corpus that ships a file in a supported language. That is where the code plane
+can fire, and nowhere else. The rest is prose:
+
+```
+  bundles with a SKILL.md                    34302
+  no code file at all (prose-only)           30808   89.8%
+    ...with a CODE-TAGGED fence              10543   34.2% of prose-only
+                                                     ~31% of the whole corpus
+
+  fence tags in those bundles:
+    bash 49693 | python 11940 | typescript 7354 | javascript 5188
+```
+
+Roughly **a third of the corpus carries runnable code, in languages that already have grammars
+and already have measured rules, and nothing ever looks at it** — not because the analysis is
+hard, but because fence bodies are never handed to the parser. On those bundles the only plane
+that can fire is the instruction plane, where three of four signals still have no recall.
+
+### The constraint that shapes the design
+
+`skillmap-code::analyze` returns `Claim::Capability`. Running the existing rules over fence
+bodies would therefore produce **capabilities**, which is exactly what this task must not emit.
+
+A fenced `curl https://api.example.com` in a prose-only skill is not the bundle performing
+egress — the bundle has no code. It is the bundle *telling the agent* to. The parse is exact;
+the claim about behaviour is not, and under invariant 5 the weaker claim governs. So these land
+in `instructions` at `tier = "pattern"` and never in `capabilities`.
+
+That is also what keeps the existing numbers still: precision 113/113 and `code_clean` 0/36 are
+computed over `manifest.capabilities`, which this never touches. **Any movement in those means
+fence findings leaked into the wrong branch**, and that is the first thing to check.
+
+### Design
+
+- **Fence extraction** in `skillmap-parse`: every *tagged* code fence as
+  `(language_tag, body, byte_offset, line_offset)`, reusing the node shapes already proven in
+  `queries/markdown/exec-directive.scm`.
+- **`SourceFile` gains an explicit language and an origin offset.** Language is currently
+  derived from the path extension, which resolves a fence to `markdown`; and evidence offsets
+  are relative to `file.text`, so the fence's own offsets must be added back. Evidence must
+  point at true positions in the `.md` file — a synthetic path does not satisfy invariant 4.
+- **`entered` is always false for fences.** Nothing establishes that a fence runs, so a
+  fence-derived finding can never be `observed`. That ceiling is asserted by a test rather than
+  left to emerge.
+- **The claim mapping is data** (invariant 7): capability term → instruction signal, in a
+  table. A term absent from the table produces no finding — adding coverage is a data edit, and
+  an unmapped term fails closed rather than inventing a signal.
+- **Three new signals**, schema **1.2.0 → 1.3.0** with a migration note.
+
+```
+  net.egress, net.fetch_then_execute        -> instruction.directs_egress
+  fs.read.credential, env.read.secret       -> instruction.directs_credential_access
+  process.exec, process.exec.dynamic,
+  code.dynamic_eval                         -> instruction.directs_exec
+```
+
+**Done when:** each shipped signal carries a precision and recall measured against a stratum
+labelled before its rule existed, published per signal, with the capability plane's numbers
+unmoved.
+
+### Order, and the clause that cannot move
+
+1. **Draw and label first**, as in T10. A `prose_directive` stratum plus a control stratum of
+   prose-only bundles whose fences trip none of the shapes, drawn with the same seeded,
+   deterministic method as `scripts/draw_fence_stratum.py` and excluding every digest already
+   labelled. Label for all three signals in one reading pass — the reader is opening the bundle
+   anyway. The terms go in `vocabulary` but **not** in `terms_labelled` (`corpus::run` scores
+   that against `capabilities`, so an instruction term there scores 0 recall forever) and the
+   strata go in **neither** `strata_scored` entry.
+2. **Then extraction, mapping and the signals.** Ship each signal only once its own precision
+   measures acceptably; the machinery is shared, the shipping decision is per signal.
+3. **Then measure, publish, gate.** `instruction_stratum.rs` already fails when a shipped
+   signal has no adjudicated count, so a new one cannot arrive unmeasured.
+
+**Expect a high base rate.** Lexical upper bounds over the 10,660 prose-only bundles with a
+code fence: credential/secret marker 26.0%, network call 23.2%, writes-outside 3.8%, exec/eval
+2.0%, any of them 39.0%. Parsing will lower all of these — `API_KEY` in a comment and `curl`
+inside prose both match a substring and neither survives an AST. A high rate is tolerable for a
+differ, which reports *changes* against a lock rather than gating an install, but it is what
+decides whether a signal ships at all.
+
+### Known limits, to be documented rather than closed
+
+- **Untagged fences are an evasion.** Only tagged fences are analysed, so omitting the tag
+  hides code — the same class as T10's fence-misalignment vector. Emitting an `unresolved`
+  entry per untagged fence was considered and rejected: 939 untagged fences across 115 labelled
+  bundles would move the published unresolved rate for nearly every bundle for reasons
+  unrelated to detection quality, which is the `mcp.tool_reference` objection again.
+- **Fence misalignment still applies**, and no fence-scoped analysis sees through it.
+- **This does not reach the ~55% of prose-only bundles with no code fence at all.** They are
+  pure documentation. The honest coverage claim after T11 is the code plane on 14.6% plus fence
+  analysis on ~31% — not the corpus.
+
+**Status: scoped, not started.** The measurements above are reproducible from `corpus/raw/`; no
+extractor, no mapping table, no label and no fixture exists yet.
+
+---
+
 ## Cross-cutting, every task
 
 The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of the above.
@@ -836,6 +939,21 @@ front of; each is a thing this repository currently claims or implies but does n
   deliberate. No fence-scoped rule can see through it, and the honest options are a
   fence-pairing sanity check reported as `unresolved` (invariant 3's shape) or accepting the
   limit and saying so. Neither is done.
+- **Every published rate describes 14.6% of the corpus, and nothing said so.** The code plane
+  can only fire on bundles shipping a file in a supported language. Of 23,966 classified
+  bundles, `prose_only` is **20,471 — 85.4%**, and on those the only applicable plane is the
+  instruction plane, where three of four signals have no recall. A further **10,318 bundles
+  (30.1% of the harvest)** carry a lexical marker with no parseable code and fall into *no
+  stratum at all* — `Stratum::of` returns `None` for them, so they were never eligible for
+  sampling, labelling or measurement. The reason is defensible and recorded in
+  `skillmap-corpus`; the consequence was not written down anywhere until now. **T11** is the
+  work that would close part of it.
+- **84% of scanned bundles carry at least one `unresolved` entry**, ~4.5 computed targets each,
+  and roughly **40% of reported capabilities are `present` rather than `observed`** — the code
+  is there and nothing established that it runs. Both belong beside "zero false positives"
+  whenever it is quoted: the claim is true, and the analysis was incomplete almost every time.
+  Reproduce with `cargo test -p skillmap-eval --test instruction_stratum -- --ignored
+  --nocapture`.
 - **Three `instruction.*` signals still have no recall number.** `exec_directive` has one
   because a stratum was drawn and labelled for it before the rule existed;
   `fetch_as_instruction`, `exfil` and `config_mutation` never had that, so all that exists for
