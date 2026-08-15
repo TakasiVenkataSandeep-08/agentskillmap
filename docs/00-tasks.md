@@ -265,17 +265,25 @@ Decisions worth recording:
 **Done when:** false-positive rate on the benign stratum is measured and published, per
 signal.
 
-**Status: the "done when" is met for all three shipped signals. T5 is done as scoped; two
-signals remain deliberately unshipped and are tracked below rather than counted as met.**
+**Status: the "done when" is met for every shipped signal. T5 is done as scoped; two signals
+remain deliberately unshipped and are tracked below rather than counted as met.**
 
 The false-positive rate on the benign stratum is measured per signal and published in the
-README:
+README. Four signals ship now — T10 added the fourth:
 
 ```
   instruction.config_mutation        1/36 (2.8%, 95% CI 0.5–14.2%)
   instruction.exfil                  1/36 (2.8%, 95% CI 0.5–14.2%)
   instruction.fetch_as_instruction   0/36 (0.0%, 95% CI 0.0–9.6%)
+  instruction.exec_directive         0/36 (0.0%, 95% CI 0.0–9.6%)
 ```
+
+**One of the four has real ground truth, and the contrast is the lesson.**
+`instruction.exec_directive` carries precision 31/31 and recall 31/35 because T10 drew a
+stratum and labelled it *before* writing the rule. The other three have a firing rate and
+nothing else — no recall exists for them, and cannot until the same is done for each. That is
+the difference between a signal that is quiet and a signal that is measured, and this task
+originally treated the first as sufficient.
 
 **Both firings were read and both are false positives**, each the documented failure mode of
 its own rule: a recommendations list pointing a human maintainer at `AGENTS.md` as somewhere a
@@ -761,10 +769,45 @@ large enough for the interval to mean something.
    `crates/skillmap-eval/tests/instruction_stratum.rs` gains its adjudicated entry — that file
    already fails when a signal ships without one, so this step cannot be skipped quietly.
 
-**Status: scoped, not started.** The measurements above are real and reproducible from
-`corpus/raw/`; no rule, no label and no fixture exists yet. Sequenced ahead of the remaining
-T9 distribution items, because a scanner that is silent on this delivery vector is silent on
-the case the category is named for, and that is the first thing a security reader will test.
+**Status: done.** All three phases landed in order, and the ordering was the point.
+
+```
+  phase 1   80 bundles drawn and hand-labelled, before any rule existed
+  phase 2   the rule triple, schema 1.1.0 -> 1.2.0
+  phase 3   published in the README and gated
+```
+
+Measured against ground truth that predates the rule: **precision 31/31 (100%), recall 31/35
+(88.6%)**, benign stratum 0/36. Scored over the two strata drawn for it and no others.
+
+Four things this task produced that were not in its scope:
+
+- **`strata_scored`.** Landing eleven labels took published precision from 113/113 to
+  113/119 — six false positives, with nothing wrong in either the bundles or the labels.
+  `corpus::run` scored bundles drawn for one term against terms they were never read for.
+  The guard for widening the *term* list existed; the guard for widening the *bundle set*
+  did not. It does now, with a test.
+- **A confirmed evasion vector.** A closing fence delimiter carrying an info string shifts
+  the pairing of every fence after it, so a later directive lands inside a block the grammar
+  reads as having no language. The identical command in a correctly paired document fires,
+  and an agent reading the prose is unaffected because it never parses fences. One corpus
+  bundle does this by accident. No fence-scoped rule can see through it, and it is recorded
+  in the rule's own docs rather than here alone.
+- **Three false-positive shapes, found by reading rather than predicted.** The `.sh`
+  top-level domain, bundled filenames containing `curl` and a script suffix, and a
+  security-vetting skill grepping for the pattern it warns about. All three are excluded by
+  requiring an `https?://` URL, and the third is the negative fixture — drawn from the
+  corpus, which is what invariant 8 asks for and what a synthetic near-miss cannot supply.
+- **One labelling error of my own, and the scan that caught it.** A control bundle was
+  labelled as carrying nothing because the first pass read `SKILL.md` alone, while the
+  instruction plane reads every markdown file. A re-scan across all eighty bundles found
+  exactly one label wrong; correcting it moved precision from 30/31 to 31/31, because the
+  rule had been right.
+
+**What it does not do.** Three misses remain and none is a missing string: two split the
+fetch and the execution across lines, which single-line patterns cannot join without
+inventing directives inside unrelated fences, and one omits the URL scheme, where relaxing
+the requirement would trade a measured 0/36 benign rate for one recovered miss.
 
 ---
 
@@ -779,12 +822,25 @@ The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of 
 Tracked here rather than left to be rediscovered. None is a blocker for the task it sits in
 front of; each is a thing this repository currently claims or implies but does not yet have.
 
-- **A payload in a fenced code block inside `SKILL.md` is invisible to every plane**, while the
-  identical bytes in a script file are caught. This is the largest detection gap in the
-  repository and it has its own task — **T10** above — because closing it correctly needs a
-  drawn stratum and a labelling pass, not a parser tweak. The naive fix breaks invariant 1 and
-  moves the unresolved rate for nearly every bundle; the measurements behind both claims are
-  in T10.
+- **~~A payload in a fenced code block inside `SKILL.md` is invisible to every plane.~~**
+  Closed by T10 at precision 31/31 and recall 31/35, against ground truth labelled before the
+  rule was written. Reported as `instruction.exec_directive`, an instruction signal rather than
+  a capability, because the claim is that the prose directs execution — not that the bundle's
+  own code performs it.
+- **Fence misalignment defeats the rule that closed that gap, and the vector is confirmed.** A
+  closing fence delimiter carrying an info string shifts the pairing of every fence after it,
+  so a later directive lands inside a block the grammar reads as having no language. The
+  identical command in a correctly paired document fires. **An agent reading the prose is
+  unaffected, because it never parses fences** — which is what makes this an evasion rather
+  than a parsing curiosity. One corpus bundle does it by accident; nothing stops it being
+  deliberate. No fence-scoped rule can see through it, and the honest options are a
+  fence-pairing sanity check reported as `unresolved` (invariant 3's shape) or accepting the
+  limit and saying so. Neither is done.
+- **Three `instruction.*` signals still have no recall number.** `exec_directive` has one
+  because a stratum was drawn and labelled for it before the rule existed;
+  `fetch_as_instruction`, `exfil` and `config_mutation` never had that, so all that exists for
+  them is a benign-stratum firing rate and two adjudicated false positives. The route is known
+  and costed — draw, label, then write — and it is roughly two days per signal.
 
 - **~~`policy.toml` has no format spec.~~** Closed by T8: `docs/06-policy-and-lock.md`.
 - **~~`skillmap.lock` is specified in one sentence.~~** Closed by the same document — fields,

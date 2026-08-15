@@ -234,8 +234,14 @@ fn every_term_a_rule_detects_is_either_scored_or_a_declared_gap() {
     let mut undeclared: Vec<String> = Vec::new();
     for rule in &rules.rules {
         let skillmap_rules::Claim::Capability(term) = rule.claim else {
-            // Instruction signals are a separate plane with a separate
-            // vocabulary; the corpus labels capabilities.
+            // Instruction signals are a separate plane and are gated
+            // separately, in `instruction_stratum.rs`: that file fails when a
+            // shipped signal has no adjudicated benign-stratum count, which is
+            // this test's property expressed for a plane whose findings never
+            // enter `capabilities`. Skipping them here would otherwise be a
+            // hole — `corpus::run` iterates `terms_labelled` against
+            // `manifest.capabilities`, so an instruction term added to that
+            // list would score 0 recall forever no matter how well it worked.
             continue;
         };
         let term = term.as_str();

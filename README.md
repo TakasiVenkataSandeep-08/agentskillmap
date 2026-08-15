@@ -235,7 +235,7 @@ different fields of the manifest, and every number above iterates `capabilities`
 
 #### The instruction plane, measured separately
 
-The three shipped `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest
+The four shipped `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest
 tier — and had never been counted over the corpus at all. Per signal, on the benign stratum:
 
 | Signal | Benign stratum |
@@ -243,6 +243,41 @@ tier — and had never been counted over the corpus at all. Per signal, on the b
 | `instruction.config_mutation` | 1/36 (2.8%, 95% CI 0.5–14.2%) |
 | `instruction.exfil` | 1/36 (2.8%, 95% CI 0.5–14.2%) |
 | `instruction.fetch_as_instruction` | 0/36 (0%, 95% CI 0–9.6%) |
+| `instruction.exec_directive` | 0/36 (0%, 95% CI 0–9.6%) |
+
+**One of the four has real ground truth**, and it is the only signal in this plane that does.
+`instruction.exec_directive` reports prose directing the agent to fetch remote content and
+execute it — `curl … | sh`, or fetching a `.sh`/`.py` and running it. Two strata were drawn
+and hand-labelled for it **before the rule was written**, which is the ordering everything
+else in this section depends on:
+
+| `instruction.exec_directive` | |
+|---|---|
+| precision | **31/31 (100%, 95% CI 89.0–100%)** |
+| recall | **31/35 (88.6%, 95% CI 74.0–95.5%)** |
+| benign stratum | 0/36 |
+
+Scored over those two strata only. The other four were never read for this term, so a firing
+there is unmeasured rather than wrong, and counting it either way would invent a number.
+
+**This closed the largest detection gap in the tool.** A payload in a fenced code block
+inside `SKILL.md` was invisible to every plane, while the identical bytes in a script file
+were caught cleanly — and a fence is how the documented marketplace-poisoning campaign
+delivered its payload. It is reported as an instruction, never as a capability: the prose
+directs execution, the bundle's own code does not perform it.
+
+**It is not a verdict, and the corpus is emphatic.** Of 40 bundles drawn for this shape, 35
+carry it and nearly all are ordinary installer instructions for real tools. The same shape
+spans a bare pipe into `sudo bash`, a fetch paged with `less` before running, and a fetch
+whose SHA-256 is verified first. All execute remote code; which of them a repository
+tolerates is `policy.toml`'s question.
+
+**A known evasion, confirmed by construction rather than theorised.** A closing fence
+delimiter carrying an info string shifts the pairing of every fence after it, so a later
+directive lands inside a block the grammar reads as having no language, and the rule goes
+silent. The identical command in a correctly paired document fires. An agent reading the
+prose is unaffected, because it never parses fences. One of the four misses is this; the
+other three split the fetch and the execution across lines, or omit the URL scheme.
 
 **Both firings were read and both are false positives.** One is a test-results document whose
 recommendations list points its human maintainer at `AGENTS.md` as somewhere a daily-routine
@@ -261,16 +296,21 @@ and nothing more. It is the definition of the tier, not a defect to be narrowed 
 is why these findings are quarantined from `capabilities` and why the manifest reports the
 sentence and its byte range rather than a verdict.
 
-Two facts belong next to that table rather than below it. **Across all 92 labelled bundles the
-three signals fired twice in total**, and both times wrongly, so the instruction plane has
-**zero adjudicated true positives on this corpus**. And **its recall is unmeasured**: no
-annotator ever judged the prose, so `capabilities = []` means "not looked for" with respect to
-`instruction.*`, never "not present". A rate against those labels would score every genuine
-detection as a false positive, so none is computed.
+**The other three signals have no recall number, and that is a real gap rather than an
+oversight.** Across all 92 originally-labelled bundles they fired twice in total, and both
+firings were read and judged wrong — so those three have **zero adjudicated true positives**
+on that corpus. No annotator judged the prose there, so `capabilities = []` means "not looked
+for" with respect to `instruction.*`, never "not present", and a rate against those labels
+would book every genuine detection as a false positive. None is computed.
 
-What this licenses is narrow and worth stating plainly: the signals are quiet enough not to
-bury a reviewer, and nothing more. `crates/skillmap-eval/tests/instruction_stratum.rs` records
-the adjudicated counts and fails when a rule widens without someone reading the new hits.
+The contrast with `instruction.exec_directive` is the argument for how the other three should
+be finished: draw a stratum for the signal, label it before writing the rule, and a real
+precision and recall follow. That is two days of work per signal, and it is the difference
+between "quiet" and "measured".
+
+`crates/skillmap-eval/tests/instruction_stratum.rs` records the adjudicated counts, fails when
+a rule widens without someone reading the new hits, and fails when a signal ships with no
+adjudicated entry at all — so the next rule in this plane cannot arrive unmeasured.
 
 **Eight terms now have ground truth, and every one of them has a rule.** A second reading pass
 over all 92 bundles hunted for `net.egress`, `env.read.secret`, `process.exec`,
