@@ -82,7 +82,7 @@
       "size": 91
     }
   ],
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "target": {
     "content_digest": "sha256:e9ab4ab22c0651af5f0490db0e76196a2f855b9980a1d28bc3cf39444ed5f87c",
     "kind": "skill",

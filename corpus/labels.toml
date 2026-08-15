@@ -2047,11 +2047,19 @@ note = "Service-mesh skill piping a vendor install endpoint into a shell with TL
 #
 # **Basis of judgement, stated because it is narrower than the other strata.**
 # Each was read for one question — does the prose direct retrieval of remote
-# content and then execute it — by examining every shell fence in SKILL.md. The
-# term's mechanism requires a fetch, so a bundle whose fences contain no
-# retrieval at all cannot carry it, and that is sufficient evidence for absence.
-# These bundles were NOT read exhaustively for the eight capability terms, which
-# is why `strata_scored` excludes this stratum.
+# content and then execute it. The term's mechanism requires a fetch, so a
+# bundle whose fences contain no retrieval at all cannot carry it, and that is
+# sufficient evidence for absence. These bundles were NOT read exhaustively for
+# the eight capability terms, which is why `strata_scored` excludes this
+# stratum.
+#
+# **That basis was too narrow on the first pass and was corrected.** It read
+# SKILL.md alone, while the instruction plane analyses every markdown file in
+# the bundle. A re-scan across all eighty bundles and all their markdown found
+# exactly one label wrong — a repository whose install directive lives in
+# README.md and AGENTS.md rather than in SKILL.md. One in eighty is a small
+# error rate and it was still an error; the re-scan is what turned it up, not
+# the reading.
 #
 # The result is the useful part: **none of the forty carries the term.** Ten
 # contain a retrieval of some kind — REST API calls, `git fetch`, a CLI
@@ -2127,9 +2135,9 @@ note = "Shell fences call a REST API over curl — request/response usage exampl
 digest = "sha256:5877b4a5275e58052c7d179c8a25fb6aa9158053c9c5747afa419b4f86a77741"
 stratum = "fence_control"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+capabilities = ["instruction.exec_directive"]
+evidence = ["AGENTS.md:18"]
+note = "A whole browser-automation repository shipped as a bundle. Its README, AGENTS.md and a setup workflow each pipe the project's own installer into bash. Originally labelled as carrying nothing, because the first pass read SKILL.md alone and the directive is not there; corrected after a re-scan across every markdown file in all eighty bundles. The only label that basis got wrong."
 
 [[label]]
 digest = "sha256:5b4b6435f71950be38603c21edc92e80aad3cd7bca01852a9cbe30f44386cb37"

@@ -1,0 +1,81 @@
+id         = "instr.exec-directive"
+language   = "markdown"
+capability = "instruction.exec_directive"
+tier       = "pattern"
+query      = "queries/markdown/exec-directive.scm"
+
+[docs]
+summary = "Prose directing the agent to fetch remote content and execute it."
+rationale = """
+The documented marketplace-poisoning campaign delivered its payload this way: a
+Prerequisites section telling the agent an initialisation script must be run,
+with the command in a fenced block. Every other plane is blind to that. The code
+plane analyses script files and a fence is not a file; the existing instruction
+rules match prose nodes and never see inside a fence. The identical bytes in
+`scripts/init.sh` are caught cleanly, which is what makes this a delivery gap
+rather than a detection one.
+
+What the term claims is narrow and true: the executed code **is not in the
+bundle and is not reviewable**. It arrives from a URL at run time, so reading
+the bundle cannot tell you what runs. That is the property worth reporting, and
+it is why the term is not the broader "directs execution of a command it
+supplies" — that reading is satisfied by `python scripts/build.py` in any usage
+section, and a signal firing on nearly every skill describes nothing.
+
+Measured against ground truth drawn and labelled for it before this rule
+existed: **precision 31/31, recall 31/35 (88.6%)**, benign stratum 0/36.
+
+The four misses are three shapes, and none of them is a missing string:
+
+  - **Two split the fetch and the execution across lines.** One writes the
+    installer to a file with `-o` and runs it on the next line; one writes it to
+    a temp variable, verifies a SHA-256, and executes it three lines later. Both
+    patterns here are deliberately single-line, because a pattern spanning lines
+    would join unrelated commands inside one fence and invent directives that
+    are not there. Connecting them needs dataflow this tier does not have.
+  - **One omits the URL scheme.** Requiring `https?://` is exactly what excludes
+    bundled filenames and prose about the shape; relaxing it to bare hosts would
+    trade a measured 0/36 benign rate for one recovered miss.
+  - **One is hidden by fence misalignment**, which is a finding rather than a
+    gap.
+
+**Fence misalignment is an evasion vector, confirmed rather than theorised.** A
+closing fence delimiter that carries an info string shifts the pairing of every
+fence after it, so a later directive lands inside a block the grammar reads as
+having no language. The identical command in a correctly paired document fires.
+An agent reading the prose is unaffected, because it never parses fences. One
+corpus bundle does this by accident; nothing stops it being done deliberately,
+and no fence-scoped rule can see through it.
+"""
+false_positive_notes = """
+**Most matches are legitimate, by a wide margin.** Of 40 corpus bundles drawn
+for this shape, 34 carry it, and nearly all are ordinary installer instructions
+for real tools — container runtimes, language toolchains, vendor CLIs. This
+reports the directive; `policy.toml` decides whether a repository tolerates it.
+Narrowing the pattern to exclude "well-known" hosts would be a verdict wearing a
+regex, and it would fail on the one case that matters: an attacker-controlled
+URL looks exactly like a vendor's.
+
+**The care gradient is invisible here and that is not a defect.** The same shape
+spans a bare pipe into `sudo bash`, a fetch paged with `less` before running,
+and a fetch whose SHA-256 is verified before execution. All three execute remote
+code, all three carry the term, and the difference between them is a judgement
+this tier cannot make.
+
+Three false-positive shapes are excluded by construction, each found by reading
+real bundles rather than predicted:
+
+  - **`.sh` is a top-level domain.** `https://api.example.sh/register` is a REST
+    call. Form 2 requires the extension to follow a `/` and not be followed by
+    one. Hostname alone cannot settle it: one drawn bundle pipes a genuine
+    `install.sh` from a `.sh` host.
+  - **A bundled filename can carry the trigger.** Bundles invoke their own
+    `current_weather_curl.sh` and `curl-api.py`. Both patterns require an
+    `https?://` URL, so a local path cannot match.
+  - **Prose about the shape.** A security-vetting skill greps for `curl` and
+    `wget` as things to look for. Again excluded by the URL requirement, and it
+    is the negative fixture.
+"""
+
+[captures]
+site = "@site"

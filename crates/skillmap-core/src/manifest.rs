@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::num::NonZeroU64;
 
 /// The schema version this crate produces.
-pub const SCHEMA_VERSION: &str = "1.1.0";
+pub const SCHEMA_VERSION: &str = "1.2.0";
 
 /// A skillmap capability manifest.
 ///
@@ -555,6 +555,21 @@ pub enum InstructionSignal {
     /// Prose asserting pre-authorization or elevated permission.
     #[serde(rename = "instruction.privilege_claim")]
     PrivilegeClaim,
+    /// Prose directing the agent to run a command that fetches remote content
+    /// and executes it.
+    ///
+    /// Narrow on purpose. "Directs execution of a command it supplies" is
+    /// satisfied by `python scripts/build.py` in any usage section, and a
+    /// signal that fires on every skill describes nothing. What this reports is
+    /// that the code being run **is not in the bundle and is not reviewable**:
+    /// it arrives from a URL at run time, so reading the bundle cannot tell you
+    /// what will execute.
+    ///
+    /// Not a verdict. Of 40 corpus bundles drawn for this shape, 34 carry it
+    /// and nearly all are ordinary installer instructions for real tools. The
+    /// manifest reports the directive and its bytes; `policy.toml` decides.
+    #[serde(rename = "instruction.exec_directive")]
+    ExecDirective,
 }
 
 /// Generate `as_str` plus an `ALL` slice, and a test proving `as_str` agrees with
@@ -613,6 +628,7 @@ wire_names!(InstructionSignal, instruction_signal_wire_names_match_serde, [
     ConfigMutation => "instruction.config_mutation",
     Silence => "instruction.silence",
     PrivilegeClaim => "instruction.privilege_claim",
+    ExecDirective => "instruction.exec_directive",
 ]);
 
 wire_names!(UnresolvedReason, unresolved_reason_wire_names_match_serde, [

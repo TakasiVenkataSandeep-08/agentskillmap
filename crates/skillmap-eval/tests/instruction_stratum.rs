@@ -187,6 +187,11 @@ fn instruction_signals_are_counted_on_every_stratum() {
         ("instruction.config_mutation", 1),
         ("instruction.exfil", 1),
         ("instruction.fetch_as_instruction", 0),
+        // T10's signal. Zero on the benign stratum, which is the number a rule
+        // matching a shape present in a third of all shell-fence bundles puts
+        // at risk. Its own strata are scored separately below, where a rate
+        // against ground truth is available.
+        ("instruction.exec_directive", 0),
     ]
     .into_iter()
     .collect();
@@ -207,4 +212,91 @@ fn instruction_signals_are_counted_on_every_stratum() {
              false-positive rate is derived from these numbers"
         );
     }
+}
+
+#[test]
+fn the_exec_directive_signal_is_scored_against_its_own_ground_truth() {
+    // T10 phase 2. Unlike the three signals above, this one has ground truth:
+    // `fence_directive` and `fence_control` were drawn and labelled for it
+    // *before* this rule existed, which is the ordering the whole corpus
+    // discipline is built around.
+    //
+    // Scored only over those two strata. The other four were never read for
+    // this term, so a firing there is neither a true nor a false positive — it
+    // is unmeasured, and counting it either way would invent a number.
+    let root = repo_root();
+    let labels = match corpus::Labels::load(&root.join("corpus/labels.toml")) {
+        Ok(labels) => labels,
+        Err(corpus::Error::Absent(_)) => return,
+        Err(error) => panic!("corpus/labels.toml is present and unusable: {error}"),
+    };
+    let rules = skillmap_rules::load(&root);
+    assert!(rules.diagnostics.is_empty(), "{:?}", rules.diagnostics);
+
+    const TERM: &str = "instruction.exec_directive";
+    let (mut tp, mut fp, mut fn_, mut tn) = (0usize, 0usize, 0usize, 0usize);
+    let mut missed = Vec::new();
+    let mut spurious = Vec::new();
+    let mut scanned = 0usize;
+
+    for label in &labels.labels {
+        if label.verdict != corpus::Verdict::Labelled {
+            continue;
+        }
+        if !matches!(label.stratum.as_str(), "fence_directive" | "fence_control") {
+            continue;
+        }
+        let dir = corpus::bundle_dir(&root.join("corpus"), &label.digest);
+        let Ok(manifest) = skillmap_scan::analyze(&dir, &rules) else {
+            continue;
+        };
+        scanned += 1;
+        let fired = manifest
+            .instructions
+            .iter()
+            .any(|entry| entry.signal.as_str() == TERM);
+        let truth = label.capabilities.iter().any(|term| term == TERM);
+        match (fired, truth) {
+            (true, true) => tp += 1,
+            (true, false) => {
+                fp += 1;
+                spurious.push(format!("{} [{}]", &label.digest[7..19], label.stratum));
+            }
+            (false, true) => {
+                fn_ += 1;
+                missed.push(format!("{} [{}]", &label.digest[7..19], label.stratum));
+            }
+            (false, false) => tn += 1,
+        }
+    }
+
+    if scanned == 0 {
+        eprintln!("SKIPPED: corpus/raw/ is absent, so {TERM} could not be scored.");
+        return;
+    }
+
+    let precision = corpus::Rate::new(tp, tp + fp);
+    let recall = corpus::Rate::new(tp, tp + fn_);
+    println!("\n{TERM} over its own strata ({scanned} bundles)");
+    println!("  precision {}", precision.render());
+    println!("  recall    {}", recall.render());
+    println!("  tp {tp}  fp {fp}  fn {fn_}  tn {tn}");
+    if !spurious.is_empty() {
+        println!("  false positives: {spurious:?}");
+    }
+    if !missed.is_empty() {
+        println!("  missed: {missed:?}");
+    }
+    println!();
+
+    // Recorded rather than asserted at a threshold: a number that only has to
+    // beat a bar invites tuning the bar. What is asserted is that the measured
+    // result has not moved without somebody updating this line and the README
+    // beside it.
+    assert_eq!(
+        (tp, fp, fn_, tn),
+        (31, 0, 4, 45),
+        "the exec_directive score moved. Re-read the changed bundles, update the \
+         README's published rate, and change these numbers deliberately"
+    );
 }

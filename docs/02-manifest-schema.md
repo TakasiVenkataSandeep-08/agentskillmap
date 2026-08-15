@@ -278,6 +278,42 @@ Instruction-plane signals use a separate `instruction.*` namespace and never app
 project attention. They are also the two most likely to false-positive on legitimate skills
 about logging verbosity and permissions — negative fixtures for those are load-bearing.
 
+## Migration: 1.1.0 → 1.2.0
+
+One change: **`instruction.exec_directive` is added to `instructionSignal`.** Nothing
+about the manifest's *shape* moved — no field added, removed, or renamed, no array
+gained a sort key, and the canonical serialization is unchanged.
+
+**What it means.** Prose directing the agent to run a command that fetches remote
+content and executes it — `curl … | sh`, or fetching a `.sh`/`.py` and then running it.
+It is `tier = "pattern"` and lands in `instructions`, never in `capabilities`: the claim
+is about what the prose tells the agent to do, not about what the bundle's own code does.
+
+**Why the definition is this narrow.** A first draft read "directs execution of a command
+it supplies", which is satisfied by `python scripts/build.py` in any usage section — a
+signal that fires on nearly every skill describes nothing. The property worth reporting is
+that the executed code **is not in the bundle and is not reviewable**: it arrives from a
+URL at run time, so reading the bundle cannot tell you what runs.
+
+**It is not a verdict, and the corpus is emphatic about that.** Of 40 bundles drawn for
+this shape, 34 carry it, and nearly all are ordinary installer instructions for real
+tools — container runtimes, language toolchains, vendor CLIs. The shape also spans a care
+gradient no pattern can see: most pipe straight into a shell, three fetch to a file and
+page it for review first, one verifies a SHA-256 before executing, one runs the fetched
+script under `sudo`. All of them execute remote code, so all carry the term. Which of
+those a repository tolerates is `policy.toml`'s question. Invariant 1 applies here more
+sharply than anywhere else in the taxonomy.
+
+**Compatibility.** Adding a variant to a closed vocabulary is breaking in the same
+direction the 1.1.0 removal was: a 1.1.0 consumer rejects a manifest carrying a signal it
+does not recognise. Unlike that removal, the breakage here is **real rather than
+hypothetical** — a rule ships with this term and will emit it, on roughly a third of
+bundles that carry a shell fence. A `skillmap.lock` written by a 1.2.0 binary can name
+`instruction.exec_directive`; an older binary reading that lock will not recognise it.
+Lock files store capability wire names precisely so this degrades to a visible error
+rather than a silent rewrite. Minor rather than major because the shape is unchanged and
+every existing term keeps its meaning.
+
 ## Migration: 1.0.0 → 1.1.0
 
 Three changes, all to the capability taxonomy. Nothing about the manifest's *shape*

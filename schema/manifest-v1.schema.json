@@ -236,7 +236,8 @@
         "instruction.exfil",
         "instruction.config_mutation",
         "instruction.silence",
-        "instruction.privilege_claim"
+        "instruction.privilege_claim",
+        "instruction.exec_directive"
       ]
     }
   }

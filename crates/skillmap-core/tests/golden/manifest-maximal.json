@@ -203,7 +203,7 @@
       "size": 4096
     }
   ],
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "target": {
     "content_digest": "sha256:f882e860ca44e6ac376c8e8148b5bc0fa7245d6f2f16a048b7a863986820a2d2",
     "kind": "skill",
