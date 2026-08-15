@@ -1815,3 +1815,574 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Video-generation skill that calls a REST API over curl throughout. Nothing is fetched and executed: every match is an API host on a .sh top-level domain, which the draw's installer heuristic read as a shell-script suffix. A drawn candidate that the reading rejects."
+
+[[label]]
+digest = "sha256:30ed238ff37971d05ca134fbc5a5189ae02d297f9afcee3fe68a4e6c75c63175"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:90"]
+note = "Prose says the skill relies on a standalone Python CLI and directs downloading it from a raw repository URL if missing, then invokes that file by name a dozen times. Fetch-then-execute where the executed code never ships with the bundle and cannot be reviewed by reading it."
+
+[[label]]
+digest = "sha256:37dbfb8be2ec2a563bfc1729fde531dced22a87ce8613c3dd40ba2216c741028"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:32"]
+note = "Build-and-install step pipes an installer into bash from a personal gist raw URL rather than a repository or a vendor domain. A gist is mutable at the author's discretion and carries no review history, which makes the fetched bytes less inspectable than the usual form of this shape."
+
+[[label]]
+digest = "sha256:3994afa0708d7f839b8a6c80a6c647e9350ebbfef1113aaeac42e0a8e57cd5cd"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:26"]
+note = "Pipes a cloud vendor's official CLI installer into a shell. No frontmatter description."
+
+[[label]]
+digest = "sha256:44c605bae9b53d0b28c8ecde876ecc71bbba51f0f37d32d7294afc5ccd39bd54"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:31"]
+note = "Brokerage-gateway skill whose first setup step pipes a well-known container-runtime install endpoint into a shell."
+
+[[label]]
+digest = "sha256:51f9314a05177e8b37b81a8a531b97a42b056a8ae92053c19f86e90db5ffca54"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:40"]
+note = "First setup step pipes a well-known JavaScript runtime's install endpoint into bash."
+
+[[label]]
+digest = "sha256:588441041b19ae868aef9faa1f4d3ff75c87c24f08d29bd8e2a593871e22b25a"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:93"]
+note = "DNS-filtering skill. Fetches a well-known project's installer to a file, pages it with less under an explicit review-before-proceeding comment, then runs it. The careful form of the shape, with the review step written into the fence itself."
+
+[[label]]
+digest = "sha256:611faae37b36f0ba5dd5720a683ffaad9b962a354f96e0415a184cbc292ea614"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Agent debate-game skill that registers and joins tables over a REST API. Nothing is fetched and executed: the matches are API hosts on a .sh top-level domain, which the draw's installer heuristic read as a shell-script suffix. Second instance of that artifact in this stratum."
+
+[[label]]
+digest = "sha256:7346335a29f921395974be5e05f9c532ad706068258d3f0ac70ffe0cf6a7422c"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:21"]
+note = "Workspace CLI install step pipes a raw repository install script into a shell, with a PowerShell equivalent piping into iex beside it. Documentation is not in English, which does not change the shape and is worth noting for a rule that matches prose."
+
+[[label]]
+digest = "sha256:77689f85aa72602c4e5cbe121065fd716fd1d1c11de29a029f0eb7a9cd7cadc9"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "A security-vetting skill for agent skills. Its fences grep for curl and wget as things to LOOK FOR, under a heading listing automatic-rejection danger signals. Nothing is fetched and nothing is executed: this is prose about the pattern, and it is the single best negative fixture candidate this stratum has produced."
+
+[[label]]
+digest = "sha256:7d1c27c3f16fa1c0e728f4a19e0d3aeaf88b5ad81e271a61a580251db3a1109b"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Debate-platform skill registering over a REST API. Same .sh top-level-domain artifact as the other two: an API host read as a script suffix by the draw, rejected by the reading."
+
+[[label]]
+digest = "sha256:8e9b326813fe6cb609fc8b2e5caeda70e4201d597b3ea87aec56e60ababc4aae"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:28"]
+note = "Agent-scaffolding skill that pipes a vendor CLI installer into bash."
+
+[[label]]
+digest = "sha256:8f9fbda1056e5800e593e493c2e3717c1073997b9a7728194cdf18c8ceaee984"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:16"]
+note = "Password-manager CLI skill whose quick install pipes the vendor's installer into bash. The bundle's subject is credential storage, which a policy might weigh differently from the same shape in a formatting skill."
+
+[[label]]
+digest = "sha256:95bbc0a42e87ec8aed1ef067972bfda0c043314e1b1dcbe76cabe16f77c34b1c"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:56"]
+note = "Cloud CLI skill piping a vendor shortlink installer into bash. The URL is a redirector, so the bytes that run are one hop further from what the reader sees."
+
+[[label]]
+digest = "sha256:a9a1ac17c4029e5a2846f07e73a7cdb773c058b8fee63418eb30fd4f10dbff70"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:835"]
+note = "Visual-QA skill. Fetches a runtime installer to a temp file, computes its SHA-256, aborts on mismatch and only then runs it. The most careful instance in this stratum: remote code still executes, so the term applies, but the bytes are pinned before they do."
+
+[[label]]
+digest = "sha256:aa8acf894c4ffef895a7d91c7516a9b7608f413e4cabc986555299830d8bc334"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:129"]
+note = "Speed-test skill piping a package-repository setup script into `sudo bash`. The only instance in this stratum that runs the fetched code as root."
+
+[[label]]
+digest = "sha256:b3cf352a031165e091a4a1e0746315a2e32c076d646d0b554e60262f0929bc38"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:22"]
+note = "Linter-configuration skill piping a raw repository install script into a shell with arguments passed through to the fetched script."
+
+[[label]]
+digest = "sha256:b7ea376a6b30c4c71ec714cd9a4c25af31167dc57dfaf4747a0aefa4de711d87"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:35"]
+note = "Under a heading marked REQUIRED, fetches a Python file from a project-specific domain into a directory under the user's config tree, chmods it executable and runs it thereafter. Structurally the closest match in this stratum to the documented marketplace-poisoning shape: a required prerequisites step, a non-vendor host, and code landing outside the bundle."
+
+[[label]]
+digest = "sha256:c26e2b9e23a03c995943dbbd7c63e3649da71fe5041b43999959357881228b02"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:21"]
+note = "Quick start pipes a vendor CLI endpoint into a shell then logs in. Same shape and vendor as another bundle in this stratum under a different digest, which is what deduplication by content cannot merge when two publishers ship near-identical prose."
+
+[[label]]
+digest = "sha256:cb2e6c8280e3a305946ffc8fe7abbce40e2ffc975e97d7bb35ae4632e04d3a75"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:85"]
+note = "Voice-agent skill offering a vendor CLI install piped into bash as one of two setup paths."
+
+[[label]]
+digest = "sha256:d27ca27b981de180ced2668a64684359715cdf8fec06880277b9f7c7547d34a0"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:17"]
+note = "Analytics CLI skill whose install step pipes a well-known runtime installer into bash."
+
+[[label]]
+digest = "sha256:d78cba98cbc708898e3978c859cfbeca16324c051df99cafe15133f1e2dae2ca"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:84"]
+note = "Secrets-management skill piping its vendor installer into a shell with a flag forwarded to the fetched script. A policy weighing this shape by what the skill handles would rank this differently from the same line in a formatting skill."
+
+[[label]]
+digest = "sha256:da644b6399b0f2cff47235c21a7a06656b536ba1c1fda99c27f84b23021d1d33"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Weather skill that invokes a shell script shipped inside the bundle. Nothing is fetched: the draw matched the script's own filename, which contains both `curl` and a `.sh` suffix. A third draw artifact, and the one most likely to mislead a query written against command text rather than command structure."
+
+[[label]]
+digest = "sha256:e30ccfacdb02592495e5acec0523ae74de28593a965216eaa706f894a81f64aa"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Browser-automation skill running a Python file shipped inside the bundle, whose filename contains `curl` and a `.py` suffix. Same filename artifact as the weather skill; the code executed is present in the bundle and reviewable."
+
+[[label]]
+digest = "sha256:e3a8423d657ca414f02d88f4af30f8a87453d230be62483d3f0816bd4b3a804e"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:30"]
+note = "Peer-to-peer file-sharing skill piping a well-known Python packaging installer into a shell. The host is itself a .sh domain, and here the fetch genuinely is an installer, which is why the top-level-domain artifact cannot be resolved by the hostname alone."
+
+[[label]]
+digest = "sha256:e6f862b5262838b05c50320324dbb025c4eed2055960b4adf438b77582660967"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:822"]
+note = "Large agent-workspace setup document. The directive sits in an optional section 800 lines into the file, which is the disclosure question this project measures elsewhere: nothing in the description says a remote installer runs."
+
+[[label]]
+digest = "sha256:e9ccc92e82d80829ab92c287ae8a3f343fed8357a41d3a2f861b6c4d5dbdbfac"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:43"]
+note = "Local-inference skill piping a well-known model-runner installer into a shell, in a section marked optional."
+
+[[label]]
+digest = "sha256:f76f3dc6f425380daaa8a37e73dc4c75aa5820ba54978e7fb6ab1a8224111292"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:181"]
+note = "Research skill whose Prerequisites section pipes a vendor installer into bash. The heading is the same one the documented marketplace-poisoning campaign used, which is a reminder that the heading carries no signal by itself."
+
+[[label]]
+digest = "sha256:ff134bd81c174b43439feb368388e5ffbb00f5122f2dd236cc84502057712e15"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:73"]
+note = "Service-mesh skill piping a vendor install endpoint into a shell with TLS pinned on the fetch. Near-identical prose to another bundle in this stratum under a different digest."
+
+# ── fence_control ────────────────────────────────────────────────────────────
+#
+# T10's control stratum: bundles with a shell fence and neither directive shape.
+# These are the false positives the signal will actually face.
+#
+# **Basis of judgement, stated because it is narrower than the other strata.**
+# Each was read for one question — does the prose direct retrieval of remote
+# content and then execute it — by examining every shell fence in SKILL.md. The
+# term's mechanism requires a fetch, so a bundle whose fences contain no
+# retrieval at all cannot carry it, and that is sufficient evidence for absence.
+# These bundles were NOT read exhaustively for the eight capability terms, which
+# is why `strata_scored` excludes this stratum.
+#
+# The result is the useful part: **none of the forty carries the term.** Ten
+# contain a retrieval of some kind — REST API calls, `git fetch`, a CLI
+# subcommand spelled `fetch`, a bundled script taking a `fetch` argument — and
+# in none of them is anything retrieved then executed. The draw's negative side
+# has no missed positives on this sample.
+
+[[label]]
+digest = "sha256:05b9e3f333487260730e24eb16c275dabe5a5e69b05924ffe32a1a1f8e1f28ed"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:0a53ec77760395f91b432104322c395f3d843b3ef8c847fa8c4e9277dc022ab2"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:14aedb4b6910cd6fc15bd1ab3ec598496871f5b5bc79aad8304973788292142f"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:17a5534c76eb07fb7c4855a57fe9076f8cde17da06f29f54e3630a24e2bd55d2"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:29b0a6d97a3a62e653b0ed976ad84787335394fd90d2866c64e4976aa834f9b2"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:3f63c6f3bdf0c128aa67bc7392e7714bd610f1b6a6de44297f8b11499d8322ca"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:4d34cb3a0bc1a40c156c65cfd0e3b93fe11c54b1cdbe80b0e0ba9e4b6a209563"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:53a5d2f0964043be414e54cc9c27dd0b48a70d6e9493120a2a2b9f5ad9bd68e0"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:5877b4a5275e58052c7d179c8a25fb6aa9158053c9c5747afa419b4f86a77741"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:5b4b6435f71950be38603c21edc92e80aad3cd7bca01852a9cbe30f44386cb37"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences invoke `git fetch` against a remote repository. Version-control synchronisation, not retrieval of code to execute."
+
+[[label]]
+digest = "sha256:5b68209b343dcb70e2da921450887236665d6bf10bbf351609aef4afb8f539c5"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:60fcedc77fc8577286409ccbf1038cf0b8d2ef68a8524afb10783e4a892040a9"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:64f64f196971ef9fe3ffbb0d61011c10b738740c3027265a2c2a1f6a7821efb4"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a CLI whose own subcommand is named `fetch`. The word is the tool's vocabulary, not a retrieval of remote code."
+
+[[label]]
+digest = "sha256:67d09ea49f86a50603c55606b9c5c20b85d8ed54f420eccabdcf159754195ffe"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences invoke a build script shipped in the bundle with a `fetch` argument. The executed code is present and reviewable; what it downloads is documentation."
+
+[[label]]
+digest = "sha256:6da29ed88db6574fa3de1e21344626c13b88630bc108437c827fc7de3d7a732a"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:6ffbe8ccba14adf5fdd7b09ec6ada8b81a505c1d06a64169049e9cb3167e2323"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:7222d17e07a3dc64b408b040d796affd93d218faf98ad000a6868002bff78895"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:77789c4c0dc02c1ccd8220cc7ef00a1aebb6e19ee11438914dfa9a5a23bf9d78"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:77fbc6268e11214c323fae420daa63dfbdbd54f601eb430489e2f0fcc0e2d0df"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:7a688031de852b3635e29f7c736b246c94ba59b6b5cc8f342bc37c676046fe57"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:7f1bd1203b0b0e1d1c54bed8b19904fb09830e99c759db99725e1642c7b1c93f"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:82e73a67814c5df0b8758e0b923d19ad0f9fce43a4f17bb82c316e8a5a93088a"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:863b727bde281c6a2480e2ea681b7853cd31d34609ff0340c9c4cd7d4ae3a175"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:86efc9dc809591d1f0a28457082594d0650701a61b13c510356e89b39444461c"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:8884f15b188138d5248e7b0d704f1eafcef62f0a417af50c1e9c2e6a52f04224"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:8d8a051a0979026a7c82d4ce176befd5f6feb28777e3b3aa5cb7e99d2c46d782"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:90ee6a034e8418d245b26ea8cb2f521ff30288d3f8a778e47c2f2b5bb7d8cb75"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:9563a9dcbe4370b4ad3d4a7a4062202d7e0f3dab46877450d5342d5f59a38be7"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:9a086104ae7e7e274327d9131ba90bc07edb205890cd74b5752a5a6772f5ae54"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:a1d41bfb34adf26f1cd5f21e9253a506b6b4552328ce7aba60ec8b8c3c5de387"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:b220eca57402dfb9a2951fe0e3c41af52883ce385ee19aba23e72ceebf609947"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:ba4323e7c74561a0ce9d736189149ca4d7c1bd19f2ea541a6656030469baffef"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:c3f0af62f37eb004e03ef146344a5900d634346af49702ed3c81effa0c232bd2"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:cedcd5deea4b3629b5d54a570b58d64f469fd7c75b8699eb134bcbbd3b20fde2"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:d1b1805bcc86106559a5c227bc723011262cc9e39232db5a7e195a00116ff976"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:d261965dc6d739c751bc88d2e1edf152a6806012881b18cc7f48c614957ce66d"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:d6cdf32c95d5db9ace17be4f6f4c8977f2500d6eb3512ba17187a1dcccc33ae1"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:e3683c21465a43700a60250413ba54a7352a8b556b0907525b6c1c6a81929650"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:f224e59c6f7fd389be0384f3c21dc0e201c8a6bfa943933098b283e7dbe9d52b"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences call a REST API over curl — request/response usage examples with headers and query parameters. Nothing retrieved is executed."
+
+[[label]]
+digest = "sha256:fc9e2f766b9248a0a8f8fb1d910a78f2af6ad6b743844abac74c1c00b7ef6391"
+stratum = "fence_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shell fences contain only local invocations of the bundle's own commands; no retrieval of remote content appears in any of them."
+
+[[label]]
+digest = "sha256:2fdca5e6376a27dc150d74b25a5a7b3398dff064086df7a0cea6d68e749b040b"
+stratum = "fence_directive"
+verdict = "labelled"
+capabilities = ["instruction.exec_directive"]
+evidence = ["SKILL.md:21"]
+note = "Media-generation skill piping a vendor CLI endpoint into a shell and logging in, then driving that CLI for the rest of the document. Third bundle in this stratum with the same vendor and near-identical install line under a different digest."
