@@ -129,4 +129,22 @@ fi
 mkdir -p "$OUTPUT"
 cp "$BUILT" "$OUTPUT/$BINARY"
 echo "built $BINARY for $HOST"
-( cd "$OUTPUT" && sha256sum "$BINARY" )
+# `sha256sum` is GNU coreutils and macOS does not ship it; `shasum -a 256` is
+# the BSD equivalent and prints the same `<hash>  <name>` format.
+#
+# This one line is why no release has ever completed. The build job runs this
+# script on five targets, and on both Darwin runners it reached the final
+# instruction — binary built, verified free of build paths, copied into dist —
+# and then exited 127 on a missing command. `build (darwin-arm64)` failed,
+# `publish` needs `build`, and so every tag since v0.3.0 produced no GitHub
+# release and no npm package. The three other uses of `sha256sum` in
+# release.yml are fine: they run in jobs whose matrix is ubuntu and windows
+# only.
+(
+  cd "$OUTPUT"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$BINARY"
+  else
+    shasum -a 256 "$BINARY"
+  fi
+)
