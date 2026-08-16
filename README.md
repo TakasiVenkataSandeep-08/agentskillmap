@@ -4,6 +4,37 @@
 > is what was available — `skillmap` is blocked on npm by an existing `skill-map` package and
 > the `skillmap` GitHub organisation was taken in 2020 — and the short one is what you type.
 
+## A measured corpus of the agent-skill ecosystem, and a differ built on it
+
+The primary artifact here is **measurement**. `SKILL.md` skills are installed with one command
+and run with your agent's permissions, and almost nothing published about them carries a
+denominator. This repository harvested **34,284 distinct bundles** (snapshot `2026-08`,
+deduplicated by content digest) and reports what is actually in them:
+
+```
+  ship an executable script            10.2%      carry files no documented path reaches   30.0%
+  ship no parseable code at all        89.8%      frontmatter parses (head / tail)   100% / 85.7%
+
+  prose directing fetch-then-execute     249 bundles  (0.73%)
+  prose directing a write outside
+    the bundle                           576 of the 10,660 prose-only bundles
+                                                    that carry a code fence  (5.4%)
+```
+
+**275 bundles were then hand-labelled across 8 strata** — 252 scored, 23 too large to read
+within one label's budget — and every detection rate below is computed against them and
+published with a Wilson interval, including the ones that look bad. A second annotator
+independently re-labelled 23 of the first 92: **18/23 agreement, and all five disagreements
+went against the first annotator.** That is published too, because a single-annotator corpus is
+a weaker artifact than a reviewed one and the reader has to be able to tell.
+
+Nothing here is a base rate someone eyeballed. `corpus/report.md` carries the harvest with its
+sampling bias stated before the findings; `corpus/labels.toml` carries the ground truth with a
+note per bundle; `corpus/sample.json` carries the provenance so any label can be traced to the
+exact bytes it describes.
+
+### The tool that came out of it
+
 **A capability differ for AI agent skills.** It records what a skill can do, with byte-level
 evidence, and tells you when that changes.
 
@@ -12,17 +43,30 @@ skill you approved last month quietly starting to read `~/.aws/credentials` is t
 catches, and the thing a pull request full of prompt edits will not show you.
 
 **What it is not.** Not a linter, not a risk scorer, not a malware classifier, and **not an
-auditor** — a clean report is not an assurance. Recall is measured and published below, and on the
-terms with a usable sample it runs from **44% to 92%** depending on the capability. (Three more
-read 100%, at n=1 and n=2 — those are decoration and the table says so.) It emits a manifest;
-your `policy.toml` decides what is acceptable, and it never uses the words "safe", "malicious"
-or "severity" — a test greps the output to keep it that way.
+auditor** — a clean report is not an assurance. It emits a manifest; your `policy.toml` decides
+what is acceptable, and it never uses the words "safe", "malicious" or "severity" — a test
+greps the output to keep it that way.
 
-**Read this before trusting a clean result.** Every precision figure here describes the code
-plane, and **only 10.2% of the 34,284 bundles we harvested ship an executable script at all**.
-For the rest, skillmap reports load phase, disclosure, and three deliberately weak prose
-patterns. The ground truth behind every number is **92 hand-labelled bundles**, 69 of them
-checked by one annotator. The intervals are wide and stated everywhere.
+### The denominators, before the good numbers
+
+Precision is 113/113 with zero false positives, and quoting that alone would be misleading.
+Read these first:
+
+- **Every capability figure describes 14.6% of the corpus.** The code plane can only fire on
+  bundles shipping a file in Python, shell, JavaScript or TypeScript. The other 85.4% is prose,
+  where two measured instruction signals now reach one shape each and three more have a firing
+  rate and no recall at all.
+- **84% of scanned bundles carry at least one `unresolved` entry**, about 4.5 computed targets
+  apiece, and **40% of reported capabilities are `present` rather than `observed`** — the code
+  is there and nothing established that it runs. "Zero false positives" and "the analysis was
+  incomplete almost every time" are both true.
+- **Recall runs 44% to 92%** on the terms with a usable sample. Three more read 100% at n=1 and
+  n=2; those are decoration and the table says so.
+- **A third of the harvest was never eligible for sampling at all** — 10,318 bundles carry a
+  lexical marker with no parseable code, fall into no stratum, and are measured by nothing.
+
+A determined author evades this easily, and the known limits in `docs/00-tasks.md` double as an
+evasion guide. That is the cost of publishing them, and they are published anyway.
 
 ## Why
 
@@ -53,6 +97,14 @@ itself a disclosure.
 `~/.claude/skills`, lock, and re-run. This is the drift case, and it is where a mediocre recall
 still buys you something: you are watching for *changes* in shapes that are covered, not
 enumerating everything that exists.
+
+**Someone who needs numbers about this ecosystem.** Security researchers and vendors writing
+about agent-skill supply chains, and anyone arguing about how large the problem is. The harvest,
+the strata, the 275 labels and the per-term rates are all in-repo and reproducible: the report
+states its sampling bias before its findings, the labels carry a note per bundle, and the sample
+carries provenance so any claim can be traced to bytes. Cite it, disagree with it, or re-run it —
+`GITHUB_TOKEN=… cargo run -p skillmap-corpus -- --snapshot 2026-08`. This is the part of the
+project that does not depend on the scanner being good.
 
 **Not yet for:** deciding whether an unknown skill is safe to install. A clean report from a
 tool with this recall is not evidence of much, and a determined author evades it easily. The
