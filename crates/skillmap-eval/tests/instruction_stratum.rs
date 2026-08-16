@@ -8,7 +8,7 @@
 //! that exists precisely to catch claims without ground truth — all of it walks
 //! past the instruction plane without looking at it.
 //!
-//! **Three of the four signals have no precision, and that is deliberate.**
+//! **Three of the five signals have no precision, and that is deliberate.**
 //! `corpus/labels.toml` records `capabilities = []` on the original strata
 //! meaning *the annotator found no capability term*; every note there describes
 //! code behaviour — what was read, what was called. No annotator judged the
@@ -22,12 +22,17 @@
 //! false-positive rate — an upper bound, since a benign bundle may legitimately
 //! contain prose that instructs a config write. Reported as such.
 //!
-//! **The fourth signal is different, and the difference is the point.**
-//! `instruction.exec_directive` has real precision and recall because T10 drew
-//! two strata and labelled them *before* the rule was written. The contrast
-//! between it and the other three is the argument for doing that for each of
-//! them: draw, label, then write, and a rate follows. Until then they have a
-//! firing rate and nothing more.
+//! **Two signals are different, and the difference is the point.**
+//! `instruction.exec_directive` (T10) and `instruction.directs_outside_write`
+//! (T11) have real precision and recall, because each had a stratum drawn and
+//! labelled *before* its rule was written. The contrast with the other three is
+//! the argument for doing that for each of them: draw, label, then write, and a
+//! rate follows. Until then they have a firing rate and nothing more.
+//!
+//! T11 also shows the cost of getting the term wrong first. Three candidate
+//! shapes were drawn for, found to be reference material rather than
+//! instruction, and withdrawn before a label was written — so "draw, label,
+//! then write" is two days per signal only when the term is right.
 
 #![allow(
     clippy::unwrap_used,
@@ -261,9 +266,7 @@ fn score_signal(
     let mut scanned = 0usize;
 
     for label in &labels.labels {
-        if label.verdict != corpus::Verdict::Labelled
-            || !strata.contains(&label.stratum.as_str())
-        {
+        if label.verdict != corpus::Verdict::Labelled || !strata.contains(&label.stratum.as_str()) {
             continue;
         }
         let dir = corpus::bundle_dir(&root.join("corpus"), &label.digest);
