@@ -89,7 +89,7 @@ Verifying beats asserting; that is the entire lesson.
 
 ```bash
 git clone https://github.com/TakasiVenkataSandeep-08/agentskillmap && cd agentskillmap
-git checkout v0.4.0
+git checkout v0.5.0
 bash scripts/build-release.sh
 sha256sum dist/skillmap
 ```

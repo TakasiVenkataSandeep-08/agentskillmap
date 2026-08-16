@@ -22,7 +22,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 # Matches rust-toolchain.toml, and deliberately so: nothing in CI builds against
 # an older compiler, and an MSRV nobody tests is a claim the project cannot back
@@ -51,19 +51,19 @@ repository = "https://github.com/TakasiVenkataSandeep-08/agentskillmap"
 # These must track `workspace.package.version` above. Nothing checks that
 # automatically — but nothing needs to, because a mismatch fails `cargo build`
 # immediately and loudly, which is the cheapest possible gate.
-skillmap-core = { path = "crates/skillmap-core", version = "0.4.0" }
-skillmap-resolve = { path = "crates/skillmap-resolve", version = "0.4.0" }
-skillmap-parse = { path = "crates/skillmap-parse", version = "0.4.0" }
-skillmap-rules = { path = "crates/skillmap-rules", version = "0.4.0" }
-skillmap-code = { path = "crates/skillmap-code", version = "0.4.0" }
-skillmap-instr = { path = "crates/skillmap-instr", version = "0.4.0" }
-skillmap-corpus = { path = "crates/skillmap-corpus", version = "0.4.0" }
-skillmap-semantic = { path = "crates/skillmap-semantic", version = "0.4.0" }
-skillmap-scan = { path = "crates/skillmap-scan", version = "0.4.0" }
-skillmap-eval = { path = "crates/skillmap-eval", version = "0.4.0" }
-skillmap-diff = { path = "crates/skillmap-diff", version = "0.4.0" }
-skillmap-policy = { path = "crates/skillmap-policy", version = "0.4.0" }
-skillmap-cli = { path = "crates/skillmap-cli", version = "0.4.0" }
+skillmap-core = { path = "crates/skillmap-core", version = "0.5.0" }
+skillmap-resolve = { path = "crates/skillmap-resolve", version = "0.5.0" }
+skillmap-parse = { path = "crates/skillmap-parse", version = "0.5.0" }
+skillmap-rules = { path = "crates/skillmap-rules", version = "0.5.0" }
+skillmap-code = { path = "crates/skillmap-code", version = "0.5.0" }
+skillmap-instr = { path = "crates/skillmap-instr", version = "0.5.0" }
+skillmap-corpus = { path = "crates/skillmap-corpus", version = "0.5.0" }
+skillmap-semantic = { path = "crates/skillmap-semantic", version = "0.5.0" }
+skillmap-scan = { path = "crates/skillmap-scan", version = "0.5.0" }
+skillmap-eval = { path = "crates/skillmap-eval", version = "0.5.0" }
+skillmap-diff = { path = "crates/skillmap-diff", version = "0.5.0" }
+skillmap-policy = { path = "crates/skillmap-policy", version = "0.5.0" }
+skillmap-cli = { path = "crates/skillmap-cli", version = "0.5.0" }
 
 # Deliberately small. Every dependency here is one this project would have to
 # defend in its own threat model — see SECURITY.md. `cargo deny check` gates
