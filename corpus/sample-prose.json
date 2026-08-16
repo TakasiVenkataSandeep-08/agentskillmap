@@ -1,331 +1,329 @@
 {
   "draws_from": "corpus/raw, prose-only bundles with a code-tagged fence, excluding digests already in corpus/labels.toml",
   "population": {
-    "prose_control": 6508,
-    "prose_credential": 3053,
-    "prose_egress": 848,
-    "prose_exec": 194
+    "prose_control": 10060,
+    "prose_outside_write": 543
   },
-  "seed": "skillmap-prose-1",
+  "seed": "skillmap-prose-2",
   "selected": [
     {
-      "digest": "sha256:2cfa88a53f68eb8e5fe93581ea72bcae2a1a0b79b9c6599a94695af7516f00cd",
-      "stratum": "prose_egress"
+      "digest": "sha256:00bb126e6ae0e62c8134beda6314248a18786fcb299bccb0666e3db5f793af7c",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:2f4b767d04c9d484e61f10767895fe36b722598351de450694c5283f4921c4cb",
-      "stratum": "prose_egress"
+      "digest": "sha256:01414f8955808781ab02ac87247dfc2fb30b879fa2c3bb07906b5d6b79b57e43",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:486345a792e60452b3cbe44e4c93e30b1cdfb77981159903b0467c87cb9e173a",
-      "stratum": "prose_egress"
+      "digest": "sha256:049fd85354cd07e0b095c2ae45c0021b196c0810686cb23faa77ee618f956945",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:52d20195a5e53f03bb5330506f7914389f5811eab2ac847950b566df0284f7dd",
-      "stratum": "prose_egress"
+      "digest": "sha256:07b1ad37db76c6b7936c63566f347b6ef743790b2a1d6c6096b77ab65f115463",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:61c73397475d90160dc72c8d5d6b03ec8d75e6387d269633a81d319766add580",
-      "stratum": "prose_egress"
+      "digest": "sha256:0c325aeee14d035be85a59d089d6168688600984e99aae076cb69c24faac885b",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:6a245a28df238c1a05ddec822b843880b326d73852e99bd603b555a403b03624",
-      "stratum": "prose_egress"
+      "digest": "sha256:0fae32d496bb649f0f9942574e0a35a1bf86c59a56b7ee243a0ca5f434bacfcd",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:722e4d1d57d76c446b2589d5e9badf99c50ed3402cb9c4ff10d50a98515eadef",
-      "stratum": "prose_egress"
+      "digest": "sha256:10eaf68345b0234d4b7867fbc6781d6ba5b9798cab9178e7f599eb16f109e103",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:76d2976f3dc6f5d5e3c70f5ba6fe8f5bb9db219077a83a2958c5950ab6a08216",
-      "stratum": "prose_egress"
+      "digest": "sha256:1211997dd1676854fed9dfca963069f993bfbf0b2d8af94f73ac95dde188ad93",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:998e315a9fb8d5cdefe629f3ee3480dc6cfa353cdbf74658d3544b1b659587af",
-      "stratum": "prose_egress"
+      "digest": "sha256:1e754e0ac7029767229cf6a57afcdf0847d998ca66f5d01245d74d7cfaf13d9c",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:9ee13a179c8e01ec40c4799fdbe1b599c700db9b040a82a9473d39ec6b7c53e5",
-      "stratum": "prose_egress"
+      "digest": "sha256:28802664a9e42939c2d3001a7a7d9816c1de65df8cd2f50af0a4a90a0b44ddb0",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:a6c1ae3ebc2a1934a22ebc7c339a827e5a054c236dc609a8aa8a447128ac4984",
-      "stratum": "prose_egress"
+      "digest": "sha256:35f0550a5d8b8071270f90c6aa61b9c61a00545223322112969a05fbfc5862af",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:b253aa6aa4505f07f0f0c214cabefd38139d5b8281df1df2ca44d22e60e192d4",
-      "stratum": "prose_egress"
+      "digest": "sha256:3c4128709fafd787544c04851e0ed85bc9cad2baecabd6b8b30398396ae188a9",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:b87d2360d21d07bada1a2d01836a54e9990f3f66ea9f1d44a1f8a02afb4ad4f7",
-      "stratum": "prose_egress"
+      "digest": "sha256:3eb255230a6b1f8fc75be1219c7ddf1ca83da597b4753923a814a7bb86b58b93",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:bdeb47656346de9cbfe1c64fc4ac07820e0d169193899b32157abdab82e0ea93",
-      "stratum": "prose_egress"
+      "digest": "sha256:4d944bc8fc3afc8a0b19a7ac50d2cbad04e70e1e387debe08d5a218172803938",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:c0929d63fdd33af148412fa5626207b772b5be70a480e86b55eac722444116e8",
-      "stratum": "prose_egress"
+      "digest": "sha256:51cf8080f83077cd1bb73a25b7514b026cb4b7db67aa2e2767d37ce33d1fee62",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:c4504e3952338d82d5449ff57e2190435aa4ad3c7cd1f22d2bb06f84f6e3c14c",
-      "stratum": "prose_egress"
+      "digest": "sha256:565e6580b10c07c81724efa5757f6c753dd4e853b228ad9e5e57f1da3850f3fe",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:d435d262616bbfc9c06421560a401bf527c994177fcead7d93fafdde32c743b4",
-      "stratum": "prose_egress"
+      "digest": "sha256:5a5ed8de1623395e3774115d0f937b72c612d6ea790868076570d2110e4bceea",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:df4a43fd392df84977e6b13e58ba11d7116569c10ad83684694b15a0632fa5b4",
-      "stratum": "prose_egress"
+      "digest": "sha256:6e91ccfb9292322c554e67361df8e0b939cbb26d198e0d97613897de4d442284",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:ef299200d59a2e309ac1ea89e5a0e6724a54800c945df7a69e919433bf1a5f64",
-      "stratum": "prose_egress"
+      "digest": "sha256:71ce1f2defbf71963ccb3cbcc5dcb4ed44310c20522206779f77f619b97e5902",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:f65531a6c1cca21fffc47f46c0a410124b48f161552d0c2aa8d05a753d7c60a6",
-      "stratum": "prose_egress"
+      "digest": "sha256:882413dabefeb36db9642b88d755f5f60de46a45afb4dd755e38cbf45191e891",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:013c6d8fc1a4ebb36a4d7af361225cf78876d2b8d1631c519c90c95ff93ad60d",
-      "stratum": "prose_credential"
+      "digest": "sha256:931fec8560f082e87cb1b3077da92fb330ef4702fad9b8485950d8bef3922a2d",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:12bec30a1bb7f99b05d2a8530795baea885cce6db410456d0a99399f3e775f40",
-      "stratum": "prose_credential"
+      "digest": "sha256:94fff1aafff657e311654843112035eecdefbff6781af996b1e9148687eff928",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:1cae6a04f51e0a143c223d6d847bf5ef401bab38d5abd2e5f1b85379b850a494",
-      "stratum": "prose_credential"
+      "digest": "sha256:9c6ad6f210b78b7935c410f2d1671ac94271973139dd3f2a414c1e700bbb5310",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:1e3d3ef09466a91b72faa7382ea3b97b1edc4f8e29efeecac984fda5198e208a",
-      "stratum": "prose_credential"
+      "digest": "sha256:a3850232512369abc302340f0eaf755132d656e34df83d99f315710680a0e17e",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:298938f2ccc12b29a836860f67ae5e66a603d7fa356940c9e92898c0aa501952",
-      "stratum": "prose_credential"
+      "digest": "sha256:a7cf49042c584bd4be30cc3df5fa1fdf76b96ceb135baf4cba2b7c763a0a030d",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:30e44cebf3363c1e92ebcb06b85b6d9830ec619a97c4562bed3b58de3babc5ec",
-      "stratum": "prose_credential"
+      "digest": "sha256:aa9df009871b7e8799ef1be9e85d324ccb2f5eb735912fb2233aec9b04ff4b5c",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:336ef5f2d0de21002c1620e5dd7dbc08a7e97752fd41f627949baf189148497b",
-      "stratum": "prose_credential"
+      "digest": "sha256:b1dc01106563bb5794b54b3132dcdbeefcc1abf6325b6c6a86f935a329df4f4f",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:69d983ef8729bac6c663b94b099a7caa585b89bf8f3d8468ff15dda79da281d4",
-      "stratum": "prose_credential"
+      "digest": "sha256:b29f1bb817ada06c3e75d5869ac16ada0f11f9b8f449d059ce83c36e7da5ad90",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:759d28ede3d0b480747087606888f701a2c8e4f268615d2270b86aa7afeb7fa2",
-      "stratum": "prose_credential"
+      "digest": "sha256:c2f8fc5194ba3d4125324c2ad87feb5a591ae6d34effd6237016e2d89ac5d600",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:8824853260ffaa95a8f675695f038c5b98c485c26e16dbd64f557d270428babe",
-      "stratum": "prose_credential"
+      "digest": "sha256:c33d484047edf8696c7ef16cf8ccd583beaf811fd2346c837376a3aab905a2ca",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:a0e948ba7ef952dd8378236dfa59d2ac3fa955994957845521771bd6fd0c276b",
-      "stratum": "prose_credential"
+      "digest": "sha256:d4970d1189473273f51229e9124c5f54bd868179cfcb3235137cc69edfc0eabc",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:b01f03420e1291f022f064701b702a6666cefe0018781217d11554426d0486f5",
-      "stratum": "prose_credential"
+      "digest": "sha256:da1c2ef501ea4e0c94fc49dfd1b4f87080dc8bcdacbef787fb74d2f11326baa5",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:bcc4ddeb70fce99c00b32ea630d10b2ca872fe3400753e8bcc21b288202c4077",
-      "stratum": "prose_credential"
+      "digest": "sha256:dacefaf4e6ae92ebeb1843152c2a9c835eef9430802e385bb3e38e7a36119a30",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:cdaa54c6e85f9e648da87ea5e8f398839c7a76918727f95324aeaae6a6af9d84",
-      "stratum": "prose_credential"
+      "digest": "sha256:dd9700531e35689472096c3a7ec416dc1759d727eaedcf815c5c3d523f2b6664",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:d378df11a71f4dee2f048a98360d998c6e629515d97c938d7614e5683ff5ba50",
-      "stratum": "prose_credential"
+      "digest": "sha256:dea8ce58d9c8bc4e774e801feda7ffc866889ac63d41a1c7783a84dc3e2801a1",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:d82544c6a04f28229c06475cd54254a3d82b044974333019024d4c43a2acdbb2",
-      "stratum": "prose_credential"
+      "digest": "sha256:dfa343d33dc8435895d49932462d15a723abebea05fd3151a51a0b60658ba290",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:da9961b239682b2c337228f18174b3ec510f9341a99f382ca222ee0d677f0a71",
-      "stratum": "prose_credential"
+      "digest": "sha256:e15ac688d083070d39643a984b14353bd0d9338b28f5f28cd85e3c4c2e28e9f9",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:dd0338055665c9b7c9f5889de44dc96fbe839f33ee3b4aacbd44a0fc1854ff8f",
-      "stratum": "prose_credential"
+      "digest": "sha256:e987ee623ca0bbd81f96034d228a1281b66a57947a7fabd87a60cce161c04f4b",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:e88105d303bc7b0172f6995803ef24bc3269129ddb83bbee2f6de9d01d2b6d0b",
-      "stratum": "prose_credential"
+      "digest": "sha256:f129dd4d678facd0d3d2f7430af8dbdd330a89df7bff439e91e14b2e7fba878c",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:f29b3e57a586800ecf1300fb333a6af57818772e11e8dcce2c0aa938a8b59466",
-      "stratum": "prose_credential"
+      "digest": "sha256:fd467e33886594a5a696e2f769f792cb2a8c7abc005d2c0de4bfdd3e0f5aeaa5",
+      "stratum": "prose_outside_write"
     },
     {
-      "digest": "sha256:03042db77ebbc776975e50b6f9459fd9dc2ef4825e2465422a9561abb2e96f3a",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:14856f8e80e9d90fc000a76d920d57b62ec9ae57245f7ac5da1979cd1b0badd5",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:15590f393f7ba31107cbcec530c4f8603817c71e2345e1a2141ec3768ebe2e99",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:296e782c94dffdd1cfc0cec15e75900136edd561b9a1e4aca6446a12416f7647",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:30f2972f2a31a0e5c518e28410a9ad5c9f2c7c511cb86020189195ec921e6adc",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:41cd1fb23aa8072d1758ccc76a7fb69595676539dc35b9c24b866408d45fdca7",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:50802385149a3cb85a8d93965e8da1c5f87a9af7f3d6fad9acf00efdaaf79ba4",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:6468dcc6b4524c1a6b3d3294cad0bb117930cf9099d3b89057b09569810a4bce",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:6bcff80865d83433c4ad0f8c980537e8ab260de07ea0193d4f19e31e09ab9230",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:6eaa883b8e29af6d9e0d447f7c6f5889686467cb694a6fc442df566d634363e7",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:7b095cace728018759a85a38c8f0968f5a035332692c373e1040583b3e33ce9b",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:8d36501dd3a41067acb8f76ba51b286d1e79a40d143660c37f5696cc24e831a3",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:8f18d424141588189249178b274da4ed0c79290f1be10dd4f5bd0a2b87d0766f",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:9e4fa669fd769b60061ad26fa24585d3e8c43b759018b58a2164ea5635fbd5ac",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:b40f333e67e66cfc46d5dfe20d89d603b0453a598375f61c58b4eaa069ee897e",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:bba6955835738f3efdf1e692e3a18b332a6ab5310391f7f45f5d275651887f87",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:e0e66ea377e544c364edce999e40ee60dfe41f0e414f6243e8ce8c9d6bf43dd7",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:e66f126523dec0745dd63211c8aee5b8f75dd5982b5cb6551738f4a6788c662d",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:f0047cc23f07a13ae6b1115c650274308521b2e8f91e5c726b3c6440883f802a",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:fb902d470cfde9ce9734c96978896ab65152ec70d4a2125e3a6d424a21a7f190",
-      "stratum": "prose_exec"
-    },
-    {
-      "digest": "sha256:03629b52465c398d5a7bc79c02d640a7ce940495bccfa3d66ea885173d067b1a",
+      "digest": "sha256:05bf93300c8fef769931114c2a4c561e76db021088df4c3b6db260ffe111f0d2",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:054646a2e6e43c8a228406f4ba654af6c5052bae3d20d45ccfb087e7626a7463",
+      "digest": "sha256:06dc76658bcbb39694b76e7511d6f81ebfcec19f23e64eed7f1656054a199037",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:0c6df7a1b9281e602a79a85e23d6c4ef28e97b33a017ff339cd4d7cc1cb4e50f",
+      "digest": "sha256:0755c4fe464e197231ece87521815a6f150d29d2641526a99a73376e85c7b3fd",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:1bfaf7fe8c67ad9c71e45054d87ac662ec11c86d77ec2505f6862748e19409bc",
+      "digest": "sha256:0fddd2422bcfb71ce8db7da1434d10d7a4d492a53ace4510e3515b31a1d50683",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:1da0afee5ccbe81b0bfc05ecb9e38529d3496d0a3baa10d7418da02f5b6eff0b",
+      "digest": "sha256:1b1a5eb4f597e9d2cc2294106f22028346b6f474b1d6677e8f5ab03fb4ef00d3",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:46fe74cbe0a2c3f4c447b099201d6f5537f5f0101451ef5f7d0092f5f2be25e9",
+      "digest": "sha256:1d392193c52b2d1d836615eaa9d2ac0e1dd28f03fabfd1d8a12656ce759fad2e",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:4e8bffc32caea1dcaa548a4519b4608c49a62a2723d3cff52c7ab8cb53b019b0",
+      "digest": "sha256:3b386949458dcc4314ad212c02991641a6d4a59eecfc68258b66ae2cf145cc21",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:5cc606fcb900239aa8e6de02748a8a19a9102cd41867915a912c08e29f141f3d",
+      "digest": "sha256:460a6805b3bef3ddfc081bb91ca86dde44ec622d4aab6d13608a19f363f033a6",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:7b6cf855c9296a7ac1ebf57e4a654f9456b69488b4f331d2ffb21af27bd740a9",
+      "digest": "sha256:4a095ac2bbf20fd7be1472bc3fbb4f73c2e5a13dc1bc6205a4e217298dac797a",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:7b97d7c9480c6996d97b49cc0a5e821e461581a1130ad88aa294599425f25e4e",
+      "digest": "sha256:4ddd5f29784452efb9c0f88bb973bc0a8b3b52c3cfa6d60abe9ff744640a4e59",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:7ecc5bc15483d73ee131e37f4043dfd584665106fe868f1e90aeb44dd1e952ec",
+      "digest": "sha256:4e07119348519f0de165cb97ce3c54efb2c26b3f5c6aab2a25a94ae956fe2728",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:90ddb1781fb974e4bc804bdccf2b1530e52371eb094f535a0a9b3b39b93dbd13",
+      "digest": "sha256:51579586ab6b4d3b8fae040ba6748e4e8c50e84497ee7e24efa4166913c3b817",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:9374a72da8a502761176d0c4a7f9a469e84095eb5f20d2e31f3d93b9f1bb4b52",
+      "digest": "sha256:56a7644b9c515cd5d4bfa5be2ebba1db5debdb95bb55281f6d98052148b60f5b",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:9f40ce2f199ab73d6b7e1b8644daa22945251c2a6f7c260b575e5b8be4f2a38c",
+      "digest": "sha256:5840361fe34b7ef9997bcb77972601f6b33ad07fcecd194a0b99b763a97d2777",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:a3f6214d1496e9a2600688f75f2e9e0f7a97e799e50b1d8c8610406d96c6dc45",
+      "digest": "sha256:5afdd44cf5c13f9abd28cf92e945762f8ad1dd9f2fd14f422032f9e669256bc8",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:d1070ea11eb8ee77a427caaabf7981f1082c6230782913516eea95680b49ab36",
+      "digest": "sha256:6f3f939ceb95166a1108c8feb059f0179adcf8e9ad18786b270c2c731c335b3f",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:d7f66ba9f9e43e5da37defb1f5682e7eb394795b1f18987c5a6da9d21b298904",
+      "digest": "sha256:76d7b49819b9b66fd46519267cc4d5d6f039a33771419a6e84d2eb3bb2542536",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:e2fce12c893db35553d9c7611a72def8b03439258a9511f39280203aee3e9ca7",
+      "digest": "sha256:7f89af2b54b96c147049b3e39b2f428aebd7f83b4f301d7f317f7f4b966c02d6",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:f2ed8dfb35c3306101a942396ee434a35f78c9df3dcaa0886c6ed11e39f1b710",
+      "digest": "sha256:81f36c040892ed914b33dec222b7d5b68007f7f8fd7a0172cc10373f1ede4be4",
       "stratum": "prose_control"
     },
     {
-      "digest": "sha256:fb62a5d2b72110169e75395fe456dd53bfe29f4cc7076ca5f59e1efa89a3d3a5",
+      "digest": "sha256:82102400228770b0fa965b92bbe8edefdb363601af41d89cb11c1b7633f63a47",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:83aa41b154b63281b38f52e9ebce22411f214494c0c0b0b7f239141ec28657ad",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:848a5d6ca9e5f602e6ec954058feb82935a2e0c5642f9c4ebdb0b16712162a5a",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:8f294fddac133e57ef86feef1718f78eb18fa51b2541bb3934ecec4899e7d257",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:a61e8da6ac4160ac7ace6d5335b0f3de52d02ddbb546dc4d74872c8c77a9f671",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:a9f30c979aa94fedb6185cec0f86e50a8c6a664df6110cdae466d40c4e5c9a4e",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:ac41656454fb936256f04034969082d03c7daf666cfead8bf577d78a108d5020",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:b44540f99b25c8b187bcd1a65aea9c75ecf5e098e5a8309b93694c543aa63629",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:b5a2075d95b1bfedeb1a9dbf492b5c3c8b1d1f7018f0dc7e16cc9eaa0a788bf6",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:bef924064fb2b1f6bdb9852a5fbb0cae156ba142e0774e269f5d0dd8fcce9347",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:c0e39a749fb17e600b056aee3466aa393051259ee1d68f7d098de17f22bfeb66",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:c18de9dda43f9dee84bbef01c6836b0de3bb2ffcc489014ed8be8d3cb2aebb82",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:c1f23483bf621d18990b83984e0a4e54766485e2749c69f409c77fe2195b9894",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:c72cff3284c625de30f27cc1991166161ba913f0465e7064d0253d2a912bfebb",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:d134d8a742479a55565c8bbd6664a73bec5cddfad342c1e405332279bebb336a",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:d8563c4d70f9087106d287ce656e94cf92b2c746f06e619db4d030a1b3e76e19",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:d8bd96cdccd8b0f0ae0741595ecda8e53da2387be97d322b40e32842ae2cc27e",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:deb4e33faef16914e84b52ea9434ac3a6004b664bb929b5358c00b2eeb1ecba6",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:f13d0f655d18a95059b90c7bd9dc356437ee9090218990690a388975e174ff6a",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:f1f124effbba877c76766cbf4466770b25ba2e795693deedc7f96a65faa8fa81",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:fdf1e6e1a76a808943f30f924454912f744bcb7cc36a5f1ff538481f5747e31e",
       "stratum": "prose_control"
     }
   ],

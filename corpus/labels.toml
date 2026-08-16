@@ -186,43 +186,43 @@ vocabulary = [
   "code.obfuscation",
   "env.read.secret",
   "instruction.exec_directive",
-  "instruction.directs_egress",
-  "instruction.directs_credential_access",
-  "instruction.directs_exec",
+  "instruction.directs_outside_write",
 ]
 
-# ── T11's three terms, defined before anything is labelled ────────────────────
+# ── T11's term, defined before anything is labelled ───────────────────────────
 #
-# All three describe **code inside a fenced block** in a bundle that ships no
-# parseable file at all. The bundle performs nothing; it tells the agent to. So
-# they are instruction signals, and the thing being reported is the directive,
-# never a capability of the bundle.
+# `instruction.directs_outside_write`
+#   The prose directs the agent to run a command that **writes data to, copies
+#   into, or makes executable** a path outside the bundle.
 #
-# `instruction.directs_egress`
-#   The prose directs the agent to run a command that sends a request to a
-#   remote host. A documented API call in a usage example counts: for a
-#   prose-only skill that IS what the skill does.
+# It describes code in a fenced block inside a bundle that ships no parseable
+# file at all. The bundle performs nothing; it tells the agent to. So it is an
+# instruction signal and what is reported is the directive, never a capability
+# of the bundle.
 #
-# `instruction.directs_credential_access`
-#   The prose directs the agent to run a command that **reads** a credential
-#   file or a secret-bearing environment variable.
+# **Why this shape and not the three it replaces.** `directs_egress`,
+# `directs_credential_access` and `directs_exec` were defined first and the
+# corpus declined all three: in a prose-only bundle the dominant genre is
+# reference material, so a network call or a subprocess spawn inside a code
+# sample is not the prose directing anything, and at 23-26% base rates with no
+# contextual separator they were noise generators. Requiring an operative
+# heading was measured as a rescue and failed — 30% of the *control* stratum sat
+# under one, against 25-40% of the positives.
 #
-#   **Setting one is not reading one.** `export OPENAI_API_KEY=sk-...` tells the
-#   agent to supply a secret, not to go and find one, and it is the single most
-#   common shape in this stratum's population. Labelling it as access would put
-#   most of 3,053 bundles under a term meaning something else. Read is
-#   `cat ~/.aws/credentials`, `os.environ["OPENAI_API_KEY"]`, `$SECRET` consumed
-#   by a command.
+# What survives is a shape carrying its own intent: reference material
+# demonstrates logic and never mutates the reader machine as an illustration.
+# Nobody teaches programming by appending to a shell profile.
 #
-# `instruction.directs_exec`
-#   The prose directs the agent to run a command that itself spawns a
-#   subprocess or evaluates constructed code — `subprocess.run`, `os.system`,
-#   `eval(`, `Function(`.
+# **Two exclusions, both deliberate.** `mkdir` alone is not a write — creating
+# an empty directory is preparation and near-zero consequence, and at 3.11% it
+# would have flooded the draw with candidates whose worst case is an empty
+# folder. `sudo` is excluded for the opposite reason: inherently operative and
+# almost worthless, being a package-manager invocation in nearly all of its 218
+# instances.
 #
-#   **Not "the fence contains a command".** Every bash fence directs the agent
-#   to run something; a term satisfied by all of them describes nothing. This is
-#   the same narrowing `instruction.exec_directive` needed in T10, for the same
-#   reason.
+# **Outside the bundle** means a path under the home directory, /etc, /usr/local
+# or /opt. A relative path staying inside the bundle is not this term, however
+# alarming it looks.
 
 # Terms looked for exhaustively, and therefore the only terms precision and
 # recall are computed for.
@@ -2430,3 +2430,668 @@ verdict = "labelled"
 capabilities = ["instruction.exec_directive"]
 evidence = ["SKILL.md:21"]
 note = "Media-generation skill piping a vendor CLI endpoint into a shell and logging in, then driving that CLI for the rest of the document. Third bundle in this stratum with the same vendor and near-identical install line under a different digest."
+
+# -- prose_outside_write ------------------------------------------------------
+#
+# T11's positive stratum. Prose-only bundles - no parseable file anywhere -
+# whose fenced blocks direct the agent to write, copy into, or make executable a
+# path outside the bundle. Drawn by scripts/draw_prose_strata.py, seed
+# skillmap-prose-2, excluding every already-labelled digest.
+#
+# disclosure_delta is omitted throughout, as in the T10 strata: these bundles
+# were read for one question and nobody assessed the description against the
+# body. T7's cut criterion reads that field and must not be handed a default.
+
+[[label]]
+digest = "sha256:00bb126e6ae0e62c8134beda6314248a18786fcb299bccb0666e3db5f793af7c"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies a hooks directory into the agent's own hooks directory under the home, installing behaviour that outlives this bundle."
+
+[[label]]
+digest = "sha256:01414f8955808781ab02ac87247dfc2fb30b879fa2c3bb07906b5d6b79b57e43"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Appends an exported API key to the user's shell profile, persisting a secret into every future shell."
+
+[[label]]
+digest = "sha256:049fd85354cd07e0b095c2ae45c0021b196c0810686cb23faa77ee618f956945"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:07b1ad37db76c6b7936c63566f347b6ef743790b2a1d6c6096b77ab65f115463"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Heredoc writes a credentials JSON under the user's config directory."
+
+[[label]]
+digest = "sha256:0c325aeee14d035be85a59d089d6168688600984e99aae076cb69c24faac885b"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies template files into the agent's config directory under the home."
+
+[[label]]
+digest = "sha256:0fae32d496bb649f0f9942574e0a35a1bf86c59a56b7ee243a0ca5f434bacfcd"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies a built binary into a system bin directory, placing it on PATH for every user."
+
+[[label]]
+digest = "sha256:10eaf68345b0234d4b7867fbc6781d6ba5b9798cab9178e7f599eb16f109e103"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies two binaries into a bin directory under the home, placing them on PATH."
+
+[[label]]
+digest = "sha256:1211997dd1676854fed9dfca963069f993bfbf0b2d8af94f73ac95dde188ad93"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Appends a JSON analytics record to a file under a dot-directory in the home."
+
+[[label]]
+digest = "sha256:1e754e0ac7029767229cf6a57afcdf0847d998ca66f5d01245d74d7cfaf13d9c"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "A crontab entry appending a timestamped snapshot to a memory file under the home. A recurring write, scheduled rather than one-shot."
+
+[[label]]
+digest = "sha256:28802664a9e42939c2d3001a7a7d9816c1de65df8cd2f50af0a4a90a0b44ddb0"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:35f0550a5d8b8071270f90c6aa61b9c61a00545223322112969a05fbfc5862af"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:3c4128709fafd787544c04851e0ed85bc9cad2baecabd6b8b30398396ae188a9"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "A stray angle bracket preceding a mkdir under the home directory - a prompt or quote marker, not a redirect, and mkdir is excluded from the term anyway. Probe artifact."
+
+[[label]]
+digest = "sha256:3eb255230a6b1f8fc75be1219c7ddf1ca83da597b4753923a814a7bb86b58b93"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Appends a JSON analytics record to a file under a dot-directory in the home."
+
+[[label]]
+digest = "sha256:4d944bc8fc3afc8a0b19a7ac50d2cbad04e70e1e387debe08d5a218172803938"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "No write outside the bundle. The probe's whitespace class after the redirect crosses newlines, so a trailing angle bracket on one line matched a home path opening the next - across two unrelated fences joined for scanning. Probe artifact."
+
+[[label]]
+digest = "sha256:51cf8080f83077cd1bb73a25b7514b026cb4b7db67aa2e2767d37ce33d1fee62"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:565e6580b10c07c81724efa5757f6c753dd4e853b228ad9e5e57f1da3850f3fe"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "A crontab entry copying a prompt vault into a cloud-synced backup directory under the home."
+
+[[label]]
+digest = "sha256:5a5ed8de1623395e3774115d0f937b72c612d6ea790868076570d2110e4bceea"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies source, config and manifest into the agent's workspace skills directory, installing itself outside the bundle."
+
+[[label]]
+digest = "sha256:6e91ccfb9292322c554e67361df8e0b939cbb26d198e0d97613897de4d442284"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Heredoc writes a state JSON into the agent's own dot-directory."
+
+[[label]]
+digest = "sha256:71ce1f2defbf71963ccb3cbcc5dcb4ed44310c20522206779f77f619b97e5902"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Writes a path into a dotfile in the home. The value is a placeholder and the documentation is not in English; neither changes the shape."
+
+[[label]]
+digest = "sha256:882413dabefeb36db9642b88d755f5f60de46a45afb4dd755e38cbf45191e891"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Heredoc writes an rclone configuration under the user's config directory - remote storage credentials by construction."
+
+[[label]]
+digest = "sha256:931fec8560f082e87cb1b3077da92fb330ef4702fad9b8485950d8bef3922a2d"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Writes an API key placeholder into a file under the user's config directory."
+
+[[label]]
+digest = "sha256:94fff1aafff657e311654843112035eecdefbff6781af996b1e9148687eff928"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Downloads a release binary to a path under the home and makes it executable. Fetch, land outside the bundle, then chmod."
+
+[[label]]
+digest = "sha256:9c6ad6f210b78b7935c410f2d1671ac94271973139dd3f2a414c1e700bbb5310"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:a3850232512369abc302340f0eaf755132d656e34df83d99f315710680a0e17e"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Heredoc writes a service configuration JSON under the user's config directory."
+
+[[label]]
+digest = "sha256:a7cf49042c584bd4be30cc3df5fa1fdf76b96ceb135baf4cba2b7c763a0a030d"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Same newline-spanning probe artifact: no single command writes outside the bundle."
+
+[[label]]
+digest = "sha256:aa9df009871b7e8799ef1be9e85d324ccb2f5eb735912fb2233aec9b04ff4b5c"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies the agent's own configuration file to a backup beside it. A write outside the bundle, and a benign one."
+
+[[label]]
+digest = "sha256:b1dc01106563bb5794b54b3132dcdbeefcc1abf6325b6c6a86f935a329df4f4f"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:b29f1bb817ada06c3e75d5869ac16ada0f11f9b8f449d059ce83c36e7da5ad90"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:c2f8fc5194ba3d4125324c2ad87feb5a591ae6d34effd6237016e2d89ac5d600"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Writes generated shell completions into the user's completion directory."
+
+[[label]]
+digest = "sha256:c33d484047edf8696c7ef16cf8ccd583beaf811fd2346c837376a3aab905a2ca"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Same newline-spanning probe artifact."
+
+[[label]]
+digest = "sha256:d4970d1189473273f51229e9124c5f54bd868179cfcb3235137cc69edfc0eabc"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies a skill directory into the agent's workspace skills directory."
+
+[[label]]
+digest = "sha256:da1c2ef501ea4e0c94fc49dfd1b4f87080dc8bcdacbef787fb74d2f11326baa5"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Copies a cloud SDK configuration tree into the user's config directory under sudo."
+
+[[label]]
+digest = "sha256:dacefaf4e6ae92ebeb1843152c2a9c835eef9430802e385bb3e38e7a36119a30"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Heredoc creates a new SKILL.md inside the user's agent skills directory - the prose directs the agent to author a skill outside this bundle."
+
+[[label]]
+digest = "sha256:dd9700531e35689472096c3a7ec416dc1759d727eaedcf815c5c3d523f2b6664"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "A grep across memory directories under the home. The angle bracket the probe matched closes a placeholder in the search term. A read, not a write. Probe artifact."
+
+[[label]]
+digest = "sha256:dea8ce58d9c8bc4e774e801feda7ffc866889ac63d41a1c7783a84dc3e2801a1"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:dfa343d33dc8435895d49932462d15a723abebea05fd3151a51a0b60658ba290"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Fetches a skill document from a vendor URL straight into the agent's own skills directory. Nine bundles in this stratum, from nine different publishers, share this exact shape: a skill that installs a skill from a remote URL, where the fetched bytes are never reviewable by reading the bundle."
+
+[[label]]
+digest = "sha256:e15ac688d083070d39643a984b14353bd0d9338b28f5f28cd85e3c4c2e28e9f9"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Redirects a generated report into a dated file under the user's documents directory."
+
+[[label]]
+digest = "sha256:e987ee623ca0bbd81f96034d228a1281b66a57947a7fabd87a60cce161c04f4b"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Appends a JSON analytics record to a file under a dot-directory in the home."
+
+[[label]]
+digest = "sha256:f129dd4d678facd0d3d2f7430af8dbdd330a89df7bff439e91e14b2e7fba878c"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Appends an API key placeholder to the agent's own .env file, persisting a secret into the agent's environment."
+
+[[label]]
+digest = "sha256:fd467e33886594a5a696e2f769f792cb2a8c7abc005d2c0de4bfdd3e0f5aeaa5"
+stratum = "prose_outside_write"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "The copy into the agent workspace is annotated WRONG, in a section showing a common mistake. The prose directs the reader away from it. Prose about the shape, matched as the shape - the fourth time this project has met that failure."
+
+# -- prose_control ------------------------------------------------------------
+#
+# T11's control stratum: prose-only bundles with a code fence that trips no
+# probe. These are the false positives the signal will actually face. Drawing
+# controls from bundles with no fence at all would pad the denominator with
+# bundles that were never at risk of one.
+#
+# Basis of judgement, stated because it is narrower than the original strata:
+# each was read for one question - does any fenced command write to, copy into,
+# or make executable a path outside the bundle - across EVERY markdown file in
+# the bundle, not SKILL.md alone. That wider scope is not incidental. It is the
+# correction T10 needed after a control was mislabelled for exactly this reason,
+# and applying it here turned up two more before any label was committed.
+
+[[label]]
+digest = "sha256:05bf93300c8fef769931114c2a4c561e76db021088df4c3b6db260ffe111f0d2"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:06dc76658bcbb39694b76e7511d6f81ebfcec19f23e64eed7f1656054a199037"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:0755c4fe464e197231ece87521815a6f150d29d2641526a99a73376e85c7b3fd"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:0fddd2422bcfb71ce8db7da1434d10d7a4d492a53ace4510e3515b31a1d50683"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:1b1a5eb4f597e9d2cc2294106f22028346b6f474b1d6677e8f5ab03fb4ef00d3"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:1d392193c52b2d1d836615eaa9d2ac0e1dd28f03fabfd1d8a12656ce759fad2e"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:3b386949458dcc4314ad212c02991641a6d4a59eecfc68258b66ae2cf145cc21"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:460a6805b3bef3ddfc081bb91ca86dde44ec622d4aab6d13608a19f363f033a6"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:4a095ac2bbf20fd7be1472bc3fbb4f73c2e5a13dc1bc6205a4e217298dac797a"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:4ddd5f29784452efb9c0f88bb973bc0a8b3b52c3cfa6d60abe9ff744640a4e59"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:4e07119348519f0de165cb97ce3c54efb2c26b3f5c6aab2a25a94ae956fe2728"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:51579586ab6b4d3b8fae040ba6748e4e8c50e84497ee7e24efa4166913c3b817"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:56a7644b9c515cd5d4bfa5be2ebba1db5debdb95bb55281f6d98052148b60f5b"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:5840361fe34b7ef9997bcb77972601f6b33ad07fcecd194a0b99b763a97d2777"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:5afdd44cf5c13f9abd28cf92e945762f8ad1dd9f2fd14f422032f9e669256bc8"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:6f3f939ceb95166a1108c8feb059f0179adcf8e9ad18786b270c2c731c335b3f"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:76d7b49819b9b66fd46519267cc4d5d6f039a33771419a6e84d2eb3bb2542536"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:7f89af2b54b96c147049b3e39b2f428aebd7f83b4f301d7f317f7f4b966c02d6"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:81f36c040892ed914b33dec222b7d5b68007f7f8fd7a0172cc10373f1ede4be4"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:82102400228770b0fa965b92bbe8edefdb363601af41d89cb11c1b7633f63a47"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:83aa41b154b63281b38f52e9ebce22411f214494c0c0b0b7f239141ec28657ad"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:848a5d6ca9e5f602e6ec954058feb82935a2e0c5642f9c4ebdb0b16712162a5a"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:8f294fddac133e57ef86feef1718f78eb18fa51b2541bb3934ecec4899e7d257"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:a61e8da6ac4160ac7ace6d5335b0f3de52d02ddbb546dc4d74872c8c77a9f671"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Its SKILL.md has no directive, but REGISTER.md writes a credentials JSON under the user's config directory with a heredoc. Drawn as a control because the draw reads SKILL.md; corrected by re-checking every markdown file in all eighty bundles before a single control label was written."
+
+[[label]]
+digest = "sha256:a9f30c979aa94fedb6185cec0f86e50a8c6a664df6110cdae466d40c4e5c9a4e"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:ac41656454fb936256f04034969082d03c7daf666cfead8bf577d78a108d5020"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:b44540f99b25c8b187bcd1a65aea9c75ecf5e098e5a8309b93694c543aa63629"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:b5a2075d95b1bfedeb1a9dbf492b5c3c8b1d1f7018f0dc7e16cc9eaa0a788bf6"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:bef924064fb2b1f6bdb9852a5fbb0cae156ba142e0774e269f5d0dd8fcce9347"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:c0e39a749fb17e600b056aee3466aa393051259ee1d68f7d098de17f22bfeb66"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = ["instruction.directs_outside_write"]
+evidence = []
+note = "Its SKILL.md has no directive, but README.md copies a skill directory into the agent's own skills directory. Same whole-bundle re-check."
+
+[[label]]
+digest = "sha256:c18de9dda43f9dee84bbef01c6836b0de3bb2ffcc489014ed8be8d3cb2aebb82"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:c1f23483bf621d18990b83984e0a4e54766485e2749c69f409c77fe2195b9894"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:c72cff3284c625de30f27cc1991166161ba913f0465e7064d0253d2a912bfebb"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:d134d8a742479a55565c8bbd6664a73bec5cddfad342c1e405332279bebb336a"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:d8563c4d70f9087106d287ce656e94cf92b2c746f06e619db4d030a1b3e76e19"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:d8bd96cdccd8b0f0ae0741595ecda8e53da2387be97d322b40e32842ae2cc27e"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:deb4e33faef16914e84b52ea9434ac3a6004b664bb929b5358c00b2eeb1ecba6"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:f13d0f655d18a95059b90c7bd9dc356437ee9090218990690a388975e174ff6a"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:f1f124effbba877c76766cbf4466770b25ba2e795693deedc7f96a65faa8fa81"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+[[label]]
+digest = "sha256:fdf1e6e1a76a808943f30f924454912f744bcb7cc36a5f1ff538481f5747e31e"
+stratum = "prose_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."

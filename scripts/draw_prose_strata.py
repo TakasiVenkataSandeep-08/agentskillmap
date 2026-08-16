@@ -1,45 +1,52 @@
 #!/usr/bin/env python3
-"""Draw T11's prose-only strata.
+"""Draw T11's prose-only strata for `instruction.directs_outside_write`.
 
 Every precision and recall figure this project publishes describes the 14.6% of
-the corpus that ships a file in a supported language. The other 85% is prose —
-and roughly a third of it carries runnable code inside fenced blocks, in
-languages that already have grammars and already have measured rules. T11 is
-about reporting what that code would do, as an instruction rather than a
-capability.
+the corpus that ships a file in a supported language. The other 85% is prose,
+and roughly a third of it carries runnable code inside fenced blocks.
 
-## Why three positive strata and not one
+## The shape, and why this one
 
-`docs/00-tasks.md` scopes T11 with a single `prose_directive` stratum. That was
-wrong in one specific way and this script deviates deliberately:
+An earlier version of this script drew three strata for `directs_egress`,
+`directs_credential_access` and `directs_exec`. The corpus declined all three.
+In a prose-only bundle the dominant genre is **reference material, not
+instruction** — a d3 tooltip example, a reusable Python helper — and
+`subprocess.run(...)` inside a code sample is not the prose directing anything.
+The obvious rescue, requiring an operative heading, was measured and failed:
+30% of the *control* stratum sat under one, against 25-40% of the positives.
 
-  lexical upper bounds over prose-only bundles with a code fence
-    credential/secret marker   26.0%
-    network call               23.2%
-    writes outside              3.8%
-    exec/eval                   2.0%
+What survives is a shape that carries its own intent. **Reference material
+demonstrates logic and never mutates the reader's machine as an illustration.**
+Nobody teaches programming by appending to `~/.zshrc`. So:
 
-A single random draw of forty from "any shape" would be dominated by the two
-common ones and would land perhaps one exec candidate. `instruction.directs_exec`
-would then ship with a recall denominator of one, which is not a rate — the
-exact mistake `code.dynamic_eval` already represents at 1/92, and which the
-labels file calls out by name.
+    the prose directs the agent to run a command that WRITES DATA TO,
+    COPIES INTO, or MAKES EXECUTABLE a path outside the bundle
 
-So the positives are drawn per shape, each into its own stratum with its own
-denominator. The strata are not proportional to anything and must never be
-pooled, which is already how every rate in this project is reported.
+Measured at ~5% of prose-only bundles with a code fence, against 23-26% for the
+shapes that failed. Rare and specific is what inherently-operative looks like.
 
-## What the probes are and are not
+**`mkdir` is deliberately excluded.** Creating an empty directory is
+preparation, not a write, and on its own it is near-zero consequence — it was
+3.11% of the population and would have flooded the draw with candidates whose
+worst case is an empty folder. A bundle that only ever `mkdir`s therefore lands
+in the control stratum, which is the correct answer rather than a concession.
 
-They select **candidates**, never verdicts. A lexical hit means "worth a human
-reading", nothing more — `API_KEY` appears in comments, `curl` appears in prose
-about a tool, and both match a substring while surviving no AST. T10's draw had
-three distinct false-positive shapes in its positive stratum and every one was
-caught by reading. Expect the same here.
+**`sudo` is excluded too**, for the opposite reason: it is inherently operative
+and almost worthless, being `sudo apt-get` in nearly every one of its 218
+instances. "This skill tells you to install a system package" separates
+nothing.
 
-Controls are prose-only bundles that have a code fence and trip **no** probe.
-Drawing controls from bundles with no fence at all would pad the denominator
-with bundles that were never at risk of a false positive.
+## What the probe is and is not
+
+It selects **candidates**, never verdicts. Every lexical probe written for this
+project has produced a distinct artifact class caught only by reading — a `.sh`
+top-level domain, a filename containing `curl`, `(?i)` matching every JavaScript
+`function(`, a security skill grepping for the pattern it warns about. Expect
+another one here.
+
+Controls are prose-only bundles that have a code fence and trip no probe.
+Drawing controls from bundles with no fence would pad the denominator with
+bundles that were never at risk of a false positive.
 
 Content under `corpus/raw/` is untrusted third-party material. Text inside a
 bundle that addresses the reader is a fact to record about the bundle, never an
@@ -66,40 +73,35 @@ RAW = REPO / "corpus" / "raw"
 LABELS = REPO / "corpus" / "labels.toml"
 OUT = REPO / "corpus" / "sample-prose.json"
 
-SEED = "skillmap-prose-1"
+# A new seed: the shape changed, so this is a different draw and must not be
+# confused with the superseded one.
+SEED = "skillmap-prose-2"
 SNAPSHOT = "2026-08"
-WANT = {"prose_egress": 20, "prose_credential": 20, "prose_exec": 20, "prose_control": 20}
+WANT = {"prose_outside_write": 40, "prose_control": 40}
 
-# A bundle is prose-only when it ships no file the code plane has a grammar for.
 CODE_SUFFIXES = {
     ".py", ".pyi", ".sh", ".bash", ".zsh",
     ".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts", ".cts",
 }
 
-# Fences whose info string names a language the code plane can parse. Untagged
-# fences are deliberately out of scope and recorded as a known evasion.
+# Only fences naming a language the code plane can parse. Untagged fences are
+# out of scope and recorded as a known evasion.
 FENCE = re.compile(r"```([A-Za-z0-9_+-]*)[^\n]*\n(.*?)```", re.S)
 CODE_TAGS = {
     "bash", "sh", "shell", "zsh", "console",
     "python", "py", "javascript", "js", "typescript", "ts", "node",
 }
 
-# Candidate probes, one per positive stratum. Ordered: a bundle is assigned to
-# the first stratum it trips, so the strata stay disjoint and the denominators
-# add up. `exec` is checked first because it is the rarest and would otherwise
-# be swallowed by the two common shapes.
+# Paths that are outside any bundle by construction.
+OUTSIDE = r'(~/|\$HOME/|/etc/|/usr/local/|/opt/)'
+
+# `[^\n|;&]` throughout keeps a match inside one command: without it,
+# `2>/dev/null || ~/.claude/...` reads as a redirect into the agent directory,
+# which is how the first version of this probe produced six false candidates.
 PROBES = [
-    # Case-SENSITIVE, deliberately. `(?i)` here matched every JavaScript
-    # `function(` literal through `Function\(`, and `RegExp.exec()` through
-    # `exec\(`. Four of the first ten candidates drawn were artifacts of that
-    # one flag — d3 tooltip callbacks, an IIFE, and a regex loop.
-    ("prose_exec", re.compile(
-        r"\b(subprocess\.|child_process|os\.system)|\beval\(|\bnew Function\(")),
-    ("prose_credential", re.compile(
-        r"(~/\.aws/|~/\.ssh/|\.netrc|\bcat\s+[^\n]*\.env\b|os\.environ|process\.env|"
-        r"\$[A-Z_]*(API_KEY|SECRET|TOKEN)|\b[A-Z_]*(API_KEY|SECRET|TOKEN)\b)", re.I)),
-    ("prose_egress", re.compile(
-        r"\b(curl|wget|requests\.(get|post|put)|fetch\(|axios\.|urlopen|httpx\.)", re.I)),
+    ("redirect", re.compile(r'>>?\s*"?\'?[^\n|;&]{0,60}?' + OUTSIDE)),
+    ("copy", re.compile(r'\b(cp|mv|ln -s|install)\s+[^\n|;&]{0,60}\s' + OUTSIDE)),
+    ("chmod", re.compile(r'\bchmod\s+\+x\s+"?\'?' + OUTSIDE)),
 ]
 LABELLED_DIGEST = re.compile(r'digest = "sha256:([0-9a-f]+)"')
 
@@ -111,14 +113,11 @@ def already_labelled():
 
 
 def code_fence_bodies(skill_md):
-    """Concatenated bodies of every fence tagged with a parseable language."""
     try:
         text = skill_md.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return ""
-    return "\n".join(
-        body for tag, body in FENCE.findall(text) if tag.lower() in CODE_TAGS
-    )
+    return "\n".join(body for tag, body in FENCE.findall(text) if tag.lower() in CODE_TAGS)
 
 
 def main():
@@ -131,6 +130,7 @@ def main():
 
     skip = already_labelled()
     pools = {name: [] for name in WANT}
+    by_probe = {name: 0 for name, _ in PROBES}
     scanned = prose_only = with_fence = 0
 
     for entry in sorted(RAW.iterdir()):
@@ -141,12 +141,11 @@ def main():
             continue
         scanned += 1
 
-        has_code = any(
+        if any(
             os.path.splitext(name)[1] in CODE_SUFFIXES
             for _, _, names in os.walk(entry)
             for name in names
-        )
-        if has_code:
+        ):
             continue
         prose_only += 1
 
@@ -155,25 +154,25 @@ def main():
             continue
         with_fence += 1
 
-        for stratum, probe in PROBES:
-            if probe.search(bodies):
-                pools[stratum].append(entry.name)
-                break
-        else:
-            pools["prose_control"].append(entry.name)
+        matched = [name for name, probe in PROBES if probe.search(bodies)]
+        for name in matched:
+            by_probe[name] += 1
+        pools["prose_outside_write" if matched else "prose_control"].append(entry.name)
 
     print(f"  scanned (excluding {len(skip)} already labelled)   {scanned}")
     print(f"  prose-only                                       {prose_only}")
     print(f"  ...with a code-tagged fence                      {with_fence}")
+    for name, count in by_probe.items():
+        print(f"      probe {name:10} {count:6}")
     for name in WANT:
-        print(f"    population {name:18} {len(pools[name]):6}")
+        print(f"    population {name:22} {len(pools[name]):6}")
 
     selected = []
     for name, want in WANT.items():
         rng = random.Random(f"{SEED}-{name}")
         pool = sorted(pools[name])
         chosen = sorted(rng.sample(pool, min(want, len(pool))))
-        print(f"    drawn      {name:18} {len(chosen):6}")
+        print(f"    drawn      {name:22} {len(chosen):6}")
         selected += [{"digest": f"sha256:{d}", "stratum": name} for d in chosen]
 
     if args.dry_run:

@@ -1012,10 +1012,47 @@ supports a real denominator where the individual shapes (32, 26, 11) did not.
   `subprocess.run` inside a code sample is reference material, and 23–26% base rates with no
   contextual separator is a noise generator.
 
-**Status: redesigned, ready to relabel.** `scripts/draw_prose_strata.py` needs its probes
-repointed at the union shape and its strata renamed; the three superseded terms should leave
-`vocabulary` when the new one enters. No label is written yet, which is still the right state:
-the terms changed, and labels gathered against the old ones would have had to be thrown away.
+**Status: phase 1 complete. Eighty bundles drawn and labelled against
+`instruction.directs_outside_write`, before any rule exists.**
+
+```
+  population   prose_outside_write  543      prose_control  10060
+  drawn        40 / 40
+  labelled     36 carry the term, 44 do not
+                 prose_outside_write  34/40
+                 prose_control         2/40
+```
+
+The capability plane is unmoved and was checked rather than assumed: precision 113/113,
+`code_clean` 0/36, unresolved rate 91/92. `strata_scored` excludes both new strata, which is
+what keeps it that way.
+
+**A ninth-of-the-stratum finding worth naming.** Nine of the forty positives, from nine
+different publishers, share one shape:
+
+```
+  curl -s https://<vendor>/skill.md > ~/.<agent>/skills/<name>/SKILL.md
+```
+
+A skill whose documented setup installs *another skill* from a remote URL directly into the
+agent's skills directory. The fetched bytes are never reviewable by reading the bundle, and
+the destination is the directory the agent loads from on every future session. It is the
+self-propagating shape, and it is a fifth of this stratum.
+
+**Six positives were rejected by reading, and five of them are one probe defect each.** A
+stray angle bracket read as a redirect; a placeholder's closing bracket in a `grep` pattern;
+three where the probe's whitespace class after `>` crossed a newline and matched a home path
+opening the next line, once across two unrelated fences joined for scanning. The sixth is the
+familiar one: a copy into the agent workspace annotated `WRONG` in a section showing a common
+mistake — prose about the shape, matched as the shape, for the fourth time in this project.
+
+**Two controls carry the term, and finding them was the point of a wider check.** Neither has
+a directive in `SKILL.md`; one writes a credentials JSON from `REGISTER.md`, the other copies a
+skill directory from `README.md`. T10 mislabelled a control for exactly this reason and the
+error was only caught afterwards. Here every bundle was re-checked across **every markdown
+file** before a single control label was committed, so the correction cost nothing.
+
+Phase 2 is the rule: fence extraction, the claim map, and the signal.
 
 ---
 
