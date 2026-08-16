@@ -186,7 +186,43 @@ vocabulary = [
   "code.obfuscation",
   "env.read.secret",
   "instruction.exec_directive",
+  "instruction.directs_egress",
+  "instruction.directs_credential_access",
+  "instruction.directs_exec",
 ]
+
+# ── T11's three terms, defined before anything is labelled ────────────────────
+#
+# All three describe **code inside a fenced block** in a bundle that ships no
+# parseable file at all. The bundle performs nothing; it tells the agent to. So
+# they are instruction signals, and the thing being reported is the directive,
+# never a capability of the bundle.
+#
+# `instruction.directs_egress`
+#   The prose directs the agent to run a command that sends a request to a
+#   remote host. A documented API call in a usage example counts: for a
+#   prose-only skill that IS what the skill does.
+#
+# `instruction.directs_credential_access`
+#   The prose directs the agent to run a command that **reads** a credential
+#   file or a secret-bearing environment variable.
+#
+#   **Setting one is not reading one.** `export OPENAI_API_KEY=sk-...` tells the
+#   agent to supply a secret, not to go and find one, and it is the single most
+#   common shape in this stratum's population. Labelling it as access would put
+#   most of 3,053 bundles under a term meaning something else. Read is
+#   `cat ~/.aws/credentials`, `os.environ["OPENAI_API_KEY"]`, `$SECRET` consumed
+#   by a command.
+#
+# `instruction.directs_exec`
+#   The prose directs the agent to run a command that itself spawns a
+#   subprocess or evaluates constructed code — `subprocess.run`, `os.system`,
+#   `eval(`, `Function(`.
+#
+#   **Not "the fence contains a command".** Every bash fence directs the agent
+#   to run something; a term satisfied by all of them describes nothing. This is
+#   the same narrowing `instruction.exec_directive` needed in T10, for the same
+#   reason.
 
 # Terms looked for exhaustively, and therefore the only terms precision and
 # recall are computed for.

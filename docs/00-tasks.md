@@ -909,8 +909,71 @@ decides whether a signal ships at all.
   pure documentation. The honest coverage claim after T11 is the code plane on 14.6% plus fence
   analysis on ~31% — not the corpus.
 
-**Status: scoped, not started.** The measurements above are reproducible from `corpus/raw/`; no
-extractor, no mapping table, no label and no fixture exists yet.
+**Status: phase 1 started and deliberately halted. The design needs revising before more
+labelling, and the reason is a measurement, not a doubt.**
+
+Done: `scripts/draw_prose_strata.py` draws four strata — three shape-specific positive strata
+plus a control — seeded, deterministic, excluding every already-labelled digest. The three terms
+are defined in `corpus/labels.toml` before any rule exists, and are correctly absent from
+`terms_labelled` and `strata_scored`.
+
+```
+  population   prose_egress 853   prose_credential 3085
+               prose_exec   137   prose_control    6528
+```
+
+**Deviation from the scope above, on purpose.** The plan called for one `prose_directive`
+stratum. Drawn that way, a sample of forty would have been dominated by the two common shapes
+and landed roughly one exec candidate — a recall denominator of one, which is the mistake
+`code.dynamic_eval` already represents at 1/92. Positives are therefore drawn per shape, each
+with its own denominator, never pooled.
+
+### Two findings, and the second is the one that halts the phase
+
+**The exec probe was matching its own reflection.** `(?i)` on `Function\(` matched every
+JavaScript `function(` literal, and `exec\(` matched `RegExp.exec()`. Four of the first ten
+candidates were artifacts: d3 tooltip callbacks, an IIFE, a regex loop, and a security skill's
+comment listing `Eval()` as a danger sign. Corrected to a case-sensitive probe; the exec
+population fell 194 → 137, and the artifact class is the same one T10 met three times.
+
+**The genre problem, which the terms as defined do not survive.** T10 worked because
+`curl … | sh` is *self-evidently operative* — nobody illustrates piping a remote script into a
+shell. The shape carries the intent. That is not true of the shapes T11 proposed to map.
+
+Reading the drawn candidates, the dominant genre in a prose-only bundle is **reference
+material, not instruction**: a d3 tooltip example teaching how to build a chart, a reusable
+Python helper defined for the reader to adapt. `subprocess.run(...)` inside a code sample is
+not the prose directing the agent to spawn a subprocess, and a rule that says otherwise is
+wrong about most of what it fires on.
+
+The obvious rescue — require the fence to sit under an operative heading (Setup, Install,
+Prerequisites, Quick start) — was measured across all eighty drawn bundles and does not work:
+
+```
+  prose_control      6/20 (30%)   prose_egress   8/20 (40%)
+  prose_exec         5/20 (25%)   prose_credential 8/20 (40%)
+```
+
+The control stratum, which trips no shape probe at all, is indistinguishable from the
+positives. Operative framing is roughly uniform across the corpus, so it separates nothing; it
+would cut every stratum by two thirds and improve discrimination not at all.
+
+### What that implies for the design
+
+**The operative intent has to live in the shape, not in the framing or the surroundings.**
+`instruction.exec_directive` satisfies that and is why it measured 31/31. "A capability term
+appears somewhere in a fence" does not, and no amount of context matching rescues it.
+
+Before this phase resumes, T11 needs a different question: *which shapes are inherently
+directives regardless of where they appear?* Fetch-then-execute is one, and it already ships.
+Whether there are two or three more worth having is an open question, and it is cheaper to
+answer by reading than by labelling eighty bundles against terms the corpus has already
+declined.
+
+The draw, the populations and the strata definitions all survive a redesign of the terms, so
+none of the phase-1 work is wasted. What is not yet written is a single label — deliberately,
+because labelling against a definition the data has already argued with would produce ground
+truth nobody should trust.
 
 ---
 

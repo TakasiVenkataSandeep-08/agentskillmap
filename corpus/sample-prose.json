@@ -1,0 +1,333 @@
+{
+  "draws_from": "corpus/raw, prose-only bundles with a code-tagged fence, excluding digests already in corpus/labels.toml",
+  "population": {
+    "prose_control": 6508,
+    "prose_credential": 3053,
+    "prose_egress": 848,
+    "prose_exec": 194
+  },
+  "seed": "skillmap-prose-1",
+  "selected": [
+    {
+      "digest": "sha256:2cfa88a53f68eb8e5fe93581ea72bcae2a1a0b79b9c6599a94695af7516f00cd",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:2f4b767d04c9d484e61f10767895fe36b722598351de450694c5283f4921c4cb",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:486345a792e60452b3cbe44e4c93e30b1cdfb77981159903b0467c87cb9e173a",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:52d20195a5e53f03bb5330506f7914389f5811eab2ac847950b566df0284f7dd",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:61c73397475d90160dc72c8d5d6b03ec8d75e6387d269633a81d319766add580",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:6a245a28df238c1a05ddec822b843880b326d73852e99bd603b555a403b03624",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:722e4d1d57d76c446b2589d5e9badf99c50ed3402cb9c4ff10d50a98515eadef",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:76d2976f3dc6f5d5e3c70f5ba6fe8f5bb9db219077a83a2958c5950ab6a08216",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:998e315a9fb8d5cdefe629f3ee3480dc6cfa353cdbf74658d3544b1b659587af",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:9ee13a179c8e01ec40c4799fdbe1b599c700db9b040a82a9473d39ec6b7c53e5",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:a6c1ae3ebc2a1934a22ebc7c339a827e5a054c236dc609a8aa8a447128ac4984",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:b253aa6aa4505f07f0f0c214cabefd38139d5b8281df1df2ca44d22e60e192d4",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:b87d2360d21d07bada1a2d01836a54e9990f3f66ea9f1d44a1f8a02afb4ad4f7",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:bdeb47656346de9cbfe1c64fc4ac07820e0d169193899b32157abdab82e0ea93",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:c0929d63fdd33af148412fa5626207b772b5be70a480e86b55eac722444116e8",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:c4504e3952338d82d5449ff57e2190435aa4ad3c7cd1f22d2bb06f84f6e3c14c",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:d435d262616bbfc9c06421560a401bf527c994177fcead7d93fafdde32c743b4",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:df4a43fd392df84977e6b13e58ba11d7116569c10ad83684694b15a0632fa5b4",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:ef299200d59a2e309ac1ea89e5a0e6724a54800c945df7a69e919433bf1a5f64",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:f65531a6c1cca21fffc47f46c0a410124b48f161552d0c2aa8d05a753d7c60a6",
+      "stratum": "prose_egress"
+    },
+    {
+      "digest": "sha256:013c6d8fc1a4ebb36a4d7af361225cf78876d2b8d1631c519c90c95ff93ad60d",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:12bec30a1bb7f99b05d2a8530795baea885cce6db410456d0a99399f3e775f40",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:1cae6a04f51e0a143c223d6d847bf5ef401bab38d5abd2e5f1b85379b850a494",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:1e3d3ef09466a91b72faa7382ea3b97b1edc4f8e29efeecac984fda5198e208a",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:298938f2ccc12b29a836860f67ae5e66a603d7fa356940c9e92898c0aa501952",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:30e44cebf3363c1e92ebcb06b85b6d9830ec619a97c4562bed3b58de3babc5ec",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:336ef5f2d0de21002c1620e5dd7dbc08a7e97752fd41f627949baf189148497b",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:69d983ef8729bac6c663b94b099a7caa585b89bf8f3d8468ff15dda79da281d4",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:759d28ede3d0b480747087606888f701a2c8e4f268615d2270b86aa7afeb7fa2",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:8824853260ffaa95a8f675695f038c5b98c485c26e16dbd64f557d270428babe",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:a0e948ba7ef952dd8378236dfa59d2ac3fa955994957845521771bd6fd0c276b",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:b01f03420e1291f022f064701b702a6666cefe0018781217d11554426d0486f5",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:bcc4ddeb70fce99c00b32ea630d10b2ca872fe3400753e8bcc21b288202c4077",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:cdaa54c6e85f9e648da87ea5e8f398839c7a76918727f95324aeaae6a6af9d84",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:d378df11a71f4dee2f048a98360d998c6e629515d97c938d7614e5683ff5ba50",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:d82544c6a04f28229c06475cd54254a3d82b044974333019024d4c43a2acdbb2",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:da9961b239682b2c337228f18174b3ec510f9341a99f382ca222ee0d677f0a71",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:dd0338055665c9b7c9f5889de44dc96fbe839f33ee3b4aacbd44a0fc1854ff8f",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:e88105d303bc7b0172f6995803ef24bc3269129ddb83bbee2f6de9d01d2b6d0b",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:f29b3e57a586800ecf1300fb333a6af57818772e11e8dcce2c0aa938a8b59466",
+      "stratum": "prose_credential"
+    },
+    {
+      "digest": "sha256:03042db77ebbc776975e50b6f9459fd9dc2ef4825e2465422a9561abb2e96f3a",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:14856f8e80e9d90fc000a76d920d57b62ec9ae57245f7ac5da1979cd1b0badd5",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:15590f393f7ba31107cbcec530c4f8603817c71e2345e1a2141ec3768ebe2e99",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:296e782c94dffdd1cfc0cec15e75900136edd561b9a1e4aca6446a12416f7647",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:30f2972f2a31a0e5c518e28410a9ad5c9f2c7c511cb86020189195ec921e6adc",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:41cd1fb23aa8072d1758ccc76a7fb69595676539dc35b9c24b866408d45fdca7",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:50802385149a3cb85a8d93965e8da1c5f87a9af7f3d6fad9acf00efdaaf79ba4",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:6468dcc6b4524c1a6b3d3294cad0bb117930cf9099d3b89057b09569810a4bce",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:6bcff80865d83433c4ad0f8c980537e8ab260de07ea0193d4f19e31e09ab9230",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:6eaa883b8e29af6d9e0d447f7c6f5889686467cb694a6fc442df566d634363e7",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:7b095cace728018759a85a38c8f0968f5a035332692c373e1040583b3e33ce9b",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:8d36501dd3a41067acb8f76ba51b286d1e79a40d143660c37f5696cc24e831a3",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:8f18d424141588189249178b274da4ed0c79290f1be10dd4f5bd0a2b87d0766f",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:9e4fa669fd769b60061ad26fa24585d3e8c43b759018b58a2164ea5635fbd5ac",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:b40f333e67e66cfc46d5dfe20d89d603b0453a598375f61c58b4eaa069ee897e",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:bba6955835738f3efdf1e692e3a18b332a6ab5310391f7f45f5d275651887f87",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:e0e66ea377e544c364edce999e40ee60dfe41f0e414f6243e8ce8c9d6bf43dd7",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:e66f126523dec0745dd63211c8aee5b8f75dd5982b5cb6551738f4a6788c662d",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:f0047cc23f07a13ae6b1115c650274308521b2e8f91e5c726b3c6440883f802a",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:fb902d470cfde9ce9734c96978896ab65152ec70d4a2125e3a6d424a21a7f190",
+      "stratum": "prose_exec"
+    },
+    {
+      "digest": "sha256:03629b52465c398d5a7bc79c02d640a7ce940495bccfa3d66ea885173d067b1a",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:054646a2e6e43c8a228406f4ba654af6c5052bae3d20d45ccfb087e7626a7463",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:0c6df7a1b9281e602a79a85e23d6c4ef28e97b33a017ff339cd4d7cc1cb4e50f",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:1bfaf7fe8c67ad9c71e45054d87ac662ec11c86d77ec2505f6862748e19409bc",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:1da0afee5ccbe81b0bfc05ecb9e38529d3496d0a3baa10d7418da02f5b6eff0b",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:46fe74cbe0a2c3f4c447b099201d6f5537f5f0101451ef5f7d0092f5f2be25e9",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:4e8bffc32caea1dcaa548a4519b4608c49a62a2723d3cff52c7ab8cb53b019b0",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:5cc606fcb900239aa8e6de02748a8a19a9102cd41867915a912c08e29f141f3d",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:7b6cf855c9296a7ac1ebf57e4a654f9456b69488b4f331d2ffb21af27bd740a9",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:7b97d7c9480c6996d97b49cc0a5e821e461581a1130ad88aa294599425f25e4e",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:7ecc5bc15483d73ee131e37f4043dfd584665106fe868f1e90aeb44dd1e952ec",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:90ddb1781fb974e4bc804bdccf2b1530e52371eb094f535a0a9b3b39b93dbd13",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:9374a72da8a502761176d0c4a7f9a469e84095eb5f20d2e31f3d93b9f1bb4b52",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:9f40ce2f199ab73d6b7e1b8644daa22945251c2a6f7c260b575e5b8be4f2a38c",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:a3f6214d1496e9a2600688f75f2e9e0f7a97e799e50b1d8c8610406d96c6dc45",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:d1070ea11eb8ee77a427caaabf7981f1082c6230782913516eea95680b49ab36",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:d7f66ba9f9e43e5da37defb1f5682e7eb394795b1f18987c5a6da9d21b298904",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:e2fce12c893db35553d9c7611a72def8b03439258a9511f39280203aee3e9ca7",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:f2ed8dfb35c3306101a942396ee434a35f78c9df3dcaa0886c6ed11e39f1b710",
+      "stratum": "prose_control"
+    },
+    {
+      "digest": "sha256:fb62a5d2b72110169e75395fe456dd53bfe29f4cc7076ca5f59e1efa89a3d3a5",
+      "stratum": "prose_control"
+    }
+  ],
+  "snapshot": "2026-08"
+}
