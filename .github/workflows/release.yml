@@ -99,7 +99,18 @@ jobs:
           # is not the same claim as "it runs".
           - { target: linux-x64,    runner: ubuntu-latest,    binary: skillmap }
           - { target: linux-arm64,  runner: ubuntu-24.04-arm, binary: skillmap }
-          - { target: darwin-x64,   runner: macos-13,         binary: skillmap }
+          # `macos-13` until it was retired in December 2025. The label did not
+          # start erroring — jobs targeting it simply queue forever, so
+          # `build (darwin-x64)` sat unallocated for twelve hours on v0.4.0 and
+          # `publish` never ran. A dead runner label fails silently, which is
+          # worse than failing loudly.
+          #
+          # `macos-15-intel` is GitHub's migration target and the LAST Intel
+          # image: x86_64 macOS runners disappear entirely in Fall 2027. When
+          # they do, this row either goes away or starts cross-compiling, and
+          # cross-compiling costs the smoke test below — which is the check that
+          # would catch a release shipping an empty ruleset.
+          - { target: darwin-x64,   runner: macos-15-intel,   binary: skillmap }
           - { target: darwin-arm64, runner: macos-14,         binary: skillmap }
           - { target: win32-x64,    runner: windows-latest,   binary: skillmap.exe }
     steps:
