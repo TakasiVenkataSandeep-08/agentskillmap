@@ -198,6 +198,19 @@ fn instruction_signals_are_counted_on_every_stratum() {
         // at risk. Its own strata are scored separately below, where a rate
         // against ground truth is available.
         ("instruction.exec_directive", 0),
+        // T11's signal, and the only non-zero entry here that is **not** a
+        // false positive. All three firings were read: each is
+        // `cp -r <skill> ~/.openclaw/workspace/skills/`, installing a skill
+        // into the agent's workspace directory, and each is a genuine
+        // directive.
+        //
+        // That is consistent rather than surprising. `code_clean` means "no
+        // credential marker", not "harmless" — the README says so explicitly —
+        // and these bundles were never read for instruction signals, so their
+        // empty `capabilities` arrays say nothing about this term. The rate
+        // against ground truth lives in
+        // `the_outside_write_signal_is_scored_against_its_own_ground_truth`.
+        ("instruction.directs_outside_write", 3),
     ]
     .into_iter()
     .collect();
@@ -218,6 +231,106 @@ fn instruction_signals_are_counted_on_every_stratum() {
              false-positive rate is derived from these numbers"
         );
     }
+}
+
+/// Score one signal over the strata drawn for it.
+///
+/// Returns `(true positive, false positive, false negative, true negative)`
+/// plus the digests behind the two error cells, and `None` when the archive is
+/// absent so a caller can skip loudly instead of asserting on zeros.
+///
+/// Scoped to named strata on purpose. A signal's own strata were labelled for
+/// it; every other stratum was not, so a firing there is unmeasured rather than
+/// wrong, and counting it either way would invent a number.
+#[allow(clippy::type_complexity, reason = "a score and its two error lists")]
+fn score_signal(
+    term: &str,
+    strata: &[&str],
+) -> Option<(usize, usize, usize, usize, Vec<String>, Vec<String>)> {
+    let root = repo_root();
+    let labels = match corpus::Labels::load(&root.join("corpus/labels.toml")) {
+        Ok(labels) => labels,
+        Err(corpus::Error::Absent(_)) => return None,
+        Err(error) => panic!("corpus/labels.toml is present and unusable: {error}"),
+    };
+    let rules = skillmap_rules::load(&root);
+    assert!(rules.diagnostics.is_empty(), "{:?}", rules.diagnostics);
+
+    let (mut tp, mut fp, mut fn_, mut tn) = (0usize, 0usize, 0usize, 0usize);
+    let (mut missed, mut spurious) = (Vec::new(), Vec::new());
+    let mut scanned = 0usize;
+
+    for label in &labels.labels {
+        if label.verdict != corpus::Verdict::Labelled
+            || !strata.contains(&label.stratum.as_str())
+        {
+            continue;
+        }
+        let dir = corpus::bundle_dir(&root.join("corpus"), &label.digest);
+        let Ok(manifest) = skillmap_scan::analyze(&dir, &rules) else {
+            continue;
+        };
+        scanned += 1;
+        let fired = manifest
+            .instructions
+            .iter()
+            .any(|entry| entry.signal.as_str() == term);
+        let truth = label.capabilities.iter().any(|have| have == term);
+        let tag = format!("{} [{}]", &label.digest[7..19], label.stratum);
+        match (fired, truth) {
+            (true, true) => tp += 1,
+            (true, false) => {
+                fp += 1;
+                spurious.push(tag);
+            }
+            (false, true) => {
+                fn_ += 1;
+                missed.push(tag);
+            }
+            (false, false) => tn += 1,
+        }
+    }
+    if scanned == 0 {
+        return None;
+    }
+    Some((tp, fp, fn_, tn, missed, spurious))
+}
+
+fn report_score(term: &str, tp: usize, fp: usize, fn_: usize, tn: usize) {
+    let precision = corpus::Rate::new(tp, tp + fp);
+    let recall = corpus::Rate::new(tp, tp + fn_);
+    println!("\n{term} over its own strata");
+    println!("  precision {}", precision.render());
+    println!("  recall    {}", recall.render());
+    println!("  tp {tp}  fp {fp}  fn {fn_}  tn {tn}\n");
+}
+
+#[test]
+fn the_outside_write_signal_is_scored_against_its_own_ground_truth() {
+    // T11. Eighty prose-only bundles across two strata, drawn and hand-labelled
+    // before this rule was written — the ordering the whole corpus discipline
+    // rests on.
+    const TERM: &str = "instruction.directs_outside_write";
+    let Some((tp, fp, fn_, tn, missed, spurious)) =
+        score_signal(TERM, &["prose_outside_write", "prose_control"])
+    else {
+        eprintln!("SKIPPED: corpus/raw/ is absent, so {TERM} could not be scored.");
+        return;
+    };
+    report_score(TERM, tp, fp, fn_, tn);
+    if !spurious.is_empty() {
+        println!("  false positives: {spurious:?}");
+    }
+    if !missed.is_empty() {
+        println!("  missed: {missed:?}");
+    }
+
+    assert_eq!(
+        (tp, fp, fn_, tn),
+        (37, 1, 0, 42),
+        "the directs_outside_write score moved. Re-read the changed bundles, update \
+         the README's published rate, and change these numbers deliberately"
+    );
 }
 
 #[test]

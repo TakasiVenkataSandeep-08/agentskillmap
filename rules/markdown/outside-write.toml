@@ -1,0 +1,73 @@
+id         = "instr.outside-write"
+language   = "markdown"
+capability = "instruction.directs_outside_write"
+tier       = "pattern"
+query      = "queries/markdown/outside-write.scm"
+
+[docs]
+summary = "Prose directing the agent to write outside the bundle."
+rationale = """
+89.8% of harvested bundles ship no file the code plane can parse, and a third of
+those carry runnable code inside fenced blocks. Nothing looked at any of it. The
+code plane analyses files and a fence is not a file, so every published
+precision and recall figure this project has describes the 14.6% of the corpus
+that ships parseable code.
+
+What this reports is narrow and true: the prose directs the agent to run a
+command that **writes to, copies into, or makes executable a path outside the
+bundle**. The bundle performs nothing — it has no code. It tells the agent to.
+So the finding is an instruction, never a capability, and the tier is `pattern`
+however exact the match.
+
+**The shape carries its own intent, which is the whole reason it is reportable.**
+Reference material demonstrates logic and never mutates the reader's machine as
+an illustration; nobody teaches programming by appending to a shell profile.
+Three earlier candidates — directing egress, credential access, subprocess
+spawning — were defined, drawn for, and withdrawn before a single label was
+written, because a network call or a `subprocess.run` inside a code sample is
+documentation. They carried 23-26% base rates and no contextual separator.
+Requiring an operative heading was measured as a rescue and failed: 30% of the
+*control* stratum sat under one, against 25-40% of the positives.
+
+A fifth of the labelled positives are one shape worth knowing about — a
+documented setup step that fetches *another skill* from a vendor URL straight
+into the agent's own skills directory, from nine different publishers. The
+fetched bytes are never reviewable by reading the bundle, and the destination is
+what the agent loads from on every later session.
+"""
+false_positive_notes = """
+**Most matches are ordinary.** Installing a CLI into a bin directory, writing a
+config file, appending a completion script — this reports the directive and
+`policy.toml` decides what a repository tolerates. Narrowing to "suspicious"
+destinations would be a verdict wearing a regex.
+
+Two exclusions, both measured rather than assumed:
+
+  - **`mkdir` is not a write.** Creating an empty directory is preparation, was
+    3.11% of the population on its own, and has a worst case of an empty folder.
+  - **`sudo` is not a signal.** Inherently operative and almost worthless: a
+    package-manager invocation in nearly all of its 218 corpus instances, which
+    is true of most CLI wrappers and separates nothing.
+
+Three false-positive shapes are excluded by construction, each found by reading
+real bundles rather than predicted:
+
+  - **A placeholder's closing bracket read as a redirect.**
+    `grep -ri "<keyword>" ~/clawd-*/memory/` is a read. Form 1 allows only
+    spaces and an optional quote between `>` and the path.
+  - **A quote or prompt marker read as a redirect.** `> mkdir -p ~/.memoria`,
+    excluded by the same tightening and by `mkdir` not being a write.
+  - **A redirect at end of line and a path on the next.** Every pattern is
+    confined to one line, because a shell redirect is.
+
+**One shape cannot be excluded lexically and is a known false positive.** A
+bundle in the labelled stratum shows `cp assets/* ~/.openclaw/workspace/core/`
+annotated `WRONG`, in a section demonstrating a common mistake. Prose about the
+shape, matched as the shape — the fourth time this project has met that failure,
+and a `pattern`-tier rule cannot tell description from instruction. That is the
+tier's definition rather than a defect, and it is why these findings are
+quarantined from `capabilities`.
+"""
+
+[captures]
+site = "@site"

@@ -237,7 +237,8 @@
         "instruction.config_mutation",
         "instruction.silence",
         "instruction.privilege_claim",
-        "instruction.exec_directive"
+        "instruction.exec_directive",
+        "instruction.directs_outside_write"
       ]
     }
   }

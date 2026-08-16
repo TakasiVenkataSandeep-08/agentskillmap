@@ -278,6 +278,39 @@ Instruction-plane signals use a separate `instruction.*` namespace and never app
 project attention. They are also the two most likely to false-positive on legitimate skills
 about logging verbosity and permissions — negative fixtures for those are load-bearing.
 
+## Migration: 1.2.0 → 1.3.0
+
+One change: **`instruction.directs_outside_write` is added to `instructionSignal`.**
+Nothing about the manifest's *shape* moved.
+
+**What it means.** Prose directing the agent to run a command that writes to, copies into,
+or makes executable a path outside the bundle — a shell profile, a config directory, a bin
+directory on `PATH`, the agent's own skills directory. `tier = "pattern"`, in `instructions`,
+never in `capabilities`: the bundles it targets ship no code at all, so the claim is about
+what the prose tells the agent to do.
+
+**Why this shape.** 89.8% of harvested bundles ship no parseable file, and a third of those
+carry runnable code in fenced blocks that nothing looked at. Three earlier candidates —
+directing egress, credential access, subprocess spawning — were defined, drawn for, and
+withdrawn before a label was written: in a prose-only bundle the dominant genre is reference
+material, so a network call in a code sample is documentation, and at 23–26% base rates with
+no contextual separator they were noise generators. Requiring an operative heading was
+measured as a rescue and failed at 30% of the *control* stratum.
+
+What survives carries its own intent. Reference material demonstrates logic and never
+mutates the reader's machine as an illustration.
+
+**Measured** against 80 prose-only bundles labelled before the rule existed: **precision
+37/38 (97.4%), recall 37/37 (100%)**. The single false positive is a copy annotated `WRONG`
+in a section showing a common mistake — prose about the shape, matched as the shape, which a
+`pattern`-tier rule cannot tell apart and which is why these findings are quarantined.
+
+**Compatibility.** Same direction as 1.2.0: adding a variant to a closed vocabulary means a
+1.2.0 consumer rejects a manifest carrying this signal, and the breakage is real rather than
+hypothetical because a rule ships that emits it. Lock files store wire names, so this
+degrades to a visible error rather than a silent rewrite. Minor because the shape is
+unchanged and every existing term keeps its meaning.
+
 ## Migration: 1.1.0 → 1.2.0
 
 One change: **`instruction.exec_directive` is added to `instructionSignal`.** Nothing

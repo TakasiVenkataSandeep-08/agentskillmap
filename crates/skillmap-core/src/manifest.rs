@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::num::NonZeroU64;
 
 /// The schema version this crate produces.
-pub const SCHEMA_VERSION: &str = "1.2.0";
+pub const SCHEMA_VERSION: &str = "1.3.0";
 
 /// A skillmap capability manifest.
 ///
@@ -555,6 +555,22 @@ pub enum InstructionSignal {
     /// Prose asserting pre-authorization or elevated permission.
     #[serde(rename = "instruction.privilege_claim")]
     PrivilegeClaim,
+    /// Prose directing the agent to run a command that writes to, copies into,
+    /// or makes executable a path outside the bundle.
+    ///
+    /// The shape carries its own intent, which is why it is reportable at all.
+    /// Reference material demonstrates logic and never mutates the reader's
+    /// machine as an illustration — nobody teaches programming by appending to
+    /// a shell profile. Three earlier candidates (directing egress, credential
+    /// access, subprocess spawning) were defined and then withdrawn because a
+    /// network call or a subprocess inside a code sample is reference material,
+    /// and they carried 23-26% base rates with no contextual separator.
+    ///
+    /// `mkdir` alone is excluded: creating an empty directory is preparation,
+    /// not a write. `sudo` is excluded for the opposite reason, being a
+    /// package-manager invocation in nearly all of its corpus instances.
+    #[serde(rename = "instruction.directs_outside_write")]
+    DirectsOutsideWrite,
     /// Prose directing the agent to run a command that fetches remote content
     /// and executes it.
     ///
@@ -629,6 +645,7 @@ wire_names!(InstructionSignal, instruction_signal_wire_names_match_serde, [
     Silence => "instruction.silence",
     PrivilegeClaim => "instruction.privilege_claim",
     ExecDirective => "instruction.exec_directive",
+    DirectsOutsideWrite => "instruction.directs_outside_write",
 ]);
 
 wire_names!(UnresolvedReason, unresolved_reason_wire_names_match_serde, [

@@ -2534,9 +2534,9 @@ note = "Fetches a skill document from a vendor URL straight into the agent's own
 digest = "sha256:3c4128709fafd787544c04851e0ed85bc9cad2baecabd6b8b30398396ae188a9"
 stratum = "prose_outside_write"
 verdict = "labelled"
-capabilities = []
+capabilities = ["instruction.directs_outside_write"]
 evidence = []
-note = "A stray angle bracket preceding a mkdir under the home directory - a prompt or quote marker, not a redirect, and mkdir is excluded from the term anyway. Probe artifact."
+note = "Appends entries to the global gitignore under the home directory. Originally labelled as carrying nothing: the draw surfaced a stray angle bracket before a mkdir, and I judged that one line instead of every line the term covers. Corrected after the rule fired and the bundle was re-read - the rule was right and the label was wrong."
 
 [[label]]
 digest = "sha256:3eb255230a6b1f8fc75be1219c7ddf1ca83da597b4753923a814a7bb86b58b93"
