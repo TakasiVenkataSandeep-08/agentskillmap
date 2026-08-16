@@ -93,6 +93,26 @@ a public issue.
 The corpus research will surface real skills doing questionable things.
 
 - Describe patterns, not people. Published research names no maintainer as a suspect.
+- **Sampling provenance is published; characterisation stays about patterns.** These are
+  different things and the distinction is deliberate, because collapsing them would cost one
+  of the two properties this project is built on.
+
+  `corpus/sample.json` records the repository, bundle root and pinned commit for every drawn
+  bundle. `corpus/raw/` is gitignored — it is 1.7 GB of untrusted third-party code — so that
+  provenance is the *only* way a reader can fetch the exact bytes a label describes and check
+  it. Remove it and every published precision and recall figure becomes unverifiable by anyone
+  who does not already have the archive, which would make "measured" a claim rather than a
+  fact.
+
+  What that licenses is narrow. The notes in `corpus/labels.toml` describe what a bundle does
+  in neutral terms — most of them ordinary installer instructions for real tools — and neither
+  they nor `corpus/report.md` characterise any bundle as malicious or any maintainer as a
+  suspect. `corpus/report.md` omits bundle names entirely, because a base-rate report has no
+  need of them.
+
+  The line to hold: **a reader may trace any label to its bytes; no document here calls anyone
+  a suspect.** A change that starts attributing judgements to named owners breaks this rule
+  even though the provenance was already public.
 - Anything that looks live and exploitable goes through coordinated disclosure to the
   maintainer and the hosting registry first, with a 90-day default timeline.
 - Do not publish a working exploit chain for a live skill. The capability manifest and the

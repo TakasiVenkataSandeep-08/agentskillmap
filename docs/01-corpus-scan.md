@@ -96,5 +96,13 @@ the findings, not in a footnote. Include the negative results. Name no maintaine
 suspect — describe patterns, not people, and follow `SECURITY.md` disclosure timelines for
 anything that looks live.
 
+**The report names no bundle; the sample does, and both are correct.** `corpus/sample.json`
+carries the repository, bundle root and pinned commit for every drawn bundle, because
+`corpus/raw/` is gitignored and that provenance is the only route a reader has to the exact
+bytes a label describes. Verifiability and non-attribution pull against each other here, and
+the resolution is to keep them in different files: provenance in the sample so a label can be
+checked, no bundle name in the report so a base rate cannot be read as an accusation.
+`SECURITY.md` states the line this draws.
+
 The report's job is to establish that the problem is real and that you measure carefully.
 Both halves matter; the second is what makes the scanner credible when it ships.

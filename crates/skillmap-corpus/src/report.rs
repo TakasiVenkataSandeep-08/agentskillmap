@@ -766,7 +766,9 @@ pub fn report(index: &Index) -> String {
         let _ = writeln!(
             out,
             "
-Bundle names are deliberately omitted. These are facts about this harvest — a clone that failed, a host antivirus that blocked a file — not findings about the bundles, and `docs/01-corpus-scan.md` is explicit that this report describes patterns rather than people."
+Bundle names are deliberately omitted. These are facts about this harvest — a clone that failed, a host antivirus that blocked a file — not findings about the bundles, and `docs/01-corpus-scan.md` is explicit that this report describes patterns rather than people.
+
+`corpus/sample.json` does carry per-bundle provenance — repository, bundle root and pinned commit — and that is deliberate too. `corpus/raw/` is gitignored, so that provenance is the only route by which a reader can fetch the exact bytes a label describes and check it; without it every published precision and recall figure would be unverifiable from outside. Verifiability and non-attribution pull against each other, and they are kept in separate files rather than traded off: provenance in the sample so a label can be checked, no bundle name in this report so a base rate cannot be read as an accusation. `SECURITY.md` states the line that draws."
         );
     }
 
