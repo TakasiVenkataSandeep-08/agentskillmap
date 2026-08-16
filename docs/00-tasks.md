@@ -958,22 +958,64 @@ The control stratum, which trips no shape probe at all, is indistinguishable fro
 positives. Operative framing is roughly uniform across the corpus, so it separates nothing; it
 would cut every stratum by two thirds and improve discrimination not at all.
 
-### What that implies for the design
+### The redesign: which shapes are inherently directives
 
-**The operative intent has to live in the shape, not in the framing or the surroundings.**
-`instruction.exec_directive` satisfies that and is why it measured 31/31. "A capability term
-appears somewhere in a fence" does not, and no amount of context matching rescues it.
+**The operative intent has to live in the shape, not in the framing.** That question was then
+put to the corpus rather than answered from the armchair, and it has an answer.
 
-Before this phase resumes, T11 needs a different question: *which shapes are inherently
-directives regardless of where they appear?* Fetch-then-execute is one, and it already ships.
-Whether there are two or three more worth having is an open question, and it is cheaper to
-answer by reading than by labelling eighty bundles against terms the corpus has already
-declined.
+**The principle.** Reference material demonstrates *logic*. It never mutates the reader's
+machine as an illustration. Nobody teaches programming by appending to `~/.zshrc` or by
+running `mkdir -p ~/.config/thing`. So a shape is inherently a directive when it **changes
+something outside the bundle that outlives the session**.
 
-The draw, the populations and the strata definitions all survive a redesign of the terms, so
-none of the phase-1 work is wasted. What is not yet written is a single label — deliberately,
-because labelling against a definition the data has already argued with would produce ground
-truth nobody should trust.
+Candidates measured across the 10,660 prose-only bundles carrying a code fence, then read:
+
+```
+  redirect out of bundle    370  3.47%     sudo                 218  2.13%
+  mkdir outside             331  3.11%     chmod +x (any)       108  1.01%
+  cp/mv/ln into outside     178  1.67%     clone then run        37  0.35%
+  chmod outside              47  0.44%     persist to shell rc   32  0.30%
+  ── union of the first four: 576  (5.40%) ──
+                                           read credential file  11  0.10%
+```
+
+Every sampled instance of the union reads as a directive and none as reference material:
+
+```
+  echo "LUCKYLOBSTER_API_KEY=ll_abc123..." >> ~/.openclaw/.env
+  cp -r agentflow/skills/* ~/.claude/skills/
+  cp memcore_backup_<date>/AGENTS.md ~/.openclaw/workspace/
+  echo 'SUBSYSTEM=="block", ATTRS{serial}=="…"' > /etc/udev/rules.d/…
+  echo "https://youraccount.api-us1.com" > ~/.config/activecampaign/url
+```
+
+**The recommended term is one, not three: `instruction.directs_outside_write`** — the prose
+directs the agent to run a command that writes, copies into, creates, or changes permissions
+on a path outside the bundle. It is the instruction-plane mirror of `fs.write.outside_bundle`
+and `fs.write.agent_config`, both of which already exist, and at 5.40% it has a population that
+supports a real denominator where the individual shapes (32, 26, 11) did not.
+
+**Rejected, with reasons, so nobody re-proposes them:**
+
+- **`sudo` (218).** Inherently operative and almost worthless: it is `sudo apt-get` in nearly
+  every instance. "This skill tells you to install a system package" is true of most CLI
+  wrappers and separates nothing.
+- **Reading a credential file (11).** Too rare for a rate, and the sample is mostly benign —
+  `~/.ssh/known_hosts`, public keys uploaded as deploy keys. The one genuinely alarming
+  instance is an *attack demonstration* inside a security-awareness skill, which is the
+  describe-versus-instruct trap again.
+- **`mkdir` outside, alone (331).** Creating a directory is near-zero consequence. It is in the
+  union because it almost always accompanies a write, but a rule firing on it by itself would
+  be noise. Whether to keep it is the first question phase 1's labelling should settle.
+- **The three original terms** — `directs_egress`, `directs_credential_access`,
+  `directs_exec`. The corpus declined them for the reason above: a network call or a
+  `subprocess.run` inside a code sample is reference material, and 23–26% base rates with no
+  contextual separator is a noise generator.
+
+**Status: redesigned, ready to relabel.** `scripts/draw_prose_strata.py` needs its probes
+repointed at the union shape and its strata renamed; the three superseded terms should leave
+`vocabulary` when the new one enters. No label is written yet, which is still the right state:
+the terms changed, and labels gathered against the old ones would have had to be thrown away.
 
 ---
 
