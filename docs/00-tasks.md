@@ -1052,7 +1052,45 @@ skill directory from `README.md`. T10 mislabelled a control for exactly this rea
 error was only caught afterwards. Here every bundle was re-checked across **every markdown
 file** before a single control label was committed, so the correction cost nothing.
 
-Phase 2 is the rule: fence extraction, the claim map, and the signal.
+### Phases 2 and 3
+
+**Status: done.** `instruction.directs_outside_write` ships, measured against ground truth
+that predates it, and published:
+
+```
+  precision  37/38 (97.4%, 95% CI 86.5–99.5%)
+  recall     37/37 (100%,  95% CI 90.6–100%)
+```
+
+Capability plane checked and unmoved throughout: 113/113, `code_clean` 0/36, unresolved 91/92.
+Schema 1.2.0 → 1.3.0 with a migration note; every golden diff is the version line.
+
+**The plan was not followed, and that was the right call.** T11 scoped fence extraction into
+the code plane — a `SourceFile` language override, byte-offset remapping, a data-driven claim
+map from capability term to instruction signal. **None of it was built.** The finding lands in
+`instructions` at `pattern` tier either way, and T10 had already shown a markdown rule reaches
+that bar on this kind of shape, so for a single term the extraction engine buys nothing the
+cheap path does not. It pays off across many terms, and the corpus has declined three of the
+four proposed. Build it when a second term needs it, not before.
+
+**Two corrections during measurement, and the first was the labeller's.** `3c4128709faf` was
+labelled as carrying nothing; the rule fired, the bundle was re-read, and it genuinely appends
+to a global gitignore under the home directory. The judgement had been made on the single line
+the *draw probe* surfaced rather than on every line the term covers — a distinct failure from
+T10's, where the error was reading one file instead of all of them. Precision went 35/37 to
+36/37 on the correction. The second was a real miss: a copy behind a crontab schedule prefix,
+skipped because the pattern anchored the command to line start. Relaxing that took recall
+to 37/37.
+
+**One false positive survives and is documented rather than chased.** A copy annotated `WRONG`
+in a section demonstrating a common mistake — prose about the shape, matched as the shape, for
+the fifth time in this project. A `pattern`-tier rule cannot separate description from
+instruction. That is the tier's definition and the reason these findings are quarantined from
+`capabilities`.
+
+**The benign-stratum entry is 3, and it is the only non-zero one in that table that is not a
+false positive.** All three firings were read: each installs a skill into an agent workspace
+directory and each is genuine. `code_clean` means *no credential marker*, not *harmless*.
 
 ---
 
@@ -1088,8 +1126,12 @@ front of; each is a thing this repository currently claims or implies but does n
   (30.1% of the harvest)** carry a lexical marker with no parseable code and fall into *no
   stratum at all* — `Stratum::of` returns `None` for them, so they were never eligible for
   sampling, labelling or measurement. The reason is defensible and recorded in
-  `skillmap-corpus`; the consequence was not written down anywhere until now. **T11** is the
-  work that would close part of it.
+  `skillmap-corpus`; the consequence was not written down anywhere until now. **T11 closed
+  part of it**: `instruction.directs_outside_write` reports fenced directives in prose-only
+  bundles at precision 37/38, which reaches a shape present in ~5% of the 10,603 prose-only
+  bundles that carry a code fence. The 85.4% figure is unchanged — that is coverage of one
+  shape, not of the stratum — and the ~55% of prose-only bundles with no code fence at all
+  remain out of reach of every plane.
 - **84% of scanned bundles carry at least one `unresolved` entry**, ~4.5 computed targets each,
   and roughly **40% of reported capabilities are `present` rather than `observed`** — the code
   is there and nothing established that it runs. Both belong beside "zero false positives"

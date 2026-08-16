@@ -235,30 +235,63 @@ different fields of the manifest, and every number above iterates `capabilities`
 
 #### The instruction plane, measured separately
 
-The four shipped `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest
-tier — and had never been counted over the corpus at all. Per signal, on the benign stratum:
+The five shipped `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest
+tier — and had never been counted over the corpus at all. How often each **fires** on the
+benign stratum, and what those firings turned out to be when read:
 
-| Signal | Benign stratum |
-|---|---|
-| `instruction.config_mutation` | 1/36 (2.8%, 95% CI 0.5–14.2%) |
-| `instruction.exfil` | 1/36 (2.8%, 95% CI 0.5–14.2%) |
-| `instruction.fetch_as_instruction` | 0/36 (0%, 95% CI 0–9.6%) |
-| `instruction.exec_directive` | 0/36 (0%, 95% CI 0–9.6%) |
+| Signal | Fires on benign stratum | Adjudicated |
+|---|---|---|
+| `instruction.config_mutation` | 1/36 (2.8%, 95% CI 0.5–14.2%) | false positive |
+| `instruction.exfil` | 1/36 (2.8%, 95% CI 0.5–14.2%) | false positive |
+| `instruction.fetch_as_instruction` | 0/36 (0%, 95% CI 0–9.6%) | — |
+| `instruction.exec_directive` | 0/36 (0%, 95% CI 0–9.6%) | — |
+| `instruction.directs_outside_write` | 3/36 (8.3%, 95% CI 2.9–21.8%) | **all three correct** |
 
-**One of the four has real ground truth**, and it is the only signal in this plane that does.
+**The last column is why this is a firing rate and not a false-positive rate.** Every firing
+was read. The three from `directs_outside_write` each install a skill into an agent workspace
+directory and are genuine detections — `code_clean` means *no credential marker*, not
+*harmless*, and these bundles were never read for instruction signals, so their empty
+`capabilities` arrays say nothing about this plane.
+
+**Two of the five have real ground truth.** Both got it the same way, and it is the only way
+that works here: a stratum drawn for the signal and hand-labelled **before** the rule was
+written.
+
+| Signal | Precision | Recall |
+|---|---|---|
+| `instruction.exec_directive` | **31/31 (100%, 95% CI 89.0–100%)** | **31/35 (88.6%, 95% CI 74.0–95.5%)** |
+| `instruction.directs_outside_write` | **37/38 (97.4%, 95% CI 86.5–99.5%)** | **37/37 (100%, 95% CI 90.6–100%)** |
+
+`instruction.directs_outside_write` reports prose directing the agent to write to, copy into,
+or make executable a path outside the bundle — a shell profile, a config directory, a `PATH`
+bin directory, the agent's own skills directory. It exists because **89.8% of harvested
+bundles ship no parseable file at all**, and a third of those carry runnable code in fenced
+blocks that nothing looked at. Measured over 80 prose-only bundles across two strata.
+
+Its single false positive is a copy annotated `WRONG` in a section demonstrating a common
+mistake: prose *about* the shape, matched *as* the shape. A `pattern`-tier rule cannot tell
+those apart, which is the tier's definition rather than a defect.
+
+**Three shapes were proposed for this and withdrawn before a label was written** — directing
+egress, credential access, and subprocess spawning. In a prose-only bundle the dominant genre
+is reference material, so a network call inside a code sample is documentation; at 23–26% base
+rates with no contextual separator they were noise generators. Requiring an operative heading
+was measured as a rescue and failed, at 30% of the *control* stratum against 25–40% of the
+positives. What survives is a shape that carries its own intent: reference material
+demonstrates logic and never mutates the reader's machine as an illustration.
+
+**A fifth of that stratum is one shape worth knowing about.** Nine of forty positives, from
+nine different publishers, are a documented setup step that fetches *another skill* from a
+vendor URL straight into the agent's own skills directory. The fetched bytes are never
+reviewable by reading the bundle, and the destination is what the agent loads from on every
+later session.
+
 `instruction.exec_directive` reports prose directing the agent to fetch remote content and
-execute it — `curl … | sh`, or fetching a `.sh`/`.py` and running it. Two strata were drawn
-and hand-labelled for it **before the rule was written**, which is the ordering everything
-else in this section depends on:
+execute it — `curl … | sh`, or fetching a `.sh`/`.py` and running it.
 
-| `instruction.exec_directive` | |
-|---|---|
-| precision | **31/31 (100%, 95% CI 89.0–100%)** |
-| recall | **31/35 (88.6%, 95% CI 74.0–95.5%)** |
-| benign stratum | 0/36 |
-
-Scored over those two strata only. The other four were never read for this term, so a firing
-there is unmeasured rather than wrong, and counting it either way would invent a number.
+Each signal is scored over its own two strata and no others. The strata drawn for one signal
+were never read for the other, so a firing outside them is unmeasured rather than wrong, and
+counting it either way would invent a number.
 
 **This closed the largest detection gap in the tool.** A payload in a fenced code block
 inside `SKILL.md` was invisible to every plane, while the identical bytes in a script file
@@ -303,10 +336,13 @@ on that corpus. No annotator judged the prose there, so `capabilities = []` mean
 for" with respect to `instruction.*`, never "not present", and a rate against those labels
 would book every genuine detection as a false positive. None is computed.
 
-The contrast with `instruction.exec_directive` is the argument for how the other three should
-be finished: draw a stratum for the signal, label it before writing the rule, and a real
-precision and recall follow. That is two days of work per signal, and it is the difference
-between "quiet" and "measured".
+The contrast with the two measured signals is the argument for how the other three should be
+finished: draw a stratum for the signal, label it before writing the rule, and a real
+precision and recall follow. Both measured signals got there that way, and the second one
+also shows the cost of getting the term wrong first — three candidate shapes were drawn for,
+found to be reference material rather than instruction, and withdrawn before a label was
+written. Roughly two days per signal when the term is right, and it is the difference between
+"quiet" and "measured".
 
 `crates/skillmap-eval/tests/instruction_stratum.rs` records the adjudicated counts, fails when
 a rule widens without someone reading the new hits, and fails when a signal ships with no
