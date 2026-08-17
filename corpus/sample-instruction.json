@@ -1,0 +1,642 @@
+{
+  "draws_from": "corpus/raw, every bundle with a SKILL.md, excluding digests already in corpus/labels.toml",
+  "population": {
+    "instr_config_mutation": 178,
+    "instr_control": 11890,
+    "instr_exfil": 171,
+    "instr_fetch_instruction": 36
+  },
+  "scored_for": [
+    "instruction.config_mutation",
+    "instruction.exfil",
+    "instruction.fetch_as_instruction"
+  ],
+  "seed": "skillmap-instruction-1",
+  "selected": [
+    {
+      "digest": "sha256:107aed033ccfd85be3e110d8c27957d179b34229c64a3af94e556c73545825c4",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:1708efb746509aa31876679f70d60965159b1ccc7c866f365ce8a5cd6cb4cce3",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:21a22e1644bad286774359e1bb9268293d1074eb4a4ac425959a551ce79890da",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:21f5e512522d4b9b8b988d0893b07f59ccce2b5fb9e1af0d83c7018e3f4b79a5",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:27798c826da648f717ca26f65a474087a1859547b5883a785a22d62d25790681",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:28a4308dba66fc929fb4a258308564b5f6b56d50d9125bd772ea996fc85d8b9b",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:2c1912683d99833a71600c1a3a5525cd1714b58f4e4fc3444bf0ebba0d4757d3",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:3a896795951580368103f20db6091dc484d75723edc98e60ce99006b3edbb9ed",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:3f6f516998c498078aa4816f488c0628ca70e12a77193bbb27b7850eaf830159",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:4ad57286ecd633ac681f31fc5ca3e52c3d9367e25ba92a5b6041a3a2871f34dd",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:62c8ae3fe7e205effcb916aa65295eccf73af4efdd94508996dfa2ef1d061c34",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:641a7f604c23c995088286c165f86293282ef37e79a2dd3049670d4147933f0d",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:64da85961aa23e7f627dd2db1badedd3103ef2e01c77577049740cc92bb7b6fd",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:664b8f455b8685b8479e44c32a3b199db37128155c368d68dedc5e984481148b",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:6a473a1d0a75f11167e4142e0da0398b15b67dd456cb334ef95e808d3e8a3846",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:723981bb77f55cd9e15e65c572e8f06ab5d58dca134baf75c45141761a56f3bc",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:739db533f20d2454561df6d433fbb7bc92818558fb15b2d59f0f19803c8341ca",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:7482e88cc67735339602aef3406404621c40774eaac6d4b30ecaddd235673795",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:7a7c2014862caeae30509a747e8e1ff487be7b7ecd390aec7525807b082a5a80",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:7b6cf855c9296a7ac1ebf57e4a654f9456b69488b4f331d2ffb21af27bd740a9",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:7c97861e488668da7ebf052e34a7bc6b127b3736b056c32cbdc6e08312894db2",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:86c61c4d86f5bf1e6a430b4f2021f46479738955c79714ff5ab47352fa0d26c4",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:896861425b3ff6f3c52e27f972407a32feed37d0e35af9c940b0d76662965573",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:8b801251b4ca17f7ecc365f1a4a447d0c3e0fca966965b76ef89065b9e1c660b",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:90b10765ad28da2f70561492127efcb002573dbd5f7538f23e06f0483a382639",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:91f5fe237d930901a6a162f7a947e2f1442dcd1acac2b707076627f0006b7012",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:a45417e858c87a47fa382b953b0fc827c0481770a91854e655e8ca342c69d890",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:a4d74c2dff815fa0f7c86fa32c3f2adfc2926cf9416a29bd62f72506f59d7328",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:ce2d08ca959ce3169f53d8377597dc28559706ae3e6f0b8f716163e2085ee5ae",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:d00e0a79ce60d96ca718a314f4c151f0d00f95f74dd1bb3c5c7e3f2717a39eb3",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:d09b22694248f316679974697cfcc8d0bf3433d2d0e73b2d3185340f050d7cf3",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:d4dfb2570fab8a5dfff7368c8b57b060fd4386d3d80a4da5aac2a26653f7472a",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:db46ac086e2bd7fcfd4cd917bf6e00812e7365e49de28d8a08ced8b02f4d072f",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:dc306eb286701ac180eb7a987379a00e5d7d25c4bc8e4281225745ff62249848",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:dd92b47486c0282d2dd7a924db16c497bcc282b37a4ecf2ea4dfe9845002fa7c",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:e6122c640fa1e9c91376027c251bd0c81cb9a54363ccc4d9b4718efe11d7959a",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:e8d1b6e9a5db1ed64125d965d61c704ca18615a127514fdf4077a69560913cfc",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:ec769d92582b9d771afde4ac6832b41e045bf7239edc5289504acd46ad21effc",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:eda0e6ad9972e4f07b5fb4b6db54558296bfe2d7b6eebae59cd4791ea547c95d",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:f903a8e63474b2db3915b123a961ddb3f0467d2bf095dfb767e3389ab23697b8",
+      "stratum": "instr_config_mutation"
+    },
+    {
+      "digest": "sha256:032a07dc38267c6407ca967e53db4cba2c03a24d5b632ee0c2feef3d87346292",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:0436674d4eaf4d97c1d69dbedcdc8f45b58fd73b65b81add009e3bc1da6ebd84",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:08e383e703deafd8d056f0634e791beb2296a4f9d936d97bdb8fb35defa1c9bd",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:0956278b0cf692c25d287edc770bd456aa5e97f8ac2a1712f849262cd1917a82",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:1e98b512b77de7a09047e627521348843de18f5dd7595eb794ca3abd89cd3ca7",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:20412dcd852008b7fe3d603a4a21a49260f55fbb3a6560bab163f3caea2c3d25",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:29687be6bb3140d4a700a6c6c96b6e436f584a3463c167725beeda4f1dee2979",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:29c15dfd22193c3d31bd228f798accb3abe5008a2f00173f765b8a1f892cdf8f",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:34504fb295207269f723844aad851e68a6991e29bd93a4dede3ae4e75d5aee1d",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:43f235bd6e911758a3715d21d02958d8bca3906d44a3861da547e74fb622cc13",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:4fba288c46d2a988a049ba84115beaece1af0307963b24f020a32077a9f8068f",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:59aa666234d2636fd504f92810376dc5943071b9f4e02b46f506ac03e8906914",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:5d316691fd2354629dda288e6d308a19ca4908d87373581d35798951df97c4ae",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:6d94878b55ac4c46d1f855c3bc551ee4b7ba94d557ef7ce8cd72e3238323d6c0",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:76d764b6e23cf19497eface2199cd02f5ec1ed78578875b4a487396ecd5722f9",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:76de75ec49293be9bd2f978469d2392b42e7e3b3f826a82978fa9bd60e518948",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:783d25519102d83900d45510b1de72e7cc5bc62d365bde7ed4f566346ee0b2e2",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:7bf5daf5f4d7fc8277e3adb02ad2a1762af17e938ba05b6177a7bd85fabcad63",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:83d66041f4658ceb7c8805a855ae8c0f107cbfda8b9e30c435da0e002f8dbf23",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:8760a3c6641b2a412a357959f136f1be375273f52a435082a350a0318a45bc5b",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:8ef9bd89cebaa76b06a4e8f84a28483b01a4cc21fd0ec75ca2c8a8f0ea086c73",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:91430d2e0d32d2749dfe83ea5ce4aba91d825eca5aea2a54b2fa1a13153f67ac",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:a396700f8ffc2de1692a40ee33f365845c96870ad19241a840cad84cc2c0161b",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:a3cec1cf6f2e8522295b6b1a1cf708f4cf7fc04fedc3d469cc17b7c86c99bac8",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:a52b2b636fdda252c5ac3c5b0283de08d740ab295d9d89b0c85c4b3e6a2467c8",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:ab6b1e31ddfd045d896b519201ed7f80a3ec8fbbfd5068e55d4fb00f58989ae1",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:b2e0d2144fa3fd8b13afeb35af7d14832b667e0371dc5726d31f6c29221cde0c",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:b33ee808753482ecbe4e14b47510c4c9dae22fd8c191557785bd0ba12261373c",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:b6d05d474f54189dd8d23a6c982d6d3a7c194444f469ef6e4accaa8a49789c4f",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:b8226efb06d6cce3ba0e643dc7e0ad335533d72fc154bd4dafd56b5854008c2a",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:cd715c6b884583e356f66cdc42ec9a0b52137dca7e35ce198e1579a026e7076d",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:ce239d3b6c6cd74bcb4b87d1cd3c0d86f4f34f4219b85cc0d662d4be36c92d91",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:dd03a196ce8a8e3fbbfe64bf202add4f6610ced722254ec90f9888dc6a203426",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:e1f4fdc468470cb34e6a6f80269ef69d4bebbf60981c5fb6a35f8d5e0efcb2f5",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:e387cc5ba3e3e7f901882613d7926791a855b606e0bb335d661803b06fa37ecf",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:e64aa8e1c2bda783cb9dcc981da7d61f20a5e3eafb433f2eaddbfbcda1e9fac6",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:e89a6628c867c075c4835808c720890fc9f436fcb7bb80a2de4d17321a0ba467",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:ec9521d60cefdd46a2c9b59820882d653e1c98a8c5dc99e019f6d176554915f5",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:ee925c9091c9bff55653e7671cce8e8f110ddd9cb794bd4a46a9cee7306d1d39",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:fe06a3d38aa1475d672b5e11fd1b771e6a9c75ebb0133556a53f79a4435310ab",
+      "stratum": "instr_exfil"
+    },
+    {
+      "digest": "sha256:05f71a956354810e25e58f4b65c5874cc516f2e77703f400245e7ce86e40fadf",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:166b4b1d3c122fd9a381cbbb2420358a461b1fe796d22025492686a6bb5b1f54",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:227029823bf98665c80084f671c0c3da1a4a219d03b40001b12eaa8d3d350a46",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:28498cae2302ca4c18d0890d487690d66aa5f394e600659760c1c7c4332dca21",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:2aa5f050da14dd1312421f9c4a5c0ba449c37f87d11688f8b28c8017fee1f936",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:3528f6094e262e79ffcb00d8f5581c0524dfb1c5f1b774f9490747b8db539c4f",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:484ba1290a136c8e7398ba2c7df48aff985dca17a272446ebc60c0fa29d4fbae",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:4885471d8a408fbdc2124b5207136668f370b12edccca44bdfd447ce18c53a03",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:4d63fb00680817014656da788f9cfefbce8c755ee711f55e0020fbd181fabbe8",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:5516abcd32b3394f1a75fdda7f8dd734fd17686433c8a2ec60fadb097c05f364",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:56cf9b930bf8541e9908379274421ccfde9c086a2d2950c4b169650314aecb33",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:5893f09856b1a25d9d8397ef31bc30214dbff60ff464b23f73a1fad14b29034f",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:58b0e575fb5453bad01a67a0f852d30014f5296fcac99cfcea9ebb0ef0700a0b",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:6a245a28df238c1a05ddec822b843880b326d73852e99bd603b555a403b03624",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:715a1dd31573695c0bd86af247de469f67ea9dc21882b38eb4274ab46c0d86b2",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:73957e25124f8b3182c19f515aefd97dd45444ebfed907a68bcb57c7893bda3f",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:7481eb9138cdafd60668b97c4aeebd667a3252dfd65bddf9f4a665fe85b71d64",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:76e56aa39df793b6be57e364b9adc46bbe2929d10811beb76f18db5a4b2980b8",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:87df9d0f954475c52bcbb7039f5522813c98238ab631feb2d0458ccc958abcc7",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:8a3334f75893dd2dd24f834be77adcdbbadb86688b6dfde21d14e46f982bb1a1",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:8c2c5721757ac7927c17fa27023d56cdd255037519854ac80fcf071e98afb2f6",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:8fba1a2badc748a207ec596b6e2dac3f3d90f2750c69dbc87ebe80123f73eb25",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:91b0ab4199f3c0d23799716f3d00237a26d6452a7eb8ec958c5cb47eaf8e2088",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:9c107fa55f1a54761d30b939bf623196c01fd3dffd99026916ec5b550967a257",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:a23aee18e0fc60cde7f1141072f8d4de379893d8e8a5e3dc202305d5ab739f7a",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:a2bcf7e66face7a8dfdfbb9f0ae11a1e3dbfd4baf56631d67500af202f056f9c",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:a618ff4f3da51721179fb3f1d2fb522813c514e9210f02e8129c55114d05e4da",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:b95cac85042b3b3603c00101bcca91d216fc84dec8b50536ac732a49b088af02",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:bcc9ae9467d94b56c34b7b0af67dc9c8035285a9f0bd2a322257b8444801de38",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:c802aae5062eb695923747ea0da92acc3979bbf8d0234c4b912e53753e1c1f46",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:cf93ac6688d6dd8bf9d906411a0a4b4135ce6d8c3c9152c19a44b43a12b640b8",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:d13439d3b7883f3e786399370bc7fbba217772e930a2be754c4aa38fb247a638",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:d43870f965dd5ba8b9a4f7b16ac7282dbe224699dbcfb0ca06da7a60ab5764c2",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:dbe31e48796bc753c407d0eab6cf38290660095e6872306c122e4f9e743a5a42",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:dd9e7063bf853ce2dffa657d1ef755cbb72a85b373ff612174edeeb4e707f670",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:e546184e138c022655252b1ca216e8722f2694b94336b93146024fc019bfc74e",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:ee45a394325e0ed201b8753ba7be603f7dfdc75c31ec0e1a45953f8b7977c048",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:f27a5d55245f3cfc3bb45b983391bc649cf7b8b7e87a3a7ccc6e443da053770d",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:f6a20b327a0660669cc1f2faae757777ca81d4aaf593c81f8cf61af26a48881a",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:faa0acc0a3d5d0095558aa4878253b77b8ee122855d431a36fca2a8d72e1fa75",
+      "stratum": "instr_control"
+    },
+    {
+      "digest": "sha256:00897374cab8023e460f75be3fd1f793b0ff33f3e539d430c5dbac507adabafc",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:02dafe8661abb4e1f6d12ef6246d157e5474c813485343f833947fc065302962",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:0d75de1987525c5d86dc210f157482c1d5e765b2fc39ae91dbef89dce8b3c576",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:18e9998aeaa63ef130d67834b443c3e02ad199594696405c39faea490a8828de",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:1f5b94dd19044fe04dcb1c4590ef4fed2ffbf957ffbdbea9171d9c4443f81cd3",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:1faaca726120fde85c83eac6964e06b6c8b64311ef7ce841548abe0dc726bd00",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:24446156097469949d7bcf2a9ff13e042c6e125494efdeb526d953b4840cddbb",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:2b5f8efdf802467857cfb6900d8e12a807882c6f08299785ebd1169b331162f8",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:31c75faa40b1d4d16686206c55e368c4eee67493d81410b5de8ed84e685082e4",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:332da993a20965a41262af5c58797e9d093a09b7bfe3280f81ebc32961a19585",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:3a05b0e101ec62ad1d3e43e5d56c3257bd52dc0ef6c2d6652f483243aa65f2fd",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:3ac50c2d44f55574c21f3a4af8dd197eead53dcd91913123e6020d0e0ea7ba43",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:3e030f10450378775a66f3ef48fd32e885d388c8b92e65cf4e5cfce45e8d510f",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:3e878956877c27ef2bdb5b48fddf5f2c004aef7d9f2fbc0fcee735f40ae69ae7",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:5b7c0a63127698af6236d1a826aacb405f040ab00facbf9f1268dbdc03e81fee",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:5d09beee59c63c0bbed06ff56f1456e5a44917cb0c057be24c6ed46e4c9bca80",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:61d158f921ea74cd7fab0f85ac44d27e9924b7d37d868fcfd6e2ce82952ef1a9",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:61eaf99909295434c3d5978ac065619ffb6149c0841a2310976523bd306fca10",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:763b58ec38e7832c14ca3d0e83a05a2c48828aad7366651b92db9fb6c5297de0",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:873dc6ee0d828dad90bb8256f381ce6a94b9a0178187b6407179f8f8ba8ef075",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:8e14cdba25b6774835cf3c6635710521ec90e814bdb01255e2f97ed54391603b",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:974a029db83143568e3d011f74e59080b019ea99d838129bab7a1238c1a096f3",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:9bf892b8eebd57f0a254e021557437ddadfb91afcd3ec9a3f7d0c2f8e58e84a4",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:a4dac97cbfb2ee849e154c670f09e227bc0f3a99e1ac1061aae3b5f4b69b4da7",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:b3c8d619907ecab0220c0e8e3a7ebdfaa5f2ca4f217541597172352651bf7bd2",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:b549db99744f7bef33dbc5bad763f4c55e6df2bd3173fdbbb0a8ada1dc698fce",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:baa4732747cc60a7171f0883aabd07c2fd5ea2432f19037a75f0e91c06d9a2ca",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:baca2ed1f69856ad7e3246e24fc5501ead3de372d5857116334c71bdf192ece5",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:c6d63a31f095df9392a756c8d7a77c129474fad84f5213e2c4208313085f6f13",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:c82aecc86ce27f37f57b05cce713b85f081777a846d760e30bfec4a703dd8b52",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:c8f6991599fd72187715108ca2351137e75862187aa265cf879a03c97fc793ff",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:cbc6a5cd8817ba8dba8e6c6024c4e0eeb903ba1dd25b62034432ada1291f117a",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:df5cee7f9262932b7975228d6cff76e76b0bd5ad751eff5e816e13ace10815bd",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:e5e5be6acc22d9241806f1eb9991e49ee00725bb420a71710877fd63864aba20",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:e801851b753278091353c3bc56ab0ba3f3c2b7eb0eb29a38486e5b9ffc1ceaf7",
+      "stratum": "instr_fetch_instruction"
+    },
+    {
+      "digest": "sha256:fe5f9ec7e1b2cc95b1ef08f312ce6d06fcf7e893617a3e460d6afb6d3fda26c5",
+      "stratum": "instr_fetch_instruction"
+    }
+  ],
+  "snapshot": "2026-08"
+}

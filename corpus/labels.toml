@@ -187,7 +187,96 @@ vocabulary = [
   "env.read.secret",
   "instruction.exec_directive",
   "instruction.directs_outside_write",
+  "instruction.config_mutation",
+  "instruction.exfil",
+  "instruction.fetch_as_instruction",
 ]
+
+# ── T13's three terms, defined before the pass that uses them ─────────────────
+#
+# Unlike every term before them, these three ship a rule already. The governing
+# principle — labels land before rules — was not followed here, and this task
+# exists because of it: the rules were written at T5 from the threat model and
+# have carried no precision and no recall since. So the definitions below are
+# written against **the claim each signal's own documentation makes**, not
+# against what its regex happens to match. Measuring a rule against a definition
+# reverse-engineered from the rule is how a detector scores 1.0 and means
+# nothing.
+#
+# `instruction.config_mutation`
+#   The prose directs adding, editing, or installing something into an **agent
+#   configuration that outlives the session**: CLAUDE.md, AGENTS.md,
+#   settings.json, .mcp.json, or the registration of a hook, MCP server, or
+#   subagent.
+#
+#   Counted whether the directive addresses the agent or the reader. A SKILL.md
+#   is read by the agent, and "add this block to your settings.json" is a
+#   directive in either voice. Distinguishing them would need intent the text
+#   does not carry.
+#
+#   NOT the term: documentation *about* agent configuration that directs no
+#   edit — this repository's own docs are the negative fixture — and a skill
+#   writing its own config file inside its own bundle, which outlives nothing.
+#
+# `instruction.exfil`
+#   The prose directs **data of the user's** to a destination outside the user's
+#   machine. Both halves are required: something belonging to the user or their
+#   environment, and somewhere external it is going.
+#
+#   Deliberately not "malicious exfiltration". The shipped rationale says half
+#   of what this matches is legitimate — telemetry, backup, deploy, log shipping
+#   — and invariant 1 puts that judgement in `policy.toml`, not here. A skill
+#   that uploads a backup by design is a true positive with a benign note.
+#
+#   NOT the term: sending content the skill itself generated to an API the skill
+#   exists to call, where nothing of the user's crosses the boundary; and prose
+#   warning *against* exfiltration, which the shipped notes already predict.
+#
+# `instruction.fetch_as_instruction`
+#   The prose tells the agent to fetch content from a URL or remote location and
+#   then **treat that content as instructions to follow** — the indirect
+#   prompt-injection setup the signal's documentation describes.
+#
+#   The decision most likely to be argued with, so it is fixed here: **"download
+#   this script and run it" is NOT this term.** That is code fetched and
+#   executed, which `net.fetch_then_execute` and `instruction.exec_directive`
+#   already name. This term is about fetched text becoming *directives for the
+#   agent*, which is a different failure and the one the signal claims.
+#
+#   The rule's regex is broader than that claim and will fire on the execute
+#   case. That gap is the measurement, not a labelling error: if precision is
+#   poor because of it, the remedy is to narrow the rule or restate the signal,
+#   and both are decisions for phase 2 with the numbers in hand.
+#
+# ── The four strata drawn for them ────────────────────────────────────────────
+#
+# `scripts/draw_instruction_strata.py`, seed `skillmap-instruction-1`, into
+# `corpus/sample-instruction.json`. Already-labelled digests are excluded, so no
+# bundle appears in two denominators.
+#
+#   instr_config_mutation    40 of 178    the config-mutation shape
+#   instr_exfil              40 of 171    the exfil shape
+#   instr_fetch_instruction  36 of 36     a CENSUS. The population is too small
+#                                         to sample, so every bundle is read and
+#                                         the resulting precision is exact
+#                                         rather than an interval.
+#   instr_control            40 of 11890  trips none of the three shapes, drawn
+#                                         from probes 42x, 16x and 145x looser
+#                                         than the rules. A control drawn at
+#                                         random would be padded with bundles
+#                                         that were never at risk.
+#
+# **All four strata are labelled for all three terms**, and scored for all
+# three. A bundle drawn for `exfil` whose prose also directs a config edit is a
+# `config_mutation` datapoint, and if the rule stayed silent it is a *miss* —
+# which is where recall comes from. The denominator is therefore enriched for
+# these three shapes and is a real denominator, not a complete one.
+#
+# The terms are NOT in `terms_labelled` and these strata are NOT in
+# `strata_scored`. `corpus::run` scores `terms_labelled` against `capabilities`,
+# so an instruction term there scores 0 recall forever, and scoring a stratum
+# read for instruction signals against the eight capability terms is what moved
+# published precision 113/113 to 113/119 during T11.
 
 # ── T11's term, defined before anything is labelled ───────────────────────────
 #
@@ -3095,3 +3184,62 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Code fences invoke the bundle's own commands and local paths only. Nothing writes to, copies into, or makes executable a path outside the bundle, in any markdown file in the bundle."
+
+# ── T13: instr_fetch_instruction ──────────────────────────────────────────────
+#
+# A CENSUS, not a sample: 36 bundles is the whole population the probe found, so
+# every one is read and the resulting precision is exact.
+#
+# **Seven of the 36 are duplicate prose.** Five groups share a byte-identical
+# SKILL.md, so the census covers 36 bundles and 29 distinct texts. That is a
+# property of the population rather than of the draw - a rare shape is where
+# republished copies of one skill concentrate - and it means the interval on any
+# rate computed here is optimistic. Both counts are reported.
+
+[[label]]
+digest = "sha256:3e878956877c27ef2bdb5b48fddf5f2c004aef7d9f2fbc0fcee735f40ae69ae7"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:18"]
+note = "Points the agent at a remote document and tells it to fetch that document and follow what it says. The operative instructions live off-bundle and can change after any review. Textbook shape for this term."
+
+[[label]]
+digest = "sha256:3e030f10450378775a66f3ef48fd32e885d388c8b92e65cf4e5cfce45e8d510f"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:64"]
+note = "A registry client that downloads another skill into a temp directory and then directs the agent to read the fetched SKILL.md and follow its instructions. The fetched text becomes the agent instruction set, which is exactly the claim this term makes."
+
+[[label]]
+digest = "sha256:baca2ed1f69856ad7e3246e24fc5501ead3de372d5857116334c71bdf192ece5"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:64"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, and counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:baa4732747cc60a7171f0883aabd07c2fd5ea2432f19037a75f0e91c06d9a2ca"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Malware-analysis skill for legacy spreadsheet macros. The matching phrase describes what the analysed sample does - download-and-run primitives to look for - and directs the agent to do none of it. The predicted describes-rather-than-instructs class, which the shipped rule notes already name."
+
+[[label]]
+digest = "sha256:c82aecc86ce27f37f57b05cce713b85f081777a846d760e30bfec4a703dd8b52"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Terminal-simulator prompt skill. It defines a convention for the current conversation - text inside braces is meant as instruction rather than as a command to run - and fetches nothing at all. A distinct artifact class from the describes-rather-than-instructs one: the phrasing matches while the remote half of the shape is absent."
+
+[[label]]
+digest = "sha256:5d09beee59c63c0bbed06ff56f1456e5a44917cb0c057be24c6ed46e4c9bca80"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:82"]
+note = "Skill-security scanner. It directs the reader to copy a policy block into AGENTS.md, which is a real config mutation and outlives the skill. Its fetch-shaped phrases are a table of dangerous patterns to detect, so this bundle is a positive for one term and the describes-rather-than-instructs class for another, in the same file."

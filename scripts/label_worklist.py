@@ -202,7 +202,14 @@ def emit(selection: dict, code_only: bool = False, views: list = None, skill_hea
     print("=" * 78)
     print(f"DIGEST   {digest}")
     print(f"STRATUM  {selection['stratum']}")
-    print(f"ORIGIN   {selection['repo']} @ {selection['commit'][:12]} :: {selection['bundle_root']}")
+    # Absent on every sample drawn after the identifying fields were stripped.
+    # The origin is a convenience for a labeller, never an input to a label, so
+    # a sample without it is read exactly the same way.
+    if "repo" in selection:
+        print(
+            f"ORIGIN   {selection['repo']} @ {selection['commit'][:12]} "
+            f":: {selection['bundle_root']}"
+        )
     print("=" * 78)
 
     if not root.is_dir():
@@ -329,8 +336,13 @@ def main() -> int:
         chosen = chosen[: args.limit]
 
     if args.list:
+        # `repo` is absent from every sample drawn after the identifying fields
+        # were stripped, which is most of them. A listing that crashes on the
+        # samples in current use is worse than one that prints a digest and a
+        # stratum, which is all this mode is for.
         for selection in chosen:
-            print(f"{selection['digest']}  {selection['stratum']:<18} {selection['repo']}")
+            origin = selection.get("repo", "")
+            print(f"{selection['digest']}  {selection['stratum']:<24} {origin}".rstrip())
         return 0
 
     for selection in chosen:
