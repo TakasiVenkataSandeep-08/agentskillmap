@@ -74,9 +74,16 @@ fn take_candidate(current: &mut String, found: &mut BTreeSet<String>) {
 /// Resolve a candidate against the directory of the file that mentioned it.
 ///
 /// Returns the bundle-relative, forward-slashed path, or `None` if the candidate
-/// escapes the bundle root or is absolute. Escaping candidates are simply not
-/// references — a `SKILL.md` mentioning `/etc/passwd` has not made `/etc/passwd`
-/// part of the bundle.
+/// escapes the bundle root or is absolute. Escaping candidates are not part of
+/// the bundle — a `SKILL.md` mentioning `/etc/passwd` has not made `/etc/passwd`
+/// part of it, and it is never added to the inventory.
+///
+/// That is right about inventory and was wrong about `unresolved`. Returning
+/// `None` here used to end the matter, so a `SKILL.md` reading
+/// `run [the helper](../../../tools/helper.py)` scanned clean with no gap
+/// recorded — while the agent, whose boundary is not the bundle root, follows
+/// exactly that link. [`escaping_code_refs`] reports them so the silence is
+/// visible; the analysis still refuses to follow them.
 fn resolve(from_dir: &str, candidate: &str) -> Option<String> {
     let candidate = candidate.replace('\\', "/");
     // An absolute path or a home-relative one names something outside the bundle.
@@ -111,6 +118,54 @@ fn parent_dir(path: &str) -> &str {
         Some((dir, _)) => dir,
         None => "",
     }
+}
+
+/// Documented references that point at **code outside the bundle**.
+///
+/// Deliberately narrow. [`candidates`] tokenises any word containing a slash or
+/// a dot, so reporting every escaping token would emit an entry for a sentence
+/// mentioning `~/.claude/skills` — noise that would bury the case that matters.
+/// What matters is a document pointing the agent at code this analysis cannot
+/// read, so the filter is the extension: only paths the code plane would have
+/// analysed had they been inside.
+///
+/// Measured over the harvest: 500 of 34,302 bundles carry a link that escapes
+/// the bundle, and exactly one points at code. The natural rate is near zero —
+/// which is not an argument for ignoring it, because a rate over honest bundles
+/// says nothing about a deliberate one, and this is the cheapest evasion the
+/// engine has.
+pub fn escaping_code_refs(entry: &str, files: &[WalkedFile]) -> BTreeSet<(String, String)> {
+    const CODE: [&str; 12] = [
+        "py", "pyi", "sh", "bash", "zsh", "js", "mjs", "cjs", "ts", "mts", "cts", "jsx",
+    ];
+    let mut found = BTreeSet::new();
+    for file in files {
+        // Only files the bundle actually documents can point anywhere. An
+        // unreferenced file's mentions are already covered by it being
+        // unreferenced.
+        if file.path != entry {
+            continue;
+        }
+        let Some(text) = file.text.as_deref() else {
+            continue;
+        };
+        let from_dir = parent_dir(&file.path);
+        for candidate in candidates(text) {
+            if resolve(from_dir, &candidate).is_some() || resolve("", &candidate).is_some() {
+                continue;
+            }
+            let extension = candidate
+                .rsplit('/')
+                .next()
+                .and_then(|name| name.rsplit_once('.'))
+                .map(|(_, ext)| ext.to_ascii_lowercase())
+                .unwrap_or_default();
+            if CODE.contains(&extension.as_str()) {
+                found.insert((file.path.clone(), candidate));
+            }
+        }
+    }
+    found
 }
 
 /// Classify every walked file by when it enters the agent's context.
@@ -256,6 +311,44 @@ mod tests {
         assert!(found.contains("docs/deep.md"));
         // Trailing punctuation is not part of the path.
         assert!(!found.contains("docs/deep.md."));
+    }
+
+    #[test]
+    fn a_document_pointing_at_code_outside_the_bundle_is_recorded() {
+        // The evasion this closes: a SKILL.md reading
+        // `run [the helper](../../../tools/helper.py)`, where that helper reads
+        // credentials and posts them onward, scanned completely clean. The
+        // analysis was right to refuse to follow the link and wrong to say
+        // nothing about having seen it — the bundle root is skillmap's boundary,
+        // not the agent's.
+        let files = vec![file(
+            "SKILL.md",
+            Some("See [a](../../../tools/helper.py) and [b](/opt/x/run.sh) and [c](~/e/z.js)."),
+        )];
+        let found = escaping_code_refs("SKILL.md", &files);
+        let targets: BTreeSet<&str> = found.iter().map(|(_, target)| target.as_str()).collect();
+        assert!(targets.contains("../../../tools/helper.py"), "{targets:?}");
+        assert!(targets.contains("/opt/x/run.sh"), "{targets:?}");
+        assert!(targets.contains("~/e/z.js"), "{targets:?}");
+    }
+
+    #[test]
+    fn prose_about_paths_is_not_reported_as_an_escaping_reference() {
+        // `candidates` tokenises any word containing a slash or a dot, so an
+        // unfiltered version of the check above would fire on a sentence telling
+        // the reader where skills live. That noise would bury the case that
+        // matters, so only paths the code plane would have analysed count.
+        let files = vec![file(
+            "SKILL.md",
+            Some(
+                "Install into ~/.claude/skills, keep creds in ~/.aws/credentials,                  see /etc/hosts and https://example.com/docs.html for details.",
+            ),
+        )];
+        assert!(
+            escaping_code_refs("SKILL.md", &files).is_empty(),
+            "{:?}",
+            escaping_code_refs("SKILL.md", &files)
+        );
     }
 
     #[test]

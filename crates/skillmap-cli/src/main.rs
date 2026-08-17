@@ -184,12 +184,30 @@ fn run() -> Result<u8, String> {
     // element later. And a session-start check is a user-scope check by
     // definition — the project scope depends on which directory the agent
     // happened to open — so that is the default here rather than the global one.
+    // `hook run` is the one path that must never return non-zero, and the guard
+    // has to sit here rather than inside `run_hook`: argument parsing resolves
+    // the home directory for `--scope user`, so an unset HOME failed with exit 4
+    // before `run_hook` was ever called. The promise was written and then not
+    // kept, which a test asserting only the escalation path did not notice.
+    //
+    // A hook that can fail a session gets disabled, and then the drift it exists
+    // to catch goes unwatched. Whatever went wrong, it is reported on stderr and
+    // the session continues.
+    let hook_run = command == "hook" && argv.get(1).map(String::as_str) == Some("run");
+
     let args = if command == "hook" {
         let mut flags: Vec<String> = argv.get(2..).unwrap_or_default().to_vec();
         if !flags.iter().any(|flag| flag == "--scope") {
             flags.splice(0..0, ["--scope".to_owned(), "user".to_owned()]);
         }
-        parse_args(&flags)?
+        match parse_args(&flags) {
+            Ok(args) => args,
+            Err(message) if hook_run => {
+                eprintln!("skillmap: {message}");
+                return Ok(0);
+            }
+            Err(message) => return Err(message),
+        }
     } else {
         parse_args(argv.get(1..).unwrap_or_default())?
     };
@@ -199,7 +217,13 @@ fn run() -> Result<u8, String> {
         "ci" => check(&args),
         "scan" => emit_manifests(&args).map(|()| 0),
         "rules" => list_rules(&args).map(|()| 0),
-        "hook" => run_hook(&argv, &args),
+        "hook" => match run_hook(&argv, &args) {
+            Err(message) if hook_run => {
+                eprintln!("skillmap: {message}");
+                Ok(0)
+            }
+            other => other,
+        },
         other => Err(format!("unknown subcommand `{other}`\n\n{USAGE}")),
     }
 }

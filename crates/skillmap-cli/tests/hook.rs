@@ -198,3 +198,38 @@ fn an_unknown_hook_action_is_refused_rather_than_guessed() {
     let output = skillmap(&home, &["hook", "enable"]);
     assert_eq!(output.status.code(), Some(4));
 }
+
+#[test]
+fn hook_run_exits_zero_even_when_it_cannot_run_at_all() {
+    // The documented guarantee is absolute — "hook run always exits 0, whatever
+    // it finds" — and it was not kept. Argument parsing resolves the home
+    // directory for `--scope user`, so an unset HOME failed with exit 4 before
+    // the check was reached. The original test covered only the escalation path,
+    // so it passed while the promise was false.
+    //
+    // A hook that can fail a session gets disabled, and then the drift it exists
+    // to catch goes unwatched.
+    let output = Command::new(env!("CARGO_BIN_EXE_skillmap"))
+        .args(["hook", "run"])
+        .current_dir(repo_root())
+        .env_remove("HOME")
+        .env_remove("USERPROFILE")
+        .output()
+        .unwrap();
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "hook run must never fail a session, even misconfigured: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // The other actions are ordinary commands and still report a config error.
+    let status = Command::new(env!("CARGO_BIN_EXE_skillmap"))
+        .args(["hook", "status"])
+        .current_dir(repo_root())
+        .env_remove("HOME")
+        .env_remove("USERPROFILE")
+        .output()
+        .unwrap();
+    assert_eq!(status.status.code(), Some(4));
+}

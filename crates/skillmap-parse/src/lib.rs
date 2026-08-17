@@ -126,6 +126,24 @@ pub fn parse_bundle(
     });
 
     let phases = refgraph::classify(ENTRY_FILE, &walk.files);
+
+    // A documented pointer at code outside the bundle is something this analysis
+    // cannot follow, and invariant 3 says that is recorded rather than dropped.
+    // The bundle root is skillmap's boundary; it is not the agent's, and the
+    // agent follows the link. Refusing to read the file is right — saying
+    // nothing about having seen it was not.
+    for (file, target) in refgraph::escaping_code_refs(ENTRY_FILE, &walk.files) {
+        unresolved.push(Unresolved {
+            reason: UnresolvedReason::SymlinkEscape,
+            file,
+            start_byte: None,
+            end_byte: None,
+            start_line: None,
+            note: Some(format!(
+                "documents `{target}`, which resolves outside the bundle; not analyzed"
+            )),
+        });
+    }
     let digest_input: Vec<(String, skillmap_core::Digest)> = walk
         .files
         .iter()
