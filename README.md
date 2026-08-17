@@ -139,7 +139,7 @@ Everything else in this repository exists to make that line trustworthy.
 ### Using it
 
 ```bash
-npm install --save-dev skillmap
+npm install --save-dev agentskillmap
 ```
 
 ```bash
@@ -186,9 +186,9 @@ that gates other people's repositories and not its own is making an untested cla
 
 | Channel | Command |
 |---|---|
-| npm | `npm install --save-dev skillmap` |
+| npm | `npm install --save-dev agentskillmap` — the package is `agentskillmap`, the command it installs is `skillmap`; not published yet |
 | GitHub Action | `uses: TakasiVenkataSandeep-08/agentskillmap@v1` — see [`action.yml`](action.yml) |
-| Homebrew | `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` — formula ships with each release; the tap repo does not exist yet |
+| Homebrew | `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` — **live**; formula regenerated with fresh checksums on every release |
 | Source | `cargo install --git https://github.com/TakasiVenkataSandeep-08/agentskillmap skillmap-cli` |
 
 **No `postinstall` script anywhere.** The npm package holds a Node shim and no binary; each

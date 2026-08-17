@@ -164,9 +164,16 @@ the checksums that were actually published, never hand-edited — a stale `sha25
 fails at install with a checksum mismatch, which reads to a user exactly like a
 compromised download.
 
-**The tap repository does not exist yet.** Until it does, the formula is attached
-to each GitHub release and can be installed from a local file. Recorded in
-`docs/00-tasks.md`'s Known gaps.
+**The tap is live**, at `TakasiVenkataSandeep-08/homebrew-agentskillmap`, carrying
+`Formula/skillmap.rb`. Verified against v0.5.0: the four archive checksums in the
+published formula match the release's `SHA256SUMS`, and the install was run.
+
+**Updating it is manual.** The formula is regenerated with the new checksums on
+every release and attached as an asset, but nothing copies it into the tap — so a
+tag whose formula is not carried across leaves `brew` installing the previous
+version. The tap's own README says the file is generated and must not be edited
+by hand, because editing it is how a checksum silently stops matching the bytes
+it names.
 
 ### From source
 

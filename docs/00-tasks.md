@@ -1149,10 +1149,13 @@ front of; each is a thing this repository currently claims or implies but does n
   framing, escalation semantics, and why unknown capability terms round-trip.
 - **~~The rules tree is not embedded in the binary.~~** Closed by T9. `--rules` survives as an
   override for developing against an edited tree.
-- **The Homebrew tap repository does not exist.** `scripts/homebrew-formula.sh` generates a
-  correct formula from the published checksums and the release workflow attaches it, but
-  `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` resolves through `TakasiVenkataSandeep-08/homebrew-agentskillmap`,
-  which has to be created before that command works.
+- **~~The Homebrew tap repository does not exist.~~** Created and populated;
+  `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` is verified working against
+  v0.5.0. `TakasiVenkataSandeep-08/homebrew-agentskillmap` carries `Formula/skillmap.rb`,
+  whose four archive checksums were checked against the release's `SHA256SUMS` before it was
+  published. **The upkeep is manual and worth knowing:** the formula is regenerated with fresh
+  checksums on every release, so each new tag means copying the new `skillmap.rb` asset into
+  the tap. Nothing automates that yet.
 - **`cargo install skillmap-cli` from crates.io does not work, and that is a decision rather
   than a gap.** Cargo packages only files beneath a package's own directory, and
   `skillmap-rules` embeds `rules/` and `queries/` from the workspace root. Both fixes are worse
@@ -1165,8 +1168,10 @@ front of; each is a thing this repository currently claims or implies but does n
   platform packages plus a wrapper with correct `optionalDependencies` and no `postinstall`,
   and a Homebrew formula with four real checksums that **exits non-zero rather than emitting an
   empty `sha256`** when one is missing — the failure mode that shipped once already.
-  **Still needed, and none of it is code:** tag a release, publish the npm packages, and create
-  the `TakasiVenkataSandeep-08/homebrew-agentskillmap` tap. Those need credentials and an account, not engineering.
+  **Mostly done now, and none of it was code.** v0.5.0 released with binaries for all five
+  targets, provenance attestation, and a Homebrew tap that installs. What remains is the npm
+  half: the `@agentskillmap` scope is unclaimed and `NPM_TOKEN` is unset, so the publish step
+  skips with a notice on every release. That needs an account, not engineering.
 - **CI syntax-checks the release scripts but does not lint them.** `bash -n` catches parse
   errors; shellcheck would catch more, including some of the class that produced T9's
   silent-failure bug. It is preinstalled on the runners and was left out only because it could
