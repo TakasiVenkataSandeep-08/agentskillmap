@@ -222,11 +222,25 @@ jobs:
       - name: Generate the Homebrew formula
         run: bash scripts/homebrew-formula.sh "${{ steps.version.outputs.version }}" release > release/skillmap.rb
 
+      # Re-runnable. `gh release create` errors when the release already exists,
+      # which made re-running this job impossible — and re-running this job is
+      # the recovery path when a later step fails, so the recovery was broken by
+      # the step that had already succeeded.
+      #
+      # The tap and the Action-tag steps were already safe to repeat. This one
+      # and npm were not, and both are fixed here rather than one.
       - name: Create GitHub release
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release/* --generate-notes
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "::notice::release $GITHUB_REF_NAME exists; replacing its assets rather than failing"
+            gh release upload "$GITHUB_REF_NAME" release/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release/* --generate-notes
+          fi
 
       # Without this the tap keeps serving the previous version: the formula is
       # regenerated with fresh checksums every release, and nothing copies it
@@ -335,7 +349,21 @@ jobs:
           # E404 during an EOTP failure — a confidently wrong diagnosis, which is
           # worse than none.
           publish() {
-            local log
+            local log name version
+            name="$(node -p "require('./$1/package.json').name")"
+            version="$(node -p "require('./$1/package.json').version")"
+
+            # npm forbids republishing a version, so a re-run after a partial
+            # publish would fail on the packages that already landed — the loop
+            # publishes platform packages one at a time and any of them can be
+            # the one that broke. Skipping what is already on the registry is
+            # what makes retrying this job safe, and retrying is the only
+            # recovery available when a publish fails halfway.
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "::notice::$name@$version is already on the registry; skipping"
+              return 0
+            fi
+
             log="$(mktemp)"
             if npm publish "$1" --access public --provenance 2>&1 | tee "$log"; then
               return 0
