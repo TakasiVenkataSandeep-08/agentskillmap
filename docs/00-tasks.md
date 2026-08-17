@@ -1153,9 +1153,10 @@ front of; each is a thing this repository currently claims or implies but does n
   `brew install TakasiVenkataSandeep-08/agentskillmap/skillmap` is verified working against
   v0.5.0. `TakasiVenkataSandeep-08/homebrew-agentskillmap` carries `Formula/skillmap.rb`,
   whose four archive checksums were checked against the release's `SHA256SUMS` before it was
-  published. **The upkeep is manual and worth knowing:** the formula is regenerated with fresh
-  checksums on every release, so each new tag means copying the new `skillmap.rb` asset into
-  the tap. Nothing automates that yet.
+  published. **The upkeep is automated now**, by a `publish` step that pushes the regenerated formula into
+  the tap. It needs `HOMEBREW_TAP_TOKEN` — a fine-grained PAT with `Contents: write` on the tap
+  repository, because `github.token` is scoped to this one — and skips with a notice when that
+  secret is absent rather than failing a release that otherwise shipped.
 - **`cargo install skillmap-cli` from crates.io does not work, and that is a decision rather
   than a gap.** Cargo packages only files beneath a package's own directory, and
   `skillmap-rules` embeds `rules/` and `queries/` from the workspace root. Both fixes are worse

@@ -168,12 +168,16 @@ compromised download.
 `Formula/skillmap.rb`. Verified against v0.5.0: the four archive checksums in the
 published formula match the release's `SHA256SUMS`, and the install was run.
 
-**Updating it is manual.** The formula is regenerated with the new checksums on
-every release and attached as an asset, but nothing copies it into the tap — so a
-tag whose formula is not carried across leaves `brew` installing the previous
-version. The tap's own README says the file is generated and must not be edited
-by hand, because editing it is how a checksum silently stops matching the bytes
-it names.
+**Updating it is automatic, and gated on a second credential.** The release
+workflow regenerates the formula from the checksums it just published and pushes
+it into the tap. That is a write to a *different* repository, so the workflow's
+own `github.token` cannot do it: it needs `HOMEBREW_TAP_TOKEN`, a fine-grained
+PAT with `Contents: write` on `homebrew-agentskillmap`. Absent, the step skips
+with a notice and the tap keeps serving the previous version — a release that
+shipped binaries is not marked failed for want of a convenience.
+
+The tap's own README says the file is generated and must not be edited by hand,
+because editing it is how a checksum silently stops matching the bytes it names.
 
 ### From source
 
