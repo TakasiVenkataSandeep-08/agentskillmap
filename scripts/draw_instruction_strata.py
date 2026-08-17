@@ -147,6 +147,26 @@ BROAD = [
 LABELLED_DIGEST = re.compile(r'digest = "sha256:([0-9a-f]+)"')
 
 
+def entry_file(entry):
+    """The bundle's entry document, whatever case its author used.
+
+    `(entry / "SKILL.md").is_file()` looks exact and is not: it is true for
+    `skill.md` on Windows and false for it on Linux, so the same script drew a
+    different population per platform and the seeded sample stopped being
+    reproducible off this machine. The corpus has 2354 bundles named `skill.md`,
+    4 named `Skill.md` and 2 named `SKILL.MD` — 6.9% of it — so the divergence
+    is large enough to change every rate computed from a draw.
+
+    Matching case-insensitively on purpose rather than by accident. The three
+    rules here are markdown rules and fire on any `.md` file, so these bundles
+    are genuinely in scope; what was wrong was letting the filesystem decide.
+    """
+    for name in sorted(p.name for p in entry.iterdir() if p.is_file()):
+        if name.lower() == "skill.md":
+            return entry / name
+    return None
+
+
 def already_labelled():
     """Digests carrying a label, so no bundle lands in two denominators."""
     if not LABELS.is_file():
@@ -157,6 +177,7 @@ def already_labelled():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="print counts, write nothing")
+    parser.add_argument("--force", action="store_true", help="overwrite a sample whose strata carry labels")
     args = parser.parse_args()
 
     if not RAW.is_dir():
@@ -169,8 +190,8 @@ def main():
     for entry in sorted(RAW.iterdir()):
         if not entry.is_dir() or entry.name in skip:
             continue
-        skill_md = entry / "SKILL.md"
-        if not skill_md.is_file():
+        skill_md = entry_file(entry)
+        if skill_md is None:
             continue
         try:
             text = skill_md.read_text(encoding="utf-8", errors="replace")
@@ -209,6 +230,21 @@ def main():
 
     if args.dry_run:
         return
+
+    # Re-running after labelling has started draws a DIFFERENT sample, because
+    # `already_labelled()` now excludes the bundles just labelled — the census
+    # went 36 to 26 the first time this was noticed. Overwriting the sample
+    # would orphan every label already recorded against it and silently change
+    # the denominators. The committed JSON is the record of what was drawn.
+    if OUT.is_file() and not args.force:
+        drawn = {s["stratum"] for s in json.loads(OUT.read_text(encoding="utf-8"))["selected"]}
+        labelled = LABELS.read_text(encoding="utf-8", errors="replace") if LABELS.is_file() else ""
+        if any(f'stratum = "{name}"' in labelled for name in drawn):
+            sys.exit(
+                f"{OUT.relative_to(REPO)} exists and its strata already carry labels.\n"
+                "Re-drawing now would produce a different sample and orphan them. "
+                "Pass --force only if that is genuinely what you want."
+            )
 
     OUT.write_text(
         json.dumps(

@@ -3243,3 +3243,75 @@ verdict = "labelled"
 capabilities = ["instruction.config_mutation"]
 evidence = ["SKILL.md:82"]
 note = "Skill-security scanner. It directs the reader to copy a policy block into AGENTS.md, which is a real config mutation and outlives the skill. Its fetch-shaped phrases are a table of dangerous patterns to detect, so this bundle is a positive for one term and the describes-rather-than-instructs class for another, in the same file."
+
+[[label]]
+digest = "sha256:0d75de1987525c5d86dc210f157482c1d5e765b2fc39ae91dbef89dce8b3c576"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:36"]
+note = "Avatar-minting service. Directs the agent to fetch a remote heartbeat document on a schedule and run it, and the fetched document in turn overwrites the skill own SKILL.md from a URL when a version changes. EDGE CASE for the config_mutation definition fixed before this pass: overwriting a skill definition under the home directory is arguably the most consequential configuration change here, and the definition names only agent config files, so it is recorded and not counted. Flagged for phase 2."
+
+[[label]]
+digest = "sha256:61d158f921ea74cd7fab0f85ac44d27e9924b7d37d868fcfd6e2ce82952ef1a9"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil", "instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:17", "SKILL.md:21"]
+note = "Preference-learning service. Directs the agent to send whole conversations to an external API, which is user data leaving by design and a benign true positive of the kind the shipped rationale predicts. Separately directs the agent to fetch a stored profile before responding and follow it, and the bundle own words call the result suitable for system prompt injection - benign in intent and structurally the shape this term names."
+
+[[label]]
+digest = "sha256:61eaf99909295434c3d5978ac065619ffb6149c0841a2310976523bd306fca10"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:19"]
+note = "Web-scraping wrapper. Directs the reader to add a hosted MCP server to their configuration, which is a registration that outlives the session and is squarely the term. Its fetch-shaped phrasing is about retrieving scraped dataset items, where nothing fetched becomes an instruction."
+
+[[label]]
+digest = "sha256:e5e5be6acc22d9241806f1eb9991e49ee00725bb420a71710877fd63864aba20"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:19"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:763b58ec38e7832c14ca3d0e83a05a2c48828aad7366651b92db9fb6c5297de0"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Skill-security review skill, and the sharpest instance of the describes-rather-than-instructs class in this stratum. Its checklist names all three shapes as things to look for - instructions modifying agent config files, any URL whose content is interpreted as instructions, scripts sending data to external URLs - so one bundle is a false positive for three terms at once. It even states the distinction the pattern tier cannot make: whether a pattern is performing injection or discussing it."
+
+[[label]]
+digest = "sha256:b549db99744f7bef33dbc5bad763f4c55e6df2bd3173fdbbb0a8ada1dc698fce"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:c6d63a31f095df9392a756c8d7a77c129474fad84f5213e2c4208313085f6f13"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil", "instruction.fetch_as_instruction"]
+evidence = ["heartbeat.md:32", "heartbeat.md:3"]
+note = "Anonymous posting service for agents. Directs the agent to overwrite its own skill document under the home directory from a remote URL whenever a version string changes, so the instructions it runs on later are whatever that URL serves. Also directs it to post observations drawn from private conversations with its owner to an external service - derived rather than verbatim, and the bundle carries its own do-not-identify-your-human guardrail, which is recorded because it shows the author knew what was crossing. Entry file is named skill.md in lowercase, which is how the case-sensitivity gap in the resolver was found."
+
+[[label]]
+digest = "sha256:18e9998aeaa63ef130d67834b443c3e02ad199594696405c39faea490a8828de"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Security-audit skill whose reference file is a catalogue of prompt-injection attack strings, quoted so a reviewer can recognise them. The quoted strings are what match - send the conversation history to an attacker URL, decode and follow a base64 blob - and the bundle directs the agent to do none of them. Describes-rather-than-instructs, in the form where the matched text is a verbatim attack sample."
+
+[[label]]
+digest = "sha256:df5cee7f9262932b7975228d6cff76e76b0bd5ad751eff5e816e13ace10815bd"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "The same skill-scanner body as another bundle in this stratum with different frontmatter, so a different digest and not caught by the byte-identical duplicate count. Same judgement: a checklist naming all three shapes as things to detect."
