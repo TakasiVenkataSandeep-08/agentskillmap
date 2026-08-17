@@ -502,7 +502,7 @@ checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
 
 [[package]]
 name = "skillmap-cli"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde_json",
  "skillmap-core",
@@ -516,7 +516,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-code"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde_json",
  "skillmap-core",
@@ -527,7 +527,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-core"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -537,7 +537,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-corpus"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -549,7 +549,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-diff"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -558,7 +558,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-eval"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -575,7 +575,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-instr"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "skillmap-core",
  "skillmap-rules",
@@ -585,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-parse"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "sha2",
  "skillmap-core",
@@ -594,7 +594,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-policy"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "skillmap-core",
@@ -604,14 +604,14 @@ dependencies = [
 
 [[package]]
 name = "skillmap-resolve"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "skillmap-core",
 ]
 
 [[package]]
 name = "skillmap-rules"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "skillmap-core",
@@ -626,7 +626,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-scan"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde_json",
  "skillmap-code",
@@ -640,7 +640,7 @@ dependencies = [
 
 [[package]]
 name = "skillmap-semantic"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "serde",
  "serde_json",
