@@ -145,7 +145,8 @@ npm install --save-dev agentskillmap
 ```bash
 skillmap lock    # record what the skills in this project can do today; commit it
 skillmap ci      # fail when that changes
-skillmap scan    # print the capability manifest as JSON
+skillmap scan                   # a canonical JSON array of manifests
+skillmap scan --format human    # a few lines per skill, for reading
 skillmap rules   # list what this build can detect
 ```
 

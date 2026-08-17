@@ -85,6 +85,20 @@ struct Args {
     /// and a default chosen by the binary would drift under readers who never
     /// typed it.
     advisory_model: Option<String>,
+    /// How `scan` renders. JSON is the default because a pipeline is the
+    /// contract; the human form exists because a person reading 103 lines of
+    /// JSON for two findings is not being served by it.
+    format: Format,
+}
+
+/// How `scan` renders its manifests.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Format {
+    /// A canonical JSON array. The default: machine-readable at every count.
+    Json,
+    /// A few lines a person can read. Not a parseable format and not intended
+    /// as one.
+    Human,
 }
 
 const USAGE: &str = "\
@@ -93,7 +107,7 @@ skillmap — a capability differ for AI agent skills
 USAGE:
     skillmap lock  [OPTIONS]   write skillmap.lock from the skills in a project
     skillmap ci    [OPTIONS]   fail if capabilities changed, or policy forbids them
-    skillmap scan  [OPTIONS]   print the capability manifest for each skill, as JSON
+    skillmap scan  [OPTIONS]   print what each skill can do, as JSON or for a person
     skillmap rules             list the rules this binary carries
     skillmap version           print the version
 
@@ -106,6 +120,10 @@ OPTIONS:
                        state and must not be committed.
                        A CI runner has no ~/.claude/skills, so `--scope user`
                        there finds nothing. That is a local check, not a gate.
+    --format <WHICH>   json | human                  [default: json]
+                       `json` is a canonical ARRAY of manifests — valid at any
+                       count, including one and zero. `human` is a few lines per
+                       skill for reading, not for parsing.
     --project <DIR>    project root to scan          [default: .]
     --lock <FILE>      lockfile path                 [default: <project>/skillmap.lock,
                        or ~/.skillmap/user.lock under --scope user]
@@ -162,6 +180,18 @@ fn run() -> Result<u8, String> {
     }
 }
 
+/// A path as the user should read it: forward slashes, always.
+///
+/// `Path::display` uses the platform separator, so a path built by joining a
+/// forward-slash argument with a constant came out as
+/// `…/scratchpad/ux/proj\skillmap.lock` — one backslash in an otherwise
+/// forward-slash path, which reads as corruption rather than as Windows. The
+/// manifest already normalises paths for exactly this reason (invariant 2); this
+/// is the same courtesy for messages, which are not byte-compared but are read.
+fn shown(path: &Path) -> String {
+    path.display().to_string().replace('\\', "/")
+}
+
 /// Parse flags. Every flag takes a value; an unknown flag is an error rather than
 /// a warning, because a typo'd `--polcy` that silently used the default would
 /// mean CI passed against a policy nobody wrote.
@@ -172,6 +202,7 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
     let mut policy: Option<PathBuf> = None;
     let mut advisory_model: Option<String> = None;
     let mut scope = Scope::Project;
+    let mut format = Format::Json;
 
     let mut rest = flags.iter();
     while let Some(flag) = rest.next() {
@@ -181,6 +212,19 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
             "--lock" => &mut lock,
             "--policy" => &mut policy,
             // Not a PathBuf, so it cannot share the slot machinery below.
+            "--format" => {
+                let Some(value) = rest.next() else {
+                    return Err("--format needs a value: json or human".to_owned());
+                };
+                format = match value.as_str() {
+                    "json" => Format::Json,
+                    "human" => Format::Human,
+                    other => {
+                        return Err(format!("unknown format `{other}` — expected json or human"))
+                    }
+                };
+                continue;
+            }
             "--scope" => {
                 let Some(value) = rest.next() else {
                     return Err(format!("`{flag}` needs `project` or `user`"));
@@ -237,6 +281,7 @@ fn parse_args(flags: &[String]) -> Result<Args, String> {
         lock: lock.unwrap_or(default_lock),
         policy: policy.unwrap_or(default_policy),
         advisory_model,
+        format,
         scope,
         base,
         project,
@@ -286,7 +331,7 @@ fn rules(args: &Args) -> Result<RuleSet, String> {
                 "no rules loaded from {}/rules — every bundle would scan clean, \
                  which would be a lie. Drop --rules to use the ones built into \
                  this binary.",
-                dir.display()
+                shown(dir)
             ),
             None => "this binary carries no rules, which should be impossible — \
                      the build refuses to produce one. Please report it."
@@ -317,17 +362,107 @@ fn list_rules(args: &Args) -> Result<(), String> {
 
 /// `skillmap scan` — the manifest, canonically serialized.
 ///
-/// One JSON document per bundle, each rendered by the same canonicalizer the
-/// rest of the tool uses, so what this prints is byte-identical to what any other
-/// consumer would produce from the same bytes (invariant 2).
+/// A JSON **array** of manifests, or a short human summary.
+///
+/// The array is not cosmetic. This printed one object per bundle, concatenated,
+/// which is valid JSON for one skill and two top-level objects for two — so
+/// `skillmap scan | jq .` failed on every project with more than one skill,
+/// which is most of them.
 fn emit_manifests(args: &Args) -> Result<(), String> {
-    for manifest in scan(args)? {
-        let json = manifest
-            .to_canonical_json()
-            .map_err(|error| format!("cannot serialize the manifest: {error}"))?;
-        print!("{json}");
+    let manifests = scan(args)?;
+    match args.format {
+        Format::Json => {
+            let json = Manifest::many_to_canonical_json(&manifests)
+                .map_err(|error| format!("cannot serialize the manifests: {error}"))?;
+            print!("{json}");
+        }
+        Format::Human => print!("{}", render_human(&manifests)),
     }
     Ok(())
+}
+
+/// What a person needs from a manifest, in a few lines.
+///
+/// The JSON is right for a pipeline and wrong for a reader: one small skill with
+/// two findings renders 103 lines of it. This is deliberately not a second
+/// serialization format — nothing parses it, nothing round-trips through it, and
+/// it says so by omitting every field a machine would want and keeping the ones
+/// a person reads.
+///
+/// Unresolved entries are summarised rather than listed, and never omitted. A
+/// short report that hides them would say "clean" where the tool means "clean,
+/// and I could not read four things" — which is the distinction invariant 3
+/// exists to preserve.
+fn render_human(manifests: &[Manifest]) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::new();
+    if manifests.is_empty() {
+        out.push_str("no skills found\n");
+        return out;
+    }
+    for manifest in manifests {
+        // The root repeats the name for a top-level skill, which is the common
+        // case; print it only when it adds something.
+        if manifest.target.root == manifest.target.name {
+            let _ = writeln!(out, "{}", manifest.target.name);
+        } else {
+            let _ = writeln!(out, "{}  ({})", manifest.target.name, manifest.target.root);
+        }
+        if manifest.capabilities.is_empty() && manifest.instructions.is_empty() {
+            let _ = writeln!(out, "    nothing detected");
+        }
+        for capability in &manifest.capabilities {
+            let evidence = capability.evidence.first();
+            let (file, line) = evidence.map_or(("?", 0), |first| {
+                (first.file.as_str(), first.start_line.get())
+            });
+            let detail = capability
+                .detail
+                .as_ref()
+                .map(|detail| {
+                    let mut parts: Vec<String> = detail.paths.clone().unwrap_or_default();
+                    parts.extend(detail.hosts.clone().unwrap_or_default());
+                    parts.join(", ")
+                })
+                .unwrap_or_default();
+            let _ = writeln!(
+                out,
+                "    {:<26} {}:{}  [{}]{}",
+                capability.capability.as_str(),
+                file,
+                line,
+                // The wire name, not a friendlier synonym. A reader who sees
+                // "runs" here and "observed" in the JSON has been given two
+                // vocabularies for one field.
+                capability.reachability.as_str(),
+                if detail.is_empty() {
+                    String::new()
+                } else {
+                    format!("  {detail}")
+                }
+            );
+        }
+        for instruction in &manifest.instructions {
+            let (file, line) = instruction.evidence.first().map_or(("?", 0), |first| {
+                (first.file.as_str(), first.start_line.get())
+            });
+            let _ = writeln!(
+                out,
+                "    {:<26} {}:{}  [prose]",
+                instruction.signal.as_str(),
+                file,
+                line
+            );
+        }
+        if !manifest.unresolved.is_empty() {
+            let _ = writeln!(
+                out,
+                "    {} thing(s) the analysis could not resolve — see --format json",
+                manifest.unresolved.len()
+            );
+        }
+    }
+    out
 }
 
 /// Build the semantic pass's provider, if `--advisory` asked for one.
@@ -394,14 +529,14 @@ fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
     eprintln!(
         "skillmap: {} bundle(s) under {} ({:?} scope)",
         discovery.bundles.len(),
-        args.base.display(),
+        shown(&args.base),
         args.scope
     );
 
     for skipped in &discovery.skipped {
         eprintln!(
             "skillmap: skipped {} — {}",
-            skipped.path.display(),
+            shown(&skipped.path),
             skipped.reason
         );
     }
@@ -421,14 +556,14 @@ fn scan(args: &Args) -> Result<Vec<Manifest>, String> {
             ),
             None => skillmap_scan::analyze(&path, &rules),
         }
-        .map_err(|error| format!("cannot analyze {}: {error}", path.display()))?;
+        .map_err(|error| format!("cannot analyze {}: {error}", shown(&path)))?;
         manifests.push(manifest);
     }
 
     if manifests.is_empty() && discovery.skipped.is_empty() {
         eprintln!(
             "skillmap: no skills found under {}/.claude/skills",
-            args.project.display()
+            shown(&args.project)
         );
     }
     Ok(manifests)
@@ -445,15 +580,15 @@ fn write_lock(args: &Args) -> Result<(), String> {
     if let Some(parent) = args.lock.parent() {
         if !parent.as_os_str().is_empty() {
             std::fs::create_dir_all(parent)
-                .map_err(|error| format!("cannot create {}: {error}", parent.display()))?;
+                .map_err(|error| format!("cannot create {}: {error}", shown(parent)))?;
         }
     }
     std::fs::write(&args.lock, json)
-        .map_err(|error| format!("cannot write {}: {error}", args.lock.display()))?;
+        .map_err(|error| format!("cannot write {}: {error}", shown(&args.lock)))?;
 
     println!(
         "wrote {} — {} bundle(s)",
-        args.lock.display(),
+        shown(&args.lock),
         lock.bundles.len()
     );
     Ok(())
@@ -476,7 +611,7 @@ fn check(args: &Args) -> Result<u8, String> {
             eprintln!(
                 "skillmap: no {} — checking escalation against the lock only, \
                  nothing against an allowlist",
-                args.policy.display()
+                shown(&args.policy)
             );
             Vec::new()
         }
@@ -521,14 +656,14 @@ fn read_lock(path: &Path) -> Result<skillmap_diff::Lock, String> {
         Ok(text) => skillmap_diff::Lock::from_json(&text).map_err(|error| {
             format!(
                 "{} is not a lockfile this build can read: {error}",
-                path.display()
+                shown(path)
             )
         }),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(format!(
             "{} does not exist. Run `skillmap lock` and commit it — the check \
              compares against it, and without one there is nothing to compare to.",
-            path.display()
+            shown(path)
         )),
-        Err(error) => Err(format!("cannot read {}: {error}", path.display())),
+        Err(error) => Err(format!("cannot read {}: {error}", shown(path))),
     }
 }

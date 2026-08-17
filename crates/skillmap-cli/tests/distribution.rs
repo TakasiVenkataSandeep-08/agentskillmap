@@ -81,8 +81,18 @@ fn scan_emits_canonical_json() {
 
     assert!(json.ends_with('\n'), "trailing newline");
     assert!(!json.contains('\r'), "LF only");
-    assert!(json.starts_with("{\n  \""), "two-space indent");
-    let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+    // An ARRAY, not a bare object. `scan` used to print one object per bundle,
+    // concatenated, which parses for one skill and is two top-level objects for
+    // two — so the only machine-readable output the tool has stopped being
+    // machine-readable at exactly the point a project became real.
+    assert!(
+        json.starts_with("[\n  {\n"),
+        "an array, two-space indent: {json}"
+    );
+    let document: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let manifests = document.as_array().expect("scan emits an array");
+    assert_eq!(manifests.len(), 1, "this fixture has one skill");
+    let parsed = manifests.first().expect("one manifest");
     // Compared against the constant rather than a literal. This carried "1.0.0"
     // and had to be edited when the taxonomy shrank — which is a test failing
     // because it duplicated a value, not because anything was wrong. The point

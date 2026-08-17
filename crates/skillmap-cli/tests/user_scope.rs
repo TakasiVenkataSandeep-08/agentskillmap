@@ -227,3 +227,102 @@ fn an_unknown_scope_is_refused_rather_than_guessed() {
         stderr(&output)
     );
 }
+
+#[test]
+fn scan_emits_valid_json_at_every_count() {
+    // `scan` printed one object per bundle, concatenated. Valid JSON for one
+    // skill; two top-level objects for two, which every JSON parser rejects — so
+    // `skillmap scan | jq .` failed on any project with more than one skill,
+    // which is most of them. The only machine-readable output the tool has
+    // stopped being machine-readable exactly when a project became real.
+    //
+    // An array is valid at one, at two, and at zero. Zero matters: a caller
+    // iterating the output must get an empty list rather than a parse error.
+    let home = fake_home("json-shape");
+    for args in [
+        vec!["scan", "--scope", "user"],
+        vec!["scan"], // this repository's own two skills
+    ] {
+        let output = skillmap_with_home(&home, &args);
+        assert!(output.status.success(), "{}", stderr(&output));
+        let json = String::from_utf8_lossy(&output.stdout);
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap_or_else(|error| {
+            panic!("`skillmap {args:?}` is not valid JSON: {error}\n{json}")
+        });
+        assert!(
+            parsed.is_array(),
+            "`skillmap {args:?}` must emit an array, got {parsed:#}"
+        );
+    }
+
+    let empty = std::env::temp_dir().join("skillmap-scan-empty");
+    let _ = std::fs::remove_dir_all(&empty);
+    std::fs::create_dir_all(&empty).unwrap();
+    let output = skillmap_with_home(&empty, &["scan", "--scope", "user"]);
+    let json = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value = serde_json::from_str(&json)
+        .unwrap_or_else(|error| panic!("empty scan is not valid JSON: {error}\n{json}"));
+    assert_eq!(
+        parsed.as_array().map(Vec::len),
+        Some(0),
+        "an empty scan must be an empty array, not a parse error"
+    );
+}
+
+#[test]
+fn the_human_format_is_short_and_says_what_it_hides() {
+    // The JSON is right for a pipeline and wrong for a reader: one small skill
+    // with two findings renders about a hundred lines of it. This asserts the
+    // summary stays a summary, and that it never silently drops the unresolved
+    // count — a short report that hides those would read as "clean" where the
+    // tool means "clean, and I could not read four things".
+    let home = fake_home("human");
+    let output = skillmap_with_home(&home, &["scan", "--scope", "user", "--format", "human"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    let text = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        text.lines().count() < 20,
+        "the human format is meant to be read at a glance:\n{text}"
+    );
+    assert!(
+        text.contains("installed-skill"),
+        "it must name the skill:\n{text}"
+    );
+    assert!(text.contains("net.egress"), "and what it found:\n{text}");
+    assert!(
+        !text.contains('{'),
+        "it is a summary, not a second serialization format:\n{text}"
+    );
+}
+
+#[test]
+fn paths_in_messages_use_forward_slashes() {
+    // `Path::display` uses the platform separator, so a path built by joining a
+    // forward-slash argument with a constant came out as `…/proj\skillmap.lock`
+    // — one backslash in an otherwise forward-slash path, which reads as
+    // corruption rather than as Windows.
+    let home = fake_home("slashes");
+    let output = skillmap_with_home(&home, &["ci", "--scope", "user"]);
+    let log = stderr(&output);
+    assert!(
+        !log.contains('\\'),
+        "messages must not mix separators:\n{log}"
+    );
+}
+
+#[test]
+fn an_unknown_format_is_refused_rather_than_guessed() {
+    let home = fake_home("bad-format");
+    let output = skillmap_with_home(&home, &["scan", "--format", "yaml"]);
+    assert_eq!(
+        output.status.code(),
+        Some(4),
+        "a bad format is a config error"
+    );
+    assert!(
+        stderr(&output).contains("unknown format"),
+        "{}",
+        stderr(&output)
+    );
+}

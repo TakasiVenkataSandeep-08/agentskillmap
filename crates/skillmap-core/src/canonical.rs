@@ -61,6 +61,42 @@ impl Manifest {
         Ok(out)
     }
 
+    /// Render several manifests as one canonical JSON **array**.
+    ///
+    /// `skillmap scan` printed one object per bundle, concatenated. For a single
+    /// skill that is valid JSON; for two it is two top-level objects in one
+    /// stream, which `jq` and every JSON parser reject — so the only
+    /// machine-readable output the tool had stopped being machine-readable at
+    /// exactly the point a project became real. An array is valid at every count
+    /// including zero.
+    ///
+    /// It lives here rather than in the CLI because `AGENTS.md` puts every
+    /// `serde_json` serialization call in this module: building the array with
+    /// `to_string_pretty` anywhere else is the byte-identity leak invariant 2
+    /// forbids, whether or not it happens to look right today.
+    ///
+    /// Each element is canonicalized exactly as [`Manifest::to_canonical_json`]
+    /// would, so the array's contents carry the same sorted keys and declared
+    /// array orders. Only the surrounding indentation differs — the byte-identical
+    /// artifact this project gates on is `skillmap.lock`, not this stream.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Serialize`] if a manifest cannot be rendered, which for
+    /// well-formed input cannot happen.
+    pub fn many_to_canonical_json(manifests: &[Self]) -> Result<String, Error> {
+        let mut values = Vec::with_capacity(manifests.len());
+        for manifest in manifests {
+            let mut canonical = manifest.clone();
+            canonical.canonicalize()?;
+            values.push(serde_json::to_value(&canonical).map_err(Error::Serialize)?);
+        }
+        let mut out = serde_json::to_string_pretty(&serde_json::Value::Array(values))
+            .map_err(Error::Serialize)?;
+        out.push('\n');
+        Ok(out)
+    }
+
     /// Parse a manifest from JSON.
     ///
     /// Unknown fields are rejected, matching the schema's
