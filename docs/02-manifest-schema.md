@@ -11,8 +11,8 @@ against that schema in CI — if the two ever disagree, the build fails.
 
 ```json
 {
-  "schema_version": "1.2.0",
-  "tool": { "name": "skillmap", "version": "0.5.0" },
+  "schema_version": "1.3.0",
+  "tool": { "name": "skillmap", "version": "0.5.1" },
 
   "target": {
     "kind": "skill",

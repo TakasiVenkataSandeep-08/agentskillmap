@@ -30,7 +30,7 @@ Canonical JSON, written by `skillmap lock`, read by `skillmap ci`. Committed.
       ],
       "content_digest": "sha256:5b337214…",
       "resolver": "claude-code",
-      "schema_version": "1.0.0"
+      "schema_version": "1.3.0"
     }
   }
 }
