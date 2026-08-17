@@ -364,8 +364,15 @@ jobs:
               return 0
             fi
 
+            # `./` is load-bearing. npm reads a bare two-segment argument as a
+            # GitHub shorthand, so `npm publish npm-dist/agentskillmap` tried to
+            # clone github.com/npm-dist/agentskillmap and failed with a git
+            # permission error that named neither the registry nor the package.
+            # The five scoped packages were unaffected because
+            # `npm-dist/@agentskillmap/win32-x64` does not match `owner/repo` —
+            # so the bug hid until the last of six publishes.
             log="$(mktemp)"
-            if npm publish "$1" --access public --provenance 2>&1 | tee "$log"; then
+            if npm publish "./$1" --access public --provenance 2>&1 | tee "$log"; then
               return 0
             fi
             echo "::error::npm publish failed for $1."
