@@ -1138,11 +1138,32 @@ guessed schema into somebody's agent config is worse than not supporting them: a
 a broken agent, not a missing feature. `settings_path()` takes the home directory as an
 argument so a second agent is a table entry rather than a rewrite.
 
-### What it does not do
+### What it does not do, and the thing that was declined rather than deferred
 
-It does not answer *"should I install this?"* — that needs `skillmap inspect <url>`, which is
-still unbuilt. This closes the drift half only, which is the half the product was already
-about.
+It does not answer *"should I install this?"*. That closes the drift half only, which is the
+half the product was always about.
+
+**`skillmap inspect <url>` was designed, costed, and rejected on invariant 9.** It is the
+single feature that would put this tool in the same conversation as the scanners that ship
+verdicts, and it was not built, so the reason belongs here rather than being rediscovered as a
+fresh idea.
+
+Invariant 9 enumerates exactly two network calls in the shipped binary: the semantic pass under
+an explicit flag, and the `corpus` research subcommand. `inspect` would be a third. The
+technical route was clean — shell out to `git clone --depth 1` as `skillmap-corpus` already
+does, so no HTTP client is linked and "a released binary contains no HTTP client at all" stays
+true — and the safeguards were available: a URL the user typed, unreachable from `lock`, `ci`
+and `scan`, nothing sent anywhere.
+
+It was still declined, and the reasoning is worth keeping. A supply-chain tool that reaches the
+network is a supply-chain tool with a supply-chain problem, and the guarantee is worth more
+than the feature: *no network at scan time* is a sentence a registry operator can verify in one
+`strings` run, and it stops being that the moment it needs three qualifications. Extending a
+closed enumeration once makes the second extension an argument about precedent rather than
+about principle.
+
+Anyone proposing this again should read invariant 9 first and be proposing to amend it, openly,
+rather than to add a feature.
 
 ---
 
