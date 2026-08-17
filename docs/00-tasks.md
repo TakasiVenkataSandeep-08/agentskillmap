@@ -1094,6 +1094,58 @@ directory and each is genuine. `code_clean` means *no credential marker*, not *h
 
 ---
 
+## T12 — the check that runs without being remembered
+
+Not a detection task. Every other command in this tool shares one defect: somebody has to run
+it. Skills update themselves — that is the premise the product rests on — and the answer until
+now was "re-run the differ", which nobody does monthly, or ever. A differ you must remember is
+a differ nobody runs, and no amount of precision fixes that.
+
+**Done.** `skillmap hook install` registers a `SessionStart` hook in `~/.claude/settings.json`,
+and the agent runs the user-scope check at the start of every session. `hook run`, `hook
+status` and `hook uninstall` complete the set.
+
+### The property everything else depends on
+
+**`hook run` always exits 0.** Whatever it finds, however alarming. This repository's own
+development hooks already made the argument — *"a hook that fights the author gets disabled"* —
+and a session-start check that could abort a session because a skill changed would be switched
+off within a day, taking the drift detection with it. Findings go to stdout for a person to
+read; the exit code is not a channel here. `skillmap ci` still exits 1, because that one is a
+gate. A test asserts both halves.
+
+### Writing to somebody's agent configuration, which is a thing this tool reports on
+
+`fs.write.agent_config` is a capability term here and `instruction.directs_outside_write` is a
+signal that fires on prose telling an agent to do exactly this. Being the author of the tool is
+not an exemption. What makes it acceptable is that it is **explicit** (on `hook install`, never
+on package install), **previewed** (the exact JSON is printed first), **backed up**
+(`settings.json.bak`), **idempotent**, and **reversible** — and `uninstall` removes only entries
+whose sole command is ours, leaving alone any the user has added their own commands to.
+
+A settings file that will not parse is an error, not something to overwrite. Somebody's agent
+configuration is not ours to replace because we could not read it, and a test asserts the
+unreadable file comes back byte-for-byte unchanged.
+
+**One cost, stated rather than hidden:** the file is rewritten through `serde_json`, which
+sorts object keys, so a user's key order does not survive. The install says so and writes the
+backup first.
+
+### Claude Code only
+
+The other seven agents read `SKILL.md` and each has its own configuration format. Writing a
+guessed schema into somebody's agent config is worse than not supporting them: a wrong guess is
+a broken agent, not a missing feature. `settings_path()` takes the home directory as an
+argument so a second agent is a table entry rather than a rewrite.
+
+### What it does not do
+
+It does not answer *"should I install this?"* — that needs `skillmap inspect <url>`, which is
+still unbuilt. This closes the drift half only, which is the half the product was already
+about.
+
+---
+
 ## Cross-cutting, every task
 
 The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of the above.

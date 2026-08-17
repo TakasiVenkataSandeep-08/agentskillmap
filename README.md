@@ -147,6 +147,7 @@ skillmap lock    # record what the skills in this project can do today; commit i
 skillmap ci      # fail when that changes
 skillmap scan                   # a canonical JSON array of manifests
 skillmap scan --format human    # a few lines per skill, for reading
+skillmap hook install           # run the user-scope check at every session start
 skillmap rules   # list what this build can detect
 ```
 

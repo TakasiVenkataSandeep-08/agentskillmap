@@ -8,6 +8,10 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+# `skillmap hook` reads and rewrites the agent's settings.json, which is JSON.
+# This adds no crate to the build — skillmap-diff already pulls serde_json in —
+# it only makes the edge explicit.
+serde_json.workspace = true
 skillmap-core.workspace = true
 skillmap-resolve.workspace = true
 skillmap-rules.workspace = true
@@ -28,8 +32,6 @@ skillmap-semantic.workspace = true
 default = []
 anthropic = ["skillmap-semantic/anthropic"]
 
-# Tests only, and already in the tree through skillmap-diff — this adds nothing
-# to the shipped binary.
 [dev-dependencies]
 serde_json.workspace = true
 

@@ -20,6 +20,8 @@
 //! version have" is the first question anyone asks about a finding they disagree
 //! with.
 
+mod hook;
+
 use skillmap_core::Manifest;
 use skillmap_policy::{Outcome, Policy};
 use skillmap_resolve::{ClaudeCode, Scope};
@@ -109,6 +111,15 @@ USAGE:
     skillmap ci    [OPTIONS]   fail if capabilities changed, or policy forbids them
     skillmap scan  [OPTIONS]   print what each skill can do, as JSON or for a person
     skillmap rules             list the rules this binary carries
+    skillmap hook <WHAT>       install | uninstall | status | run
+                               `install` registers a SessionStart hook in
+                               ~/.claude/settings.json so the user-scope check
+                               runs by itself. It prints what it will write,
+                               backs the file up first, and `uninstall` removes
+                               exactly what it added. `run` is what the hook
+                               calls and always exits 0 — a hook that can fail a
+                               session gets disabled, and then nothing is
+                               watched at all.
     skillmap version           print the version
 
 OPTIONS:
@@ -169,13 +180,26 @@ fn run() -> Result<u8, String> {
         _ => {}
     }
 
-    let args = parse_args(argv.get(1..).unwrap_or_default())?;
+    // `hook` takes an action word before its flags, so its flags start one
+    // element later. And a session-start check is a user-scope check by
+    // definition — the project scope depends on which directory the agent
+    // happened to open — so that is the default here rather than the global one.
+    let args = if command == "hook" {
+        let mut flags: Vec<String> = argv.get(2..).unwrap_or_default().to_vec();
+        if !flags.iter().any(|flag| flag == "--scope") {
+            flags.splice(0..0, ["--scope".to_owned(), "user".to_owned()]);
+        }
+        parse_args(&flags)?
+    } else {
+        parse_args(argv.get(1..).unwrap_or_default())?
+    };
 
     match command.as_str() {
         "lock" => write_lock(&args).map(|()| 0),
         "ci" => check(&args),
         "scan" => emit_manifests(&args).map(|()| 0),
         "rules" => list_rules(&args).map(|()| 0),
+        "hook" => run_hook(&argv, &args),
         other => Err(format!("unknown subcommand `{other}`\n\n{USAGE}")),
     }
 }
@@ -190,6 +214,55 @@ fn run() -> Result<u8, String> {
 /// is the same courtesy for messages, which are not byte-compared but are read.
 fn shown(path: &Path) -> String {
     path.display().to_string().replace('\\', "/")
+}
+
+/// `skillmap hook <install|uninstall|status|run>`.
+///
+/// `run` is deliberately the only path here that cannot fail the caller. It is
+/// invoked by the agent at session start, and a check that could abort a session
+/// because a skill changed would be turned off within a day — taking the drift
+/// detection with it.
+fn run_hook(argv: &[String], args: &Args) -> Result<u8, String> {
+    let home = home_dir().ok_or_else(|| {
+        "cannot find your home directory: set HOME (or USERPROFILE on windows)".to_owned()
+    })?;
+    match argv.get(1).map(String::as_str) {
+        Some("install") => {
+            // The lock has to exist or the very first session-start check exits
+            // 4 with "run `skillmap lock`" — a fresh install that greets you
+            // with an error is one nobody keeps.
+            if !args.lock.exists() {
+                write_lock(args)?;
+            }
+            hook::install(&home)?;
+            println!("the user-scope check now runs at the start of every session.");
+            Ok(0)
+        }
+        Some("uninstall") => hook::uninstall(&home).map(|_| 0),
+        Some("status") => hook::status(&home).map(|()| 0),
+        Some("run") => {
+            // Whatever `check` decides, this exits 0. The findings are on
+            // stdout for a person; the exit code is not a channel here.
+            match check(args) {
+                Ok(0) => {}
+                Ok(_) => {
+                    println!();
+                    println!("Run `skillmap ci --scope user` for the full report,");
+                    println!(
+                        "or `skillmap lock --scope user` to accept these as the new baseline."
+                    );
+                }
+                Err(message) => eprintln!("skillmap: {message}"),
+            }
+            Ok(0)
+        }
+        Some(other) => Err(format!(
+            "unknown hook action `{other}` — expected install, uninstall, status or run"
+        )),
+        None => {
+            Err("`skillmap hook` needs an action: install, uninstall, status or run".to_owned())
+        }
+    }
 }
 
 /// Parse flags. Every flag takes a value; an unknown flag is an error rather than
