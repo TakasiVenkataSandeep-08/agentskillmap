@@ -330,16 +330,26 @@ jobs:
           # whether a scope exists — which reads as "your package is missing"
           # when it means "your scope is". That cost a release to diagnose; the
           # message now says so at the point of failure.
+          # Keyed on the error code npm actually returned, not on the package
+          # name. The first version of this keyed on the name and so explained
+          # E404 during an EOTP failure — a confidently wrong diagnosis, which is
+          # worse than none.
           publish() {
-            if npm publish "$1" --access public --provenance; then
+            local log
+            log="$(mktemp)"
+            if npm publish "$1" --access public --provenance 2>&1 | tee "$log"; then
               return 0
             fi
             echo "::error::npm publish failed for $1."
-            case "$1" in
-              *@agentskillmap*)
-                echo "::error::If that was E404: npm returns 404 rather than 403 for a scope you cannot write to. Either the @agentskillmap organisation does not exist (create it at https://www.npmjs.com/org/create) or NPM_TOKEN does not grant it read/write. A granular token created before the scope existed cannot have been granted it."
-                ;;
-            esac
+            if grep -q 'code EOTP' "$log"; then
+              echo "::error::EOTP: the registry wants a one-time password, so this token does not bypass 2FA. CI cannot answer an OTP prompt and no workflow change makes it possible. Regenerate NPM_TOKEN as a classic *Automation* token or a granular access token — both bypass 2FA; a classic *Publish* token does not."
+            elif grep -q 'code E404' "$log"; then
+              echo "::error::E404 on a scoped package means the SCOPE, not the package: npm returns 404 rather than 403 for a scope you cannot write to, so it does not leak whether one exists. Either the organisation does not exist (https://www.npmjs.com/org/create) or this token cannot write to it."
+            elif grep -q 'code E403' "$log"; then
+              echo "::error::E403: the scope exists and this token may not write to it. A granular token created before the scope existed cannot have been granted that scope — regenerate it with the scope selected."
+            elif grep -q 'code EPUBLISHCONFLICT\|cannot publish over' "$log"; then
+              echo "::error::This version is already on the registry. npm forbids republishing a version; bump and cut a new tag."
+            fi
             return 1
           }
 
