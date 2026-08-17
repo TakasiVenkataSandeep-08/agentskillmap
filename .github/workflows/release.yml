@@ -292,20 +292,62 @@ jobs:
       # Publishing is last and gated on everything above. npm has no unpublish
       # after 72 hours, so a bad publish is permanent in a way a bad GitHub
       # release is not — it goes after the release, not before it.
+      # Pinned rather than inherited. `--provenance` needs npm 9.5 or newer, and
+      # without this step npm is whatever the runner image happens to ship — it
+      # worked on the first attempt by luck, not by contract, and a runner image
+      # is free to move underneath a release.
+      #
+      # Deliberately no `registry-url`: that makes setup-node write its own
+      # .npmrc keyed on NODE_AUTH_TOKEN, and the hand-written one below is the
+      # path that demonstrably authenticated. Pin the toolchain, leave the auth
+      # alone.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Publish to npm
         if: github.event_name == 'push'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          # Explicit rather than inherited. The runner's default for a `run:`
+          # block already aborts on error, but this step publishes to a registry
+          # with no unpublish after 72 hours — "which shell flags did the runner
+          # pick today" is not a question worth having an answer to here. With
+          # this, a failed package stops the loop instead of the next one being
+          # attempted against a registry that just rejected the last.
+          set -euo pipefail
+
           if [ -z "$NODE_AUTH_TOKEN" ]; then
             echo "::notice::NPM_TOKEN is not set; skipping npm publish"
             exit 0
           fi
           echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > ~/.npmrc
+          echo "npm $(npm --version), node $(node --version)"
+
+          # E404 on a scoped PUT does not mean what it says. npm returns 404
+          # rather than 403 for a scope you cannot write to, so it does not leak
+          # whether a scope exists — which reads as "your package is missing"
+          # when it means "your scope is". That cost a release to diagnose; the
+          # message now says so at the point of failure.
+          publish() {
+            if npm publish "$1" --access public --provenance; then
+              return 0
+            fi
+            echo "::error::npm publish failed for $1."
+            case "$1" in
+              *@agentskillmap*)
+                echo "::error::If that was E404: npm returns 404 rather than 403 for a scope you cannot write to. Either the @agentskillmap organisation does not exist (create it at https://www.npmjs.com/org/create) or NPM_TOKEN does not grant it read/write. A granular token created before the scope existed cannot have been granted it."
+                ;;
+            esac
+            return 1
+          }
+
           # Platform packages first. The wrapper's optionalDependencies pin exact
           # versions, so publishing it first would leave a window where
-          # `npm install skillmap` resolves a wrapper whose binaries do not exist.
+          # `npm install agentskillmap` resolves a wrapper whose binaries do not
+          # exist.
           for package in npm-dist/@agentskillmap/*; do
-            npm publish "$package" --access public --provenance
+            publish "$package"
           done
-          npm publish npm-dist/agentskillmap --access public --provenance
+          publish npm-dist/agentskillmap
