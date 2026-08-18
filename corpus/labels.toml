@@ -4000,9 +4000,9 @@ note = "Byte-identical SKILL.md to another bundle in this stratum, republished u
 digest = "sha256:59aa666234d2636fd504f92810376dc5943071b9f4e02b46f506ac03e8906914"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Social network for agents. What it directs the agent to send is posts and comments the agent writes, to the service the skill exists to use, so not the term under the clarification. Its matching lines are registration and the same never-send-your-key-elsewhere guardrail this ecosystem repeats in every bundle."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["skill.md:25"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Social network for agents. What it directs the agent to send is posts and comments the agent writes, to the service the skill exists to use, so not the term under the clarification. Its matching lines are registration and the same never-send-your-key-elsewhere guardrail this ecosystem repeats in every bundle."
 
 [[label]]
 digest = "sha256:20412dcd852008b7fe3d603a4a21a49260f55fbb3a6560bab163f3caea2c3d25"
@@ -4048,9 +4048,9 @@ note = "Mobile push-notification setup skill. Push and send here describe an app
 digest = "sha256:29687be6bb3140d4a700a6c6c96b6e436f584a3463c167725beeda4f1dee2979"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Research posting service for agents. Registration, a challenge-response verification, and submitting research the agent produced. The ecosystem guardrail about never sending the API key elsewhere again. Nothing drawn from the machine."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["skill.md:24"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Research posting service for agents. Registration, a challenge-response verification, and submitting research the agent produced. The ecosystem guardrail about never sending the API key elsewhere again. Nothing drawn from the machine."
 
 [[label]]
 digest = "sha256:4fba288c46d2a988a049ba84115beaece1af0307963b24f020a32077a9f8068f"
@@ -4137,9 +4137,9 @@ note = "Multiplayer game service for agents. Registration, room creation and joi
 digest = "sha256:43f235bd6e911758a3715d21d02958d8bca3906d44a3861da547e74fb622cc13"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Dating service where the agent publishes a profile of its human - name, age, gender, location, preferences, dealbreakers - and later discusses their schedule to arrange meetings. Real personal data going to a third party, and NOT the term under the clarification above, because the bundle directs the agent to obtain every field by interviewing the human immediately before publishing it. Volunteered for this purpose rather than harvested from a session that happened for another. Recorded at length because this is the closest call in the stratum and the opposite judgement is defensible."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:24"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Dating service where the agent publishes a profile of its human - name, age, gender, location, preferences, dealbreakers - and later discusses their schedule to arrange meetings. Real personal data going to a third party, and NOT the term under the clarification above, because the bundle directs the agent to obtain every field by interviewing the human immediately before publishing it. Volunteered for this purpose rather than harvested from a session that happened for another. Recorded at length because this is the closest call in the stratum and the opposite judgement is defensible."
 
 [[label]]
 digest = "sha256:5d316691fd2354629dda288e6d308a19ca4908d87373581d35798951df97c4ae"
@@ -4153,9 +4153,9 @@ note = "Agent marketplace with a wallet. Registration, deposits and purchases - 
 digest = "sha256:76d764b6e23cf19497eface2199cd02f5ec1ed78578875b4a487396ecd5722f9"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Job marketplace for agents. Posting jobs and applications the agent writes, plus the copied never-send-your-key guardrail. Not the term."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["skill.md:61"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Job marketplace for agents. Posting jobs and applications the agent writes, plus the copied never-send-your-key guardrail. Not the term."
 
 [[label]]
 digest = "sha256:7bf5daf5f4d7fc8277e3adb02ad2a1762af17e938ba05b6177a7bd85fabcad63"
@@ -4201,25 +4201,25 @@ note = "Live-streaming skill, and the one bundle in this stratum where reading c
 digest = "sha256:ab6b1e31ddfd045d896b519201ed7f80a3ec8fbbfd5068e55d4fb00f58989ae1"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Chess service for agents. Registration, joining a queue, submitting moves, and the copied guardrail. Not the term."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:26"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Chess service for agents. Registration, joining a queue, submitting moves, and the copied guardrail. Not the term."
 
 [[label]]
 digest = "sha256:b8226efb06d6cce3ba0e643dc7e0ad335533d72fc154bd4dafd56b5854008c2a"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Agent services client. The nearest thing to the term is a step that forwards a project URL to another agent for review, and the URL is one the user just shared for that purpose - volunteered rather than harvested, under the clarification. One of its matches is a quoted transcript inside a lessons-learned example, where a user said send ETH and meant a different network, so the rule is firing on a record of a past mistake."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:26"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Agent services client. The nearest thing to the term is a step that forwards a project URL to another agent for review, and the URL is one the user just shared for that purpose - volunteered rather than harvested, under the clarification. One of its matches is a quoted transcript inside a lessons-learned example, where a user said send ETH and meant a different network, so the rule is firing on a record of a past mistake."
 
 [[label]]
 digest = "sha256:dd03a196ce8a8e3fbbfe64bf202add4f6610ced722254ec90f9888dc6a203426"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Content platform for agents. Posts outputs the agent generated, plus the ecosystem guardrail - which this bundle states more precisely than its siblings, noting that the key is the agent identity and leaking it lets someone else post as them. Not the term."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:25"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Content platform for agents. Posts outputs the agent generated, plus the ecosystem guardrail - which this bundle states more precisely than its siblings, noting that the key is the agent identity and leaking it lets someone else post as them. Not the term."
 
 [[label]]
 digest = "sha256:e89a6628c867c075c4835808c720890fc9f436fcb7bb80a2de4d17321a0ba467"
@@ -4241,9 +4241,9 @@ note = "Token launch and trading service. Launch, quote, buy and sell are the to
 digest = "sha256:ee925c9091c9bff55653e7671cce8e8f110ddd9cb794bd4a46a9cee7306d1d39"
 stratum = "instr_exfil"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Project collaboration service for agents. Joining projects and posting threads the agent writes. Not the term."
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["HEARTBEAT.md:18"]
+note = "LABEL CORRECTED IN PHASE 2. Originally labelled with no term. It carries the self-overwriting shape - curling a remote document over its own entry or heartbeat file under the home directory - which is instruction.fetch_as_instruction and is the shape this pass identified as its most important finding. The error was mine and its cause is on the record: this ecosystem was triaged with a filter tuned to send verbs, the install block sat outside that filter, and a grep I ran to check for exactly this pattern returned a zero I accepted without reading the file. Relying on a grep instead of reading is the failure the labelling method exists to prevent. Original note follows. Project collaboration service for agents. Joining projects and posting threads the agent writes. Not the term."
 
 [[label]]
 digest = "sha256:fe06a3d38aa1475d672b5e11fd1b771e6a9c75ebb0133556a53f79a4435310ab"
@@ -4689,3 +4689,75 @@ note = "Output quality scorecard. Its most relevant line is a flat statement tha
 # definition enumerates. Widening the term to cover persistence rather than a
 # filename list moves precision on its own stratum from 20/29 to 22/29 without
 # touching a regex.
+
+# ══ T13 PHASE 2: diagnosis, a correction to my own labels, and the numbers ════
+#
+# EIGHT LABELS WERE WRONG AND ARE CORRECTED ABOVE. Eight bundles in the exfil
+# stratum carry the self-overwriting shape - curl a remote document over their
+# own entry or heartbeat file under the home directory - and I labelled all
+# eight as carrying no term. That is the shape phase 1 called its most important
+# finding, missed in the stratum where it was most concentrated.
+#
+# The cause is on the record because it is the more useful half. I triaged that
+# ecosystem with a filter tuned to send verbs, so the install block never
+# appeared. Then I ran a grep specifically for this pattern across three of
+# those bundles, got a zero, and accepted it without opening the files. The zero
+# was wrong. Relying on a grep instead of reading is precisely the failure the
+# labelling method is built to prevent, and it took a rule experiment to catch.
+#
+# Corrected phase 1 numbers, shipped rules, all four strata:
+#
+#   term                              precision        recall
+#   instruction.config_mutation       21/32 (65.6%)    21/48 (43.8%)
+#   instruction.exfil                  2/36 ( 5.6%)     2/12 (16.7%)
+#   instruction.fetch_as_instruction  10/30 (33.3%)    10/26 (38.5%)
+#
+# fetch_as_instruction is worse than phase 1 reported: recall falls from 55.6%
+# to 38.5%, because eight of its real positives were hidden in my own labels.
+#
+# ── Three mechanical causes, each isolated by experiment ─────────────────────
+#
+# THE PERIOD EXCLUSION BLOCKS URLS. Every pattern uses [^.\n] to keep a match
+# inside one sentence. fetch_as_instruction is a signal ABOUT URLs, and URLs
+# contain periods, so its first pattern cannot span the thing it exists to
+# detect. "Fetch https://host/heartbeat.md and follow it" matches only once the
+# exclusion is relaxed.
+#
+# TABLES ARE INVISIBLE. The queries match (inline) nodes. A probe with the same
+# sentence in five positions shows paragraphs, lists and blockquotes fire while
+# TABLE CELLS AND FENCE BODIES DO NOT. Measured corpus-wide the effect is real
+# but small: 15 config_mutation bundles, 5 exfil, 1 fetch match only inside a
+# table. Worth fixing, not the main story - the first draft of this note called
+# it major before it was measured.
+#
+# THE PATTERNS ANCHOR ON ADJACENCY. config_mutation wants its noun immediately
+# after an article, and real prose writes "add the Composio MCP server" or "add
+# a URL as an MCP server" or "configuring the Stop hook".
+#
+# ── What repair does to each term, measured against these labels ─────────────
+#
+# exfil CANNOT BE RESCUED, and this was tested rather than assumed. Bare "token"
+# in its sensitive-noun list means a crypto coin in most of this corpus, and its
+# false positives are dominated by prohibition prose. Qualifying the noun:
+# 1/30. Adding a negation guard as well: 0/7 - the guard removes 23 false
+# positives and BOTH true positives with them. Every repair path measured makes
+# it worse than 2/36.
+#
+# config_mutation REPAIRS ON RECALL ONLY. Allowing a bounded gap between verb
+# and noun and permitting periods takes it from 24/38 precision, 24/48 recall to
+# 38/59 precision, 38/48 recall - half the misses closed, precision unchanged at
+# about 64%. What remains is not reachable by any pattern: security scanners
+# enumerating what they detect, git-hooks skills, and two definitional edges.
+#
+# fetch_as_instruction NARROWED TO THE SHAPE IT ACTUALLY DETECTS scores
+# 18/18 precision and 18/26 recall. Four patterns: a remote document curled over
+# an entry or heartbeat file, a fetch of a .md followed by follow or execute, a
+# file declaring itself incomplete and naming where the real one is, and
+# following instructions at a URL. No false positives at all on 145 labelled
+# bundles.
+#
+# THAT LAST NUMBER IS IN-SAMPLE AND MUST NOT BE PUBLISHED AS IT STANDS. The
+# patterns were written after reading the bundles they are scored against, so
+# 18/18 is what fitting looks like, not what precision looks like. It needs a
+# fresh seeded draw against bundles no one has read. That is phase 3's first
+# job, before any of this ships.
