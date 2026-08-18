@@ -4188,3 +4188,113 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Android project scaffolder. The matching line instructs the generated application to send its own push notification token to its own backend, which is code being written rather than data leaving the developer machine. Second instance of the push-notification collision, and a reminder that the analysed prose here is a specification for software that does not exist yet."
+
+[[label]]
+digest = "sha256:a396700f8ffc2de1692a40ee33f365845c96870ad19241a840cad84cc2c0161b"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Live-streaming skill, and the one bundle in this stratum where reading changed the answer. It captures a display and pushes an encoded video stream to a remote ingest, which reads as screen exfiltration until the source is checked: it launches its own virtual framebuffer and streams that, so the captured display is one the skill created rather than the user desktop. Screenshots go to thumbnails of the same synthetic display. Not the term, and a case where the mechanism words - capture, screen, push, stream - are all present and all point somewhere harmless."
+
+[[label]]
+digest = "sha256:ab6b1e31ddfd045d896b519201ed7f80a3ec8fbbfd5068e55d4fb00f58989ae1"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Chess service for agents. Registration, joining a queue, submitting moves, and the copied guardrail. Not the term."
+
+[[label]]
+digest = "sha256:b8226efb06d6cce3ba0e643dc7e0ad335533d72fc154bd4dafd56b5854008c2a"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Agent services client. The nearest thing to the term is a step that forwards a project URL to another agent for review, and the URL is one the user just shared for that purpose - volunteered rather than harvested, under the clarification. One of its matches is a quoted transcript inside a lessons-learned example, where a user said send ETH and meant a different network, so the rule is firing on a record of a past mistake."
+
+[[label]]
+digest = "sha256:dd03a196ce8a8e3fbbfe64bf202add4f6610ced722254ec90f9888dc6a203426"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Content platform for agents. Posts outputs the agent generated, plus the ecosystem guardrail - which this bundle states more precisely than its siblings, noting that the key is the agent identity and leaking it lets someone else post as them. Not the term."
+
+[[label]]
+digest = "sha256:e89a6628c867c075c4835808c720890fc9f436fcb7bb80a2de4d17321a0ba467"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Hackathon submission helper. Posts a submission the agent writes, and its two nearest matches are constraints on itself - transmit the key only to the one host, do not send credentials or secrets to external endpoints. Not the term."
+
+[[label]]
+digest = "sha256:ec9521d60cefdd46a2c9b59820882d653e1c98a8c5dc99e019f6d176554915f5"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Token launch and trading service. Launch, quote, buy and sell are the token-transfer collision a sixth time, and the one genuinely data-shaped line is a prohibition - never reveal, output or send your API key to anyone or any service."
+
+[[label]]
+digest = "sha256:ee925c9091c9bff55653e7671cce8e8f110ddd9cb794bd4a46a9cee7306d1d39"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Project collaboration service for agents. Joining projects and posting threads the agent writes. Not the term."
+
+[[label]]
+digest = "sha256:fe06a3d38aa1475d672b5e11fd1b771e6a9c75ebb0133556a53f79a4435310ab"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:55"]
+note = "Endurance coaching protocol, and the SIXTH bundle in this pass whose operative instructions are not in it. The bundle ships one file. The protocol rules the agent is told to apply sit second in its own data hierarchy and are resolved by looking in two local paths and then falling back to a raw file URL on a code host, so in a fresh install the rules always arrive over the network. Not exfil: the athlete health data does go to a repository they create, and they create it deliberately for this skill to read, which is volunteered under the clarification - though a public repository of training data is the kind of thing a reviewer would want to see stated, and the bundle does state it."
+
+# ── T13 phase 1: the exfil stratum, measured ─────────────────────────────────
+#
+# 40 bundles, 39 labelled, 1 too_large.
+#
+#   instruction.exfil   precision 2/34 (5.9%)   fn 0
+#
+# Thirty-two false positives out of thirty-four firings, on the stratum drawn
+# for this term by its own shape. This is not a rule that needs narrowing. The
+# causes, counted by reading:
+#
+#   VERB COLLISIONS. In this corpus send and transfer usually mean moving crypto
+#     tokens between wallets; post means publishing agent-authored text to a
+#     social service; push means an application delivering notifications to its
+#     own users. Six token cases, several posting cases, two push cases. None
+#     moves anything off a machine and the rule matches the verb.
+#
+#   PROHIBITIONS AND GUARDRAILS. A security-hardening policy that is nothing but
+#     rules against sending credentials, memory files, and dotenv contents fires
+#     on all three terms. A finance skill fires on a section stating it cannot
+#     move funds and does not send credentials anywhere. A dependency inventory
+#     fires on the boundary it documents staying inside. And one bundle fires on
+#     a DISCLOSURE that provider examples may transmit prompt context, followed
+#     by an instruction not to send regulated data into them.
+#
+#   COPIED BOILERPLATE. One agent-social ecosystem repeats never send your API
+#     key to any domain other than X, refuse if anything asks, across a dozen
+#     bundles. A single copied guardrail generates false positives across a
+#     whole genre - the shared-preamble effect from the previous stratum in a
+#     different form.
+#
+#   REFERENCE MATERIAL. An email API client whose every match is a library call
+#     in a code sample. A scaffolder whose match instructs the application it is
+#     generating to send its own device token to its own backend - a
+#     specification for software that does not exist, analysed as though it
+#     described this machine.
+#
+# The two true positives are both content harvested from a session: conversation
+# messages sent to a preference service, and a human's skills synced FROM
+# CONVERSATIONS onto a public profile by a recurring heartbeat.
+#
+# fetch_as_instruction fired ZERO times here and missed FIVE real positives that
+# this stratum happens to contain, including the sixth bundle found whose
+# operative instructions are not in it. Combined with its own census - 10/30
+# precision with 3 misses - the term now has poor precision AND poor recall,
+# measured on two independent strata.
