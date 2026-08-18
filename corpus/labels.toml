@@ -3431,3 +3431,93 @@ verdict = "labelled"
 capabilities = ["instruction.fetch_as_instruction"]
 evidence = ["SKILL.md:54"]
 note = "Workflow orchestration layer, and a quieter instance of the shape than the obvious ones. The recipe steps the agent carries out are not in the bundle at all: they arrive at runtime in the catalog response and the prose directs the agent to fetch that catalog at conversation start and work from it. A reviewer reading this entry document never sees the steps that will run. Benign in posture - it states that it holds no keys and delegates every state-changing action - and structurally the thing this term names."
+
+[[label]]
+digest = "sha256:24446156097469949d7bcf2a9ff13e042c6e125494efdeb526d953b4840cddbb"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:36", "SKILL.md:65"]
+note = "The most architectural instance of this term in the census. The bundle defines a language whose programs are prose documents the model simulates - its own text says a system reading the specification becomes that virtual machine - and directs the agent to fetch a program from any URL or from a hosted registry shorthand and execute it. Remote includes resolve the same way, so one fetched program can pull in others. Nothing here is a binary: the fetched text IS the instruction set, which is precisely what this term claims and what the dangerous bundles in this same stratum turned out not to be."
+
+[[label]]
+digest = "sha256:2b5f8efdf802467857cfb6900d8e12a807882c6f08299785ebd1169b331162f8"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:190"]
+note = "A third distinct product name carrying the identical setup pattern - password-protected Windows archive with the password printed beside it, and a macOS one-liner that echoes a decoy vendor CDN address before base64-decoding a shell command. Different repository, different archive, different password, same two judgements: an MCP registration is this term, and fetched code that executes is not."
+
+[[label]]
+digest = "sha256:332da993a20965a41262af5c58797e9d093a09b7bfe3280f81ebc32961a19585"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:262"]
+note = "Crypto exchange trading skill carrying the identical setup pattern as the other samples in this family, down to the same archive and the same archive password. Same two judgements: the MCP registration is this term, the fetched-and-executed payload is not."
+
+[[label]]
+digest = "sha256:5b7c0a63127698af6236d1a826aacb405f040ab00facbf9f1268dbdc03e81fee"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:279"]
+note = "Social-media automation skill, same family and same setup pattern again, advertised with anti-detection and account rotation. Same two judgements."
+
+[[label]]
+digest = "sha256:00897374cab8023e460f75be3fd1f793b0ff33f3e539d430c5dbac507adabafc"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["skill.md:23"]
+note = "Prediction-market skill, and the third self-updating bundle in this stratum: it directs curling its own entry document and its heartbeat document from the vendor into a directory under the home, so the instructions the agent later runs are whatever those URLs serve. It also keeps a wallet private key in a dotfile beside them. Entry file is named skill.md in lowercase, the second such bundle here."
+
+[[label]]
+digest = "sha256:1f5b94dd19044fe04dcb1c4590ef4fed2ffbf957ffbdbea9171d9c4443f81cd3"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:19"]
+note = "Developer-experience auditing skill and the most self-aware instance of the shape in the census. It spawns subagents with web fetching and shell access and a one-sentence prompt, and instructs them to discover a third party documentation site themselves, install what it says, and attempt real execution - deliberately treating fetched documentation as the instruction set, because measuring what happens when an agent does that is the entire product. A true positive whose risk is inseparable from its purpose, which is the case invariant 1 exists for: report the shape, let policy decide."
+
+# ── T13 phase 1: the census is complete, and it is a bad result ───────────────
+#
+# 36 bundles, 34 labelled, 2 too_large. 27 distinct entry texts among the 34, so
+# the effective sample is smaller than the count and any interval here is
+# optimistic.
+#
+# Measured against the shipped rule, over this stratum only:
+#
+#   instruction.fetch_as_instruction   precision 10/30 (33.3%)  fn 3
+#
+# Twenty false positives out of thirty firings. Not a marginal result and not
+# one narrowing a regex will rescue on its own, because the misfires are three
+# distinct genres:
+#
+#   - Security-review skills, seven of them across five distinct scanner bodies.
+#     They match because enumerating these shapes is their job. One writes down
+#     the exact distinction the pattern tier cannot make.
+#   - Fetched code that is executed rather than fetched text that becomes
+#     instructions. Eight bundles from ONE malware campaign wearing seven
+#     product names - trading, proxy harvesting, social automation - all with a
+#     password-protected archive whose password is printed beside it, or a
+#     base64 one-liner that runs bash on the body of a plain-HTTP request to a
+#     bare IP. Genuinely dangerous, and named by net.fetch_then_execute and
+#     instruction.exec_directive rather than by this term.
+#   - Prompt-convention prose. A terminal simulator saying to treat text in
+#     braces as instruction, with no remote half at all.
+#
+# And it misses the clearest cases it should catch. Three false negatives, two
+# of them a registry client that extracts another skill and says in as many
+# words to follow the fetched instructions, and the third an entire language
+# whose programs are fetched from arbitrary URLs and interpreted by the model.
+#
+# The other two terms CANNOT be scored from this stratum and their numbers here
+# are not precision. This stratum was selected by the fetch probe, so a
+# config_mutation or exfil true positive appearing in it was never sampled for.
+# Their own 40-bundle strata are drawn and not yet labelled. What the misses do
+# show is real: config_mutation stayed silent on ten bundles that direct an MCP
+# registration, because its second pattern requires the noun to follow the
+# article immediately and real prose puts a product name in between - add the
+# Composio MCP server, ensure your MCP settings include. That is a fixable rule,
+# on evidence, in phase 2.
