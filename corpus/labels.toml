@@ -4521,3 +4521,171 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Social posting pipeline. Uploads images it generated to a public image host and then publishes them, so what leaves is content the pipeline made rather than anything of the user. Correct silence, and a close one: upload to public hosting is the phrase an exfil rule most wants to fire on."
+
+[[label]]
+digest = "sha256:05f71a956354810e25e58f4b65c5874cc516f2e77703f400245e7ce86e40fadf"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.exfil"]
+evidence = ["SKILL.md:102"]
+note = "FOURTEENTH MISS, and the first one that is exfil rather than config. Directs uploading the original images the user supplied - by chat upload or by hand - into a hosted database, storing both metadata and the file itself. User files going to a third-party workspace, which is the same judgement already applied to a documents integration and a meeting recorder in the exfil stratum, so it is counted here for consistency and the rule is silent on it."
+
+[[label]]
+digest = "sha256:166b4b1d3c122fd9a381cbbb2420358a461b1fe796d22025492686a6bb5b1f54"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Application starter template. Its config-shaped matches are webhook routes in the application being generated and a payment CLI forwarding events to localhost during development. Software being written, not this machine being configured. Correct silence."
+
+[[label]]
+digest = "sha256:6a245a28df238c1a05ddec822b843880b326d73852e99bd603b555a403b03624"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Multi-agent room controller. Every command it sends is an HTTP POST to a loopback address on this machine, so the send-shaped prose is dense and nothing crosses a boundary at all. The cleanest possible negative for exfil and a useful one: destination matters more than verb, and only one of those is in the pattern."
+
+[[label]]
+digest = "sha256:7481eb9138cdafd60668b97c4aeebd667a3252dfd65bddf9f4a665fe85b71d64"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Prediction market agent. Registration and bets the agent decides on, plus a performance report shown to the owner rather than sent anywhere. Correct silence."
+
+[[label]]
+digest = "sha256:76e56aa39df793b6be57e364b9adc46bbe2929d10811beb76f18db5a4b2980b8"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:516"]
+note = "FIFTEENTH MISS. A release checklist step directing that AGENTS.md be verified and its skill count kept accurate, which means editing an always-loaded instruction file. Counted for consistency with the conventions bundle in the config stratum labelled true on the same kind of maintenance step. The rule is silent because the sentence puts the file first and the action second."
+
+[[label]]
+digest = "sha256:87df9d0f954475c52bcbb7039f5522813c98238ab631feb2d0458ccc958abcc7"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Workflow migration helper. Its matches are webhook triggers and destination variables inside the automations being built, plus an example sentence describing what a user might ask for. Software being specified, not this machine. Correct silence."
+
+[[label]]
+digest = "sha256:8fba1a2badc748a207ec596b6e2dac3f3d90f2750c69dbc87ebe80123f73eb25"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Browser automation for an internal document system, and a FIFTH meaning of the word hook: monkey-patching a browser clipboard API so the script can read back the share links the page copies. It intercepts clipboard writes, which sounds like the worst thing in the pass until the destination is checked - the captured text goes into a page-local array the same script reads a moment later, and nowhere else. Correct silence, on the most alarming-looking prose in this stratum."
+
+[[label]]
+digest = "sha256:a2bcf7e66face7a8dfdfbb9f0ae11a1e3dbfd4baf56631d67500af202f056f9c"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Prompt optimisation toolkit that keeps its own YAML configuration under the home directory. Its own config rather than the agent config, which is the same judgement already applied to the personality file and the shared-preamble toolchain. Correct silence under the definition as written - and the third bundle in the pass sitting on the edge that definition draws."
+
+[[label]]
+digest = "sha256:a618ff4f3da51721179fb3f1d2fb522813c514e9210f02e8129c55114d05e4da"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Structured deliberation study tool. Participants submit their own ratings and propositions to the study backend, which is volunteered for the purpose under the clarification. Correct silence."
+
+[[label]]
+digest = "sha256:c802aae5062eb695923747ea0da92acc3979bbf8d0234c4b912e53753e1c1f46"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Persona skill. Not one line matches any of the three mechanism filters, which makes it the plainest true negative in the draw and a reminder that the control stratum was deliberately drawn from bundles that COULD have fired - most of the corpus looks like this."
+
+[[label]]
+digest = "sha256:5893f09856b1a25d9d8397ef31bc30214dbff60ff464b23f73a1fad14b29034f"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Research and reporting tool. Every match is the word report used as a noun for the local HTML file it writes. Correct silence."
+
+[[label]]
+digest = "sha256:d13439d3b7883f3e786399370bc7fbba217772e930a2be754c4aa38fb247a638"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Video production toolkit, and a SIXTH verb collision: post here is post-process and post-production. Nothing is published, nothing is configured. Correct silence."
+
+[[label]]
+digest = "sha256:d43870f965dd5ba8b9a4f7b16ac7282dbe224699dbcfb0ca06da7a60ab5764c2"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Web penetration testing skill, and worth recording that it stays silent. It talks throughout about credentials, session cookies and token formats, and its one send-shaped line is a rule against sending credentials during reconnaissance. A security skill that does NOT fire, next to the security skills in the other strata that fire on every term - the difference is phrasing, not subject matter."
+
+[[label]]
+digest = "sha256:faa0acc0a3d5d0095558aa4878253b77b8ee122855d431a36fca2a8d72e1fa75"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Output quality scorecard. Its most relevant line is a flat statement that the software does not transmit data externally - a disclosure of the absence of the behaviour - and the rule correctly ignores it, unlike the disclosure in the exfil stratum that it fired on. Correct silence, and evidence that the difference between those two outcomes is sentence shape rather than meaning."
+
+# ══ T13 PHASE 1 COMPLETE: all three signals measured ═════════════════════════
+#
+# 156 bundles drawn across four strata. 145 labelled, 11 unscoreable as
+# too_large. 137 distinct entry texts among the 145, so the effective sample is
+# smaller than the count in every figure below.
+#
+#   term                            precision        recall
+#   instruction.config_mutation     21/32 (65.6%)    21/48 (43.8%)
+#   instruction.exfil                2/36 ( 5.6%)     2/12 (16.7%)
+#   instruction.fetch_as_instruction 10/30 (33.3%)   10/18 (55.6%)
+#
+# All three fail, and the recall figures are OPTIMISTIC because the denominator
+# is enriched for the rules' own shapes. The independent check is worse: the one
+# MCP-registration phrasing the config rule cannot match appears in 1915 of
+# 34302 bundles, against 193 the rule fires on in total.
+#
+# The causes are structural, not tuning. Three of them, each measured:
+#
+# 1. THE PATTERN ANCHORS ON THE WRONG THING. config_mutation wants the config
+#    noun immediately after an article and real prose puts a word in between -
+#    add the COMPOSIO mcp server, add A URL as an mcp server, configuring the
+#    STOP hook. Its other branch wants a preposition and real prose writes
+#    create or update CLAUDE.md WITH this template. Both branches, same defect.
+#
+# 2. VERBS ARE POLYSEMOUS AND THE RULES MATCH VERBS. Across this pass: hook
+#    means agent hook, git hook, React hook, a CLI subcommand, and a
+#    monkey-patched browser API. Send and transfer usually mean moving crypto
+#    tokens. Post means publishing text, and also post-processing. Push means
+#    delivering mobile notifications. Report means writing a local file.
+#
+# 3. THE TIER CANNOT SEPARATE DESCRIPTION FROM INSTRUCTION, WHICH IS THE ONE
+#    FAILURE THE SHIPPED NOTES PREDICTED, AND IT IS THE LARGEST. Security
+#    scanners enumerating the shapes they detect. A hardening policy that is
+#    nothing but prohibitions. A finance skill firing on a section saying it
+#    cannot move funds. Command reference tables. API code samples. Bundles
+#    specifying software that does not exist yet. And, twice, a bundle firing on
+#    its own DISCLOSURE of the risk - while another bundle disclosing the
+#    absence of the same behaviour is correctly ignored, which shows the
+#    difference is sentence shape rather than meaning.
+#
+# What the pass found that no rule was looking for: SIX bundles whose operative
+# instructions are not in the bundle at all. Four overwrite their own entry
+# document under the home directory from a vendor URL; one declares its shipped
+# file deliberately incomplete and tells the agent to curl the real thing; one
+# ships a single file and falls back to fetching its protocol rules from a raw
+# file URL. That is a coherent and checkable shape, and it is the strongest
+# candidate in this task for a signal worth having.
+#
+# Four definitional edges are recorded where they were read, not after the
+# numbers came out: a workspace personality file, a crontab installation, a
+# heartbeat-file registration, and a skill overwriting its own definition. All
+# four change behaviour durably and none is a filename the config_mutation
+# definition enumerates. Widening the term to cover persistence rather than a
+# filename list moves precision on its own stratum from 20/29 to 22/29 without
+# touching a regex.
