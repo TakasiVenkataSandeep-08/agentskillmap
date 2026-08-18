@@ -139,8 +139,42 @@ impl Resolver for ClaudeCode {
         // walk `.claude/plugins`, and returning Plugin from a code path that
         // cannot actually produce one would be a stub (invariant 12). Tracked in
         // docs/00-tasks.md.
-        dir.join("SKILL.md").is_file().then_some(BundleKind::Skill)
+        entry_file(dir).map(|_| BundleKind::Skill)
     }
+}
+
+/// The bundle's entry document, whatever case its author used.
+///
+/// `dir.join("SKILL.md").is_file()` looks exact and is not. It is **true** for a
+/// `skill.md` on Windows and **false** for the same bundle on Linux, so the same
+/// directory was a skill on one machine and invisible on another — and invisible
+/// silently, because a directory that is not a bundle is never walked and can
+/// never produce an `unresolved` entry to say so. That is the failure invariant 3
+/// exists to prevent, arriving through the filesystem rather than through the
+/// analysis.
+///
+/// It is not rare. Of 34,302 harvested bundles: 31,942 `SKILL.md`, 2,354
+/// `skill.md`, 4 `Skill.md`, 2 `SKILL.MD` — **6.9% would not be discovered at all
+/// on Linux or macOS**, which is where CI runs.
+///
+/// So the match is case-insensitive **on purpose** rather than by accident of the
+/// platform, and both platforms now agree. Whether the agent itself loads a
+/// lowercase entry file is a separate question this crate does not claim to
+/// answer; `skillmap-parse` records the discrepancy on the manifest so a reader
+/// can see it and decide.
+///
+/// Ties are broken by sorted order so a directory holding two case variants
+/// resolves identically everywhere.
+fn entry_file(dir: &Path) -> Option<PathBuf> {
+    let mut names: Vec<String> = std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_file()))
+        .filter_map(|entry| entry.file_name().into_string().ok())
+        .filter(|name| name.eq_ignore_ascii_case("SKILL.md"))
+        .collect();
+    names.sort();
+    names.into_iter().next().map(|name| dir.join(name))
 }
 
 /// Everything that can go wrong discovering bundles.

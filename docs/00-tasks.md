@@ -1374,6 +1374,16 @@ The definition-of-done checklist at the bottom of `AGENTS.md` applies to all of 
 ---
 
 ## Known gaps
+- **~~The entry filename was matched case-sensitively, and the filesystem decided.~~** Closed.
+  `dir.join("SKILL.md").is_file()` is true for a lowercase `skill.md` on Windows and false on
+  Linux, so **6.9% of the corpus** — 2,354 `skill.md`, 4 `Skill.md`, 2 `SKILL.MD` of 34,302 —
+  was discovered on one platform and *silently absent* on the other, never walked and so unable
+  to produce an `unresolved` entry saying so. Both the resolver and the parser now match
+  case-insensitively on purpose rather than by accident of platform, ties broken by sorted
+  order. The bundle is analysed, and a `parse_error` entry records that the name is not the
+  documented one, because whether the **agent** loads a file by that name is a question this
+  tool cannot answer and does not pretend to.
+
 
 Tracked here rather than left to be rediscovered. None is a blocker for the task it sits in
 front of; each is a thing this repository currently claims or implies but does not yet have.

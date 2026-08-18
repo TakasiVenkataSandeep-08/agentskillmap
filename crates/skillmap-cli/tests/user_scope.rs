@@ -468,3 +468,55 @@ fn a_prose_only_skill_can_be_gated_on_content_change() {
         "and must say why, or the exit code is a riddle:\n{report}"
     );
 }
+
+#[test]
+fn a_lowercase_entry_file_is_found_and_the_discrepancy_is_recorded() {
+    // 2,360 of 34,302 harvested bundles - 6.9% - name their entry document
+    // something other than `SKILL.md`: 2,354 `skill.md`, 4 `Skill.md`, 2
+    // `SKILL.MD`. The old check was `dir.join("SKILL.md").is_file()`, which is
+    // true for a lowercase file on Windows and false on Linux, so those bundles
+    // were discovered on one platform and SILENTLY ABSENT on the other - not
+    // reported as unreadable, just never walked, which is the failure invariant 3
+    // exists to prevent.
+    //
+    // This test cannot fail on Windows for the original reason, since the
+    // filesystem hides it. It asserts the two things that hold on every
+    // platform: the bundle is found, and the manifest says its name is unusual.
+    let home = std::env::temp_dir().join("skillmap-entry-case");
+    let _ = std::fs::remove_dir_all(&home);
+    let skill = home.join(".claude").join("skills").join("lowercase-entry");
+    std::fs::create_dir_all(&skill).unwrap();
+    std::fs::write(
+        skill.join("skill.md"),
+        "---\nname: lowercase-entry\ndescription: A skill whose entry document is lowercase.\n---\n\nSummarise things.\n",
+    )
+    .unwrap();
+
+    let output = skillmap_with_home(&home, &["scan", "--scope", "user"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert!(
+        stderr(&output).contains("1 bundle(s)"),
+        "a bundle whose entry file is lowercase must still be discovered:\n{}",
+        stderr(&output)
+    );
+
+    let json = String::from_utf8_lossy(&output.stdout);
+    let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let manifest = parsed.get(0).expect("one manifest");
+    let notes: Vec<&str> = manifest["unresolved"]
+        .as_array()
+        .expect("unresolved is an array")
+        .iter()
+        .filter_map(|entry| entry["note"].as_str())
+        .collect();
+    assert!(
+        notes.iter().any(|note| note.contains("not `SKILL.md`")),
+        "finding it is only half the fix - the manifest must say the name is not \
+         the documented one, because whether the AGENT loads it is unverified:\n{notes:?}"
+    );
+    assert_eq!(
+        manifest["target"]["name"].as_str(),
+        Some("lowercase-entry"),
+        "and its frontmatter must have been read, not skipped"
+    );
+}

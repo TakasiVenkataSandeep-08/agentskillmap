@@ -98,11 +98,40 @@ pub fn parse_bundle(
     let walk = inventory::walk(&root, limits)?;
     let mut unresolved = walk.unresolved;
 
-    let entry_text = walk
+    // The entry document, whatever case its author used. Matching `ENTRY_FILE`
+    // exactly was a platform-dependent bug: `dir.join("SKILL.md").is_file()` is
+    // true for a lowercase `skill.md` on Windows and false on Linux, so 6.9% of
+    // the corpus - 2,360 of 34,302 bundles - parsed on one machine and vanished
+    // on the other. Ties broken by sorted order, so a bundle holding two case
+    // variants resolves identically everywhere.
+    let mut candidates: Vec<&inventory::WalkedFile> = walk
         .files
         .iter()
-        .find(|file| file.path == ENTRY_FILE)
-        .and_then(|file| file.text.as_deref());
+        .filter(|file| file.path.eq_ignore_ascii_case(ENTRY_FILE))
+        .collect();
+    candidates.sort_by(|a, b| a.path.cmp(&b.path));
+    let entry = candidates.first().copied();
+    let entry_text = entry.and_then(|file| file.text.as_deref());
+
+    // Analysed, and the discrepancy recorded rather than smoothed over. Reading
+    // it is strictly better than ignoring it - the markdown rules run on every
+    // `.md` file regardless - but whether the AGENT loads a file by this name is
+    // not something this crate can verify, so the reader is told and decides.
+    if let Some(file) = entry {
+        if file.path != ENTRY_FILE {
+            unresolved.push(Unresolved {
+                reason: UnresolvedReason::ParseError,
+                file: file.path.clone(),
+                start_byte: None,
+                end_byte: None,
+                start_line: None,
+                note: Some(format!(
+                    "entry document is named `{}`, not `{ENTRY_FILE}`; analysed anyway,                      but whether the agent loads it under this name is unverified"
+                    , file.path
+                )),
+            });
+        }
+    }
 
     let front = read_frontmatter(entry_text, &mut unresolved);
 
