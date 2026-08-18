@@ -166,11 +166,10 @@ And it has to be a **real** negative — drawn from an actual bundle in the corp
 exists; today, from a real skill you can point to), not one you invent to make the rule look
 good. An invented negative tests your imagination of what a false positive looks like. A real
 one tests whether the ecosystem actually produces the shape you're worried about. Those are
-different questions, and only the second one is useful to the project. This is spelled out
-hardest for `instruction.silence` and `instruction.privilege_claim` in
-`docs/03-rules-authoring.md` — they're the two signals most likely to get this project
-attention and most likely to false-positive on ordinary skills that talk about logging or
-permissions, so their negative fixtures are explicitly load-bearing.
+different questions, and only the second one is useful to the project. T13 is the worked example: it hand-labelled 156 bundles
+and withdrew `instruction.exfil` at 2/36 precision, because its false positives were mostly
+security policies *forbidding* the behaviour and skills using `send` to mean a crypto
+transfer. No invented negative would have predicted either.
 
 ## Why the tool never says "safe" or "malicious"
 

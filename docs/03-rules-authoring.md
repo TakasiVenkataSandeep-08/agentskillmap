@@ -150,10 +150,16 @@ covers the documentation case; extend it rather than narrowing the query.
 Same triple, `tier = "pattern"`, language `markdown`. These are lexical and deliberately
 weak; they land in `instructions`, never `capabilities`, and can never be promoted.
 
-Two of them — `instruction.silence` and `instruction.privilege_claim` — are the signals most
-likely to earn this project attention and most likely to false-positive on legitimate skills
-about logging verbosity and permission handling. Their negative fixtures are load-bearing.
-Write three negatives each, drawn from real bundles in the corpus, before writing the query.
+**Negative fixtures decide whether one of these is shippable, and T13 is the evidence.** It
+labelled 156 bundles and withdrew `instruction.exfil` at 2/36 precision. Its false positives
+were a security policy made entirely of prohibitions, a finance skill stating it *cannot* move
+funds, a bundle disclosing that its examples may transmit prompt context, and six wallet
+skills where `send` means a token transfer. An invented negative predicts none of that.
+
+`instruction.silence` and `instruction.privilege_claim` were also removed — they had sat in
+the vocabulary since T5 with no rule, and the pass that would have supplied their fixtures
+read 156 bundles and found no candidate prose for either. `crates/skillmap-instr/tests/signals.rs`
+now fails if any vocabulary term has no rule that can produce it.
 
 ## Adding a language
 

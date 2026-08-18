@@ -215,8 +215,10 @@ fn findings_carry_full_provenance() {
     // Invariant 4 is explicit that the weak tier gets no discount: "No
     // exceptions, including for instruction-plane findings."
     let rules = rules();
-    let text =
-        std::fs::read_to_string(repo_root().join("fixtures/markdown/exfil/positive.md")).unwrap();
+    let text = std::fs::read_to_string(
+        repo_root().join("fixtures/markdown/fetch-as-instruction/positive.md"),
+    )
+    .unwrap();
     let found = analyze(
         &[ProseFile {
             path: "positive.md",
@@ -254,19 +256,25 @@ fn the_two_riskiest_signals_are_deliberately_not_shipped() {
         })
         .collect();
 
-    for withheld in [
-        InstructionSignal::Silence,
-        InstructionSignal::PrivilegeClaim,
-    ] {
-        assert!(
-            !shipped.contains(&withheld),
-            "`{}` is shipped, but docs/00-tasks.md requires three negative \
-             fixtures drawn from real corpus bundles before its query is written. \
-             If T3 has now run and those fixtures exist, update this test in the \
-             same commit that adds them.",
-            withheld.as_str()
-        );
-    }
+    // T13 removed `instruction.silence` and `instruction.privilege_claim` from
+    // the vocabulary rather than write their queries. They had sat unshipped
+    // since T5, and the pass that would have supplied their fixtures read 156
+    // bundles and found no candidate prose for either.
+    //
+    // So the guard changed shape. It used to assert that two named terms stayed
+    // unshipped; it now asserts the general property that replaced them: every
+    // term the manifest can express is a term some rule can produce. A
+    // vocabulary wider than the rules is a taxonomy the tool cannot fill, which
+    // is what invariant 12 forbids and what those two entries were.
+    let unreachable: Vec<&str> = InstructionSignal::ALL
+        .iter()
+        .filter(|term| !shipped.contains(term))
+        .map(|term| term.as_str())
+        .collect();
+    assert!(
+        unreachable.is_empty(),
+        "these instruction terms are in the manifest vocabulary and no shipped          rule can produce them: {unreachable:?}. Either write the rule with its          fixtures, or remove the term - a term nothing can emit is a promise the          tool does not keep."
+    );
 }
 
 #[test]
@@ -291,8 +299,10 @@ fn the_instruction_plane_cannot_produce_a_capability() {
 #[test]
 fn analysis_is_deterministic() {
     let rules = rules();
-    let text =
-        std::fs::read_to_string(repo_root().join("fixtures/markdown/exfil/positive.md")).unwrap();
+    let text = std::fs::read_to_string(
+        repo_root().join("fixtures/markdown/fetch-as-instruction/positive.md"),
+    )
+    .unwrap();
     let file = ProseFile {
         path: "positive.md",
         text: &text,

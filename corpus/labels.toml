@@ -192,6 +192,19 @@ vocabulary = [
   "instruction.fetch_as_instruction",
 ]
 
+# NOTE ON instruction.exfil, WHICH NO LONGER EXISTS IN THE MANIFEST.
+#
+# It stays in this list, and in 12 labels above, on purpose. Those labels are a
+# record of what 145 bundles were judged to contain, made before the term was
+# withdrawn, and deleting them would erase the evidence the withdrawal rests on -
+# the 2/36 precision, and the two repair attempts that measured 1/30 and 0/7.
+# Ground truth is about the bundles, not about which rules happen to ship.
+#
+# Nothing scores it: the term is absent from terms_labelled, its strata are
+# absent from strata_scored, and no shipped rule can emit it, so the eval simply
+# never asks. If the term is ever reintroduced, these labels are what it has to
+# beat.
+
 # ── T13's three terms, defined before the pass that uses them ─────────────────
 #
 # Unlike every term before them, these three ship a rule already. The governing

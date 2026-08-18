@@ -185,8 +185,8 @@ pub fn maximal() -> Manifest {
         ],
         instructions: vec![
             Instruction {
-                signal: InstructionSignal::Silence,
-                evidence: NonEmpty::of(evidence("reference/setup.md", 300, 22, "instr.silence"), []),
+                signal: InstructionSignal::ConfigMutation,
+                evidence: NonEmpty::of(evidence("reference/setup.md", 300, 22, "instr.config-mutation"), []),
             },
             Instruction {
                 signal: InstructionSignal::FetchAsInstruction,

@@ -485,3 +485,77 @@ fn reachability_and_coverage_distribution() {
     println!("  unresolved reasons: {unres:?}");
     println!("  files by parsed_as: {parsed:?}");
 }
+
+#[test]
+fn the_remote_instruction_signal_is_scored_against_its_own_ground_truth() {
+    // T13. This one carries a caveat the other two do not, and it belongs next
+    // to the number rather than in a document nobody opens.
+    //
+    // The rule was REWRITTEN AFTER the phase 1 strata were labelled, which
+    // inverts the ordering the corpus discipline rests on: labels before rules.
+    // The four phase 1 strata are therefore in-sample for it, and a precision
+    // measured only there would be fitted rather than observed.
+    //
+    // `instr_remote_instructions_holdout` exists to answer that. Thirty bundles
+    // nobody had read, drawn by `scripts/draw_instruction_validation.py` from
+    // the 100 unlabelled bundles matching the narrowed shape, and judged against
+    // the term definition fixed before phase 1 rather than against the patterns.
+    // Both are asserted below, separately, so the honest number stays visible
+    // beside the flattering one.
+    const TERM: &str = "instruction.fetch_as_instruction";
+
+    let Some((tp, fp, fn_, tn, missed, spurious)) =
+        score_signal(TERM, &["instr_remote_instructions_holdout"])
+    else {
+        eprintln!("SKIPPED: corpus/raw/ is absent, so {TERM} could not be scored.");
+        return;
+    };
+    report_score(
+        &format!("{TERM} [held out, unread when drawn]"),
+        tp,
+        fp,
+        fn_,
+        tn,
+    );
+    if !spurious.is_empty() {
+        println!("  false positives: {spurious:?}");
+    }
+    if !missed.is_empty() {
+        println!("  missed: {missed:?}");
+    }
+    assert_eq!(
+        (tp, fp, fn_, tn),
+        (26, 0, 3, 1),
+        "the held-out remote-instruction score moved. This is the only figure for \
+         this term that was not fitted, so change it deliberately and re-read the \
+         bundles before touching the published rate"
+    );
+
+    let Some((tp, fp, fn_, tn, _, spurious)) = score_signal(
+        TERM,
+        &[
+            "instr_config_mutation",
+            "instr_exfil",
+            "instr_fetch_instruction",
+            "instr_control",
+        ],
+    ) else {
+        return;
+    };
+    report_score(
+        &format!("{TERM} [phase 1 strata, IN SAMPLE]"),
+        tp,
+        fp,
+        fn_,
+        tn,
+    );
+    if !spurious.is_empty() {
+        println!("  false positives: {spurious:?}");
+    }
+    assert_eq!(
+        (tp, fp, fn_, tn),
+        (13, 0, 13, 119),
+        "the in-sample remote-instruction score moved. Recall here is the honest \
+         half of this pair: thirteen of twenty-six real cases are still missed"
+    );
+}

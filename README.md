@@ -289,17 +289,37 @@ different fields of the manifest, and every number above iterates `capabilities`
 
 #### The instruction plane, measured separately
 
-The five shipped `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest
-tier — and had never been counted over the corpus at all. How often each **fires** on the
-benign stratum, and what those firings turned out to be when read:
+The `instruction.*` signals are `tier = "pattern"` — prose regex, the weakest tier. T13
+hand-labelled 156 bundles across four strata to find out whether the three that had never
+been measured were worth keeping. **Two were not, and were removed at schema 1.4.0.**
 
-| Signal | Fires on benign stratum | Adjudicated |
-|---|---|---|
-| `instruction.config_mutation` | 1/36 (2.8%, 95% CI 0.5–14.2%) | false positive |
-| `instruction.exfil` | 1/36 (2.8%, 95% CI 0.5–14.2%) | false positive |
-| `instruction.fetch_as_instruction` | 0/36 (0%, 95% CI 0–9.6%) | — |
-| `instruction.exec_directive` | 0/36 (0%, 95% CI 0–9.6%) | — |
-| `instruction.directs_outside_write` | 3/36 (8.3%, 95% CI 2.9–21.8%) | **all three correct** |
+| Signal | Precision | Recall | Status |
+|---|---|---|---|
+| `instruction.exec_directive` | 31/31 (100%) | 31/35 (88.6%) | shipped |
+| `instruction.directs_outside_write` | 37/38 (97.4%) | 37/37 (100%) | shipped |
+| `instruction.fetch_as_instruction` | **26/26 held out** | 26/29 (89.7%) | rewritten at 1.4.0 |
+| `instruction.config_mutation` | 21/32 (65.6%) | 21/48 (43.8%) | **held, not repaired** |
+| ~~`instruction.exfil`~~ | 2/36 (5.6%) | 2/12 | **withdrawn at 1.4.0** |
+| ~~`instruction.silence`~~ | — | — | **withdrawn: never had a rule** |
+| ~~`instruction.privilege_claim`~~ | — | — | **withdrawn: never had a rule** |
+
+`exfil` was withdrawn because its failure is not tunable: in this corpus `send` and
+`transfer` usually mean moving crypto tokens, and the largest group of false positives is
+prose *forbidding* the behaviour. Two repairs were measured — qualifying the noun gave 1/30,
+adding a negation guard gave 0/7, removing both true positives along with 23 false ones.
+
+`fetch_as_instruction` now detects one thing: **the bundle's operative instructions are not
+in the bundle.** Its precision column is the held-out figure — 30 bundles drawn and read
+after the rule was written, because the rule was rewritten *after* its other strata were
+labelled and those are in-sample for it. In-sample recall is 13/26, and that gap is published
+beside the flattering number rather than under it.
+
+`config_mutation` is measured and deliberately **not** shipped repaired. A repair closes half
+its misses (recall 43.8% → 79%) and leaves precision at ~64%, and what remains is unreachable
+by any pattern: security scanners enumerating what they detect, git-hooks skills where the
+word means something else entirely, and two cases where the rule is arguably right and the
+definition too narrow. 64% is far below the bar the two shipped signals set, so it stays as it
+is with the evidence recorded.
 
 **The last column is why this is a firing rate and not a false-positive rate.** Every firing
 was read. The three from `directs_outside_write` each install a skill into an agent workspace

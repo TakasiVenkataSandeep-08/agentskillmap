@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::num::NonZeroU64;
 
 /// The schema version this crate produces.
-pub const SCHEMA_VERSION: &str = "1.3.0";
+pub const SCHEMA_VERSION: &str = "1.4.0";
 
 /// A skillmap capability manifest.
 ///
@@ -538,23 +538,34 @@ pub enum CapabilityTerm {
 ///
 /// A separate namespace from [`CapabilityTerm`] on purpose: these never appear in
 /// `capabilities` and can never be promoted there.
+///
+/// # Three terms were removed at schema 1.4.0, and the reasons differ
+///
+/// `instruction.exfil` **shipped a rule and was withdrawn on measurement.** T13
+/// hand-labelled 145 bundles across four strata and it scored **2/36 precision**
+/// on the stratum drawn for it. The false positives are not tunable: in this
+/// corpus `send` and `transfer` usually mean moving crypto tokens, `post` means
+/// publishing, `push` means mobile notifications, and the largest single group
+/// is prose *forbidding* the behaviour — a security-hardening policy made
+/// entirely of prohibitions fires on it by naming what it forbids. Two repairs
+/// were measured rather than assumed: qualifying the noun gave 1/30, and adding
+/// a negation guard gave 0/7, because the guard removed 23 false positives and
+/// both true positives with them.
+///
+/// `instruction.silence` and `instruction.privilege_claim` **never had a rule at
+/// all.** They sat in this enum from T5 as vocabulary a detector might one day
+/// need, and nothing could ever produce them, so every manifest claimed a
+/// taxonomy two terms wider than the tool could fill. T13's pass read 156
+/// bundles and found no candidate prose for either. A vocabulary entry no code
+/// path can emit is the shape invariant 12 forbids.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InstructionSignal {
     /// Prose telling the agent to treat fetched content as instructions.
     #[serde(rename = "instruction.fetch_as_instruction")]
     FetchAsInstruction,
-    /// Prose directing data to an external destination.
-    #[serde(rename = "instruction.exfil")]
-    Exfil,
     /// Prose directing edits to agent config.
     #[serde(rename = "instruction.config_mutation")]
     ConfigMutation,
-    /// Prose directing the agent not to report or surface something.
-    #[serde(rename = "instruction.silence")]
-    Silence,
-    /// Prose asserting pre-authorization or elevated permission.
-    #[serde(rename = "instruction.privilege_claim")]
-    PrivilegeClaim,
     /// Prose directing the agent to run a command that writes to, copies into,
     /// or makes executable a path outside the bundle.
     ///
@@ -640,10 +651,7 @@ wire_names!(CapabilityTerm, capability_term_wire_names_match_serde, [
 
 wire_names!(InstructionSignal, instruction_signal_wire_names_match_serde, [
     FetchAsInstruction => "instruction.fetch_as_instruction",
-    Exfil => "instruction.exfil",
     ConfigMutation => "instruction.config_mutation",
-    Silence => "instruction.silence",
-    PrivilegeClaim => "instruction.privilege_claim",
     ExecDirective => "instruction.exec_directive",
     DirectsOutsideWrite => "instruction.directs_outside_write",
 ]);

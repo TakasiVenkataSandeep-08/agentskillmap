@@ -11,7 +11,7 @@ against that schema in CI — if the two ever disagree, the build fails.
 
 ```json
 {
-  "schema_version": "1.3.0",
+  "schema_version": "1.4.0",
   "tool": { "name": "skillmap", "version": "0.7.1" },
 
   "target": {
@@ -277,6 +277,47 @@ Instruction-plane signals use a separate `instruction.*` namespace and never app
 `instruction.silence` and `instruction.privilege_claim` are the two that will earn this
 project attention. They are also the two most likely to false-positive on legitimate skills
 about logging verbosity and permissions — negative fixtures for those are load-bearing.
+
+## Migration: 1.3.0 → 1.4.0
+
+**Three terms leave `instructionSignal`, and one rule is rewritten.** Nothing about the
+manifest's *shape* moved. This is the first release that removes vocabulary rather than
+adding it, so the reasons are given per term.
+
+**`instruction.exfil` is removed — it shipped a rule and failed measurement.** T13
+hand-labelled 145 bundles across four strata and it scored **2/36 precision** on the stratum
+drawn for its own shape. The failure is not tunable. In this corpus `send` and `transfer`
+usually mean moving crypto tokens between wallets; `post` means publishing text; `push` means
+an app delivering notifications. The largest single group of false positives is prose
+*forbidding* the behaviour — a security-hardening policy consisting entirely of prohibitions
+fires by naming what it forbids, and so does a bundle disclosing that its examples may
+transmit prompt context. Two repairs were measured rather than argued: qualifying the
+sensitive noun gave 1/30, and adding a negation guard gave 0/7, because the guard removed 23
+false positives and both true positives with them.
+
+**`instruction.silence` and `instruction.privilege_claim` are removed — they never had a
+rule.** They had been in the vocabulary since T5 as terms a detector might one day need, and
+no code path could emit either, so every manifest advertised a taxonomy two terms wider than
+the tool could fill. T13's pass read 156 bundles and found no candidate prose for either.
+`crates/skillmap-instr/tests/signals.rs` now asserts the general property instead: every term
+this enum can express is a term some shipped rule can produce.
+
+**`instruction.fetch_as_instruction` keeps its name and changes its meaning.** It used to
+claim indirect prompt injection in general and scored 10/30 precision, matching security
+scanners that enumerate attacks, a terminal simulator defining a brace convention, and
+installers that fetch a binary and run it — which is fetched *code*, already named by
+`net.fetch_then_execute` and `instruction.exec_directive`. It now detects one thing: **the
+bundle's operative instructions are not in the bundle.** A remote document written over an
+entry or heartbeat file, a fetched `.md` that is then followed, a shipped file declaring
+itself incomplete. Measured through the binary at **39/39 precision and 39/55 recall** across
+175 labelled bundles, 30 of which were drawn and read specifically as a held-out test.
+
+**What a reader has to do.** Nothing, if you only consume `capabilities` — the capability
+plane is untouched and its published rates are unchanged. If you match on `instructions`,
+drop the three removed wire names; a lock written by an older build still round-trips,
+because `LockEntry` stores wire strings rather than the enum. If you acted on
+`instruction.fetch_as_instruction`, re-read what it now means: it fires on fewer bundles and
+on a different, narrower claim.
 
 ## Migration: 1.2.0 → 1.3.0
 

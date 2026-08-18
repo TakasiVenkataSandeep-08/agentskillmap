@@ -1327,10 +1327,43 @@ skill. All change behaviour durably; none is a filename the definition enumerate
 the term to cover persistence moves precision on its own stratum from 20/29 to 22/29 with no
 regex change.
 
-**Phase 2 inherits three decisions, all now evidenced:** whether `exfil` at 2/36 can be
-rescued or should be withdrawn; whether `fetch_as_instruction` should be narrowed to the
-instructions-not-in-the-bundle shape it actually detects well; and whether `config_mutation`
-is worth repairing given that one template accounts for most of its misses.
+### Phases 2 and 3: what shipped, at schema 1.4.0
+
+**`instruction.exfil` withdrawn.** 2/36 precision on its own stratum, and the failure is
+structural: `send` and `transfer` usually mean crypto transfers here, and the largest group of
+false positives is prose *forbidding* the behaviour. Two repairs were measured before the
+decision — qualifying the noun gave 1/30, adding a negation guard gave 0/7, taking both true
+positives with 23 false ones.
+
+**`instruction.silence` and `instruction.privilege_claim` withdrawn.** In the vocabulary since
+T5, no rule, no candidate prose in 156 bundles. `signals.rs` now fails if any vocabulary term
+has no rule that can produce it.
+
+**`instruction.fetch_as_instruction` rewritten**, to the one shape the pass found it detects
+well: the bundle's operative instructions are not in the bundle.
+
+```
+  held out (30 bundles, unread when drawn)   precision 26/26   recall 26/29
+  phase 1 strata (in sample for this rule)   precision 13/13   recall 13/26
+```
+
+Both are asserted in CI, separately, so the fitted number cannot be quoted without the honest
+one beside it. Three things this repository's own guards caught first: a negative fixture that
+tripped `exec_directive`, the rule firing on these very notes twice, and a tightening that
+compiled cleanly and then **matched nothing at all** — a character class after `\s*` in a
+`#match?` predicate silently never fires, so anyone narrowing it must smoke-test the rebuilt
+binary rather than trust the query compiles.
+
+**`config_mutation` measured and deliberately held.** The repair closes half its misses
+(recall 43.8% → 79%) and leaves precision at ~64%; what remains is unreachable by any pattern.
+64% is far below the 97-100% the two shipped signals set, so it stays as it is with the
+repaired patterns recorded here as evidence for a later pass.
+
+**Still open, and recorded rather than quietly dropped:** a recall stratum for the rewritten
+term (13/26 in sample is the only recall figure that is not fitted); the table and fence blind
+spot affecting every `(inline)` rule (15 bundles for `config_mutation`, 5 for the withdrawn
+`exfil`, 1 for `fetch`); and the four definitional edges where persistence does not live in
+the filenames `config_mutation` enumerates.
 
 ---
 

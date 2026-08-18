@@ -145,6 +145,19 @@
     {
       "evidence": [
         {
+          "end_byte": 336,
+          "file": "reference/setup.md",
+          "rule_id": "instr.config-mutation",
+          "snippet_sha256": "sha256:7b5f4608082b25775d9ad2b4bf836c61735fa97749ed8fae51a901f34340cba9",
+          "start_byte": 300,
+          "start_line": 22
+        }
+      ],
+      "signal": "instruction.config_mutation"
+    },
+    {
+      "evidence": [
+        {
           "end_byte": 124,
           "file": "reference/setup.md",
           "rule_id": "instr.fetch-as-instruction",
@@ -154,19 +167,6 @@
         }
       ],
       "signal": "instruction.fetch_as_instruction"
-    },
-    {
-      "evidence": [
-        {
-          "end_byte": 336,
-          "file": "reference/setup.md",
-          "rule_id": "instr.silence",
-          "snippet_sha256": "sha256:e03c2ac2443798dc0214eb887b4a2b809d824641ffc67a9c42b1c0723c3a0693",
-          "start_byte": 300,
-          "start_line": 22
-        }
-      ],
-      "signal": "instruction.silence"
     }
   ],
   "inventory": [
@@ -203,7 +203,7 @@
       "size": 4096
     }
   ],
-  "schema_version": "1.3.0",
+  "schema_version": "1.4.0",
   "target": {
     "content_digest": "sha256:f882e860ca44e6ac376c8e8148b5bc0fa7245d6f2f16a048b7a863986820a2d2",
     "kind": "skill",
