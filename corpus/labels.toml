@@ -3817,3 +3817,65 @@ verdict = "labelled"
 capabilities = ["instruction.config_mutation"]
 evidence = ["SKILL.md:547"]
 note = "Organisational readiness advisor. Directs adding context to CLAUDE.md as a step in its recommendation template and again in a week-by-week rollout plan, so the mutation is advice given to a reader rather than a setup procedure the agent runs - and still directs the edit, so counted."
+
+[[label]]
+digest = "sha256:ec769d92582b9d771afde4ac6832b41e045bf7239edc5289504acd46ad21effc"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Agent framework overview. Its config-shaped lines are rows in a CLI reference block - subcommands for adding, removing, listing and testing MCP servers, and for adding a repository as a skill source. The document lists what the tool can do and directs no edit, which is the same describes-rather-than-instructs form as the other command-reference bundle in this stratum. Worth noting that a rule cannot easily tell a command reference from a setup step: both are an imperative verb next to a config noun."
+
+[[label]]
+digest = "sha256:eda0e6ad9972e4f07b5fb4b6db54558296bfe2d7b6eebae59cd4791ea547c95d"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Fourth bundle carrying the shared eighteen-line toolchain preamble. Reads its own configuration, directs no change to agent configuration, and names no destination for its opt-in telemetry."
+
+[[label]]
+digest = "sha256:f903a8e63474b2db3915b123a961ddb3f0467d2bf095dfb767e3389ab23697b8"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "FIFTH bundle with the shared preamble - an eighth of this stratum. The family is larger than it first looked and none of its members is a duplicate by content: the bodies save context, fix iOS builds, print a release dashboard, teach, and benchmark models. Only the boilerplate that made them match is common, which is the correlation a duplicate check cannot see and the reason the interval on this stratum is optimistic."
+
+# ── T13 phase 1: the config_mutation stratum, measured ────────────────────────
+#
+# 40 bundles, 34 labelled, 6 too_large.
+#
+#   instruction.config_mutation   precision 20/29 (69.0%)   fn 3
+#
+# The headline number is less useful than its composition, because the nine
+# false positives are not nine independent failures:
+#
+#   5  the shared-preamble family. Five bundles with different bodies - context
+#      saving, iOS builds, a release dashboard, teaching, model benchmarking -
+#      carrying one identical eighteen-line shell preamble that READS a
+#      toolchain's own configuration. One boilerplate block, five false
+#      positives, and no duplicate check sees it because the bodies differ.
+#   2  the git-hook collision. Pre-commit setup skills touching no agent
+#      configuration at all. The pattern matches the bare noun after set up,
+#      install or add, and hook is four different words in this stratum: agent
+#      hook, git hook, React hook, vendor CLI subcommand.
+#   2  the definitional edges, where the RULE IS ARGUABLY RIGHT AND THE
+#      DEFINITION WRONG: a personality file in the workspace root that shapes
+#      every response, and crontab entries running a skill's own scripts every
+#      three hours forever. Both change behaviour durably; neither is a filename
+#      the definition enumerates. If phase 2 widens the term, precision here
+#      becomes 22/29 without touching a regex.
+#
+# The three misses are one structural weakness, not three. The rule's first
+# pattern requires a preposition - add X TO CLAUDE.md - and real prose does not
+# supply one: "Create or update CLAUDE.md with this template" is missed. Its
+# second pattern requires the config noun immediately after the article, and
+# real prose puts a product name in between: "Add the Composio MCP server",
+# "Add MCP server to Codex". Both are fixable on this evidence.
+#
+# exfil and fetch_as_instruction cannot be scored here. This stratum was
+# selected by the config probe, so their positives were never sampled for. Both
+# their misses are recorded: two bundles direct user data to an external
+# service - documents into a hosted workspace, triples to a SPARQL endpoint -
+# and the exfil rule fired on neither.
