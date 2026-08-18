@@ -3689,3 +3689,51 @@ verdict = "labelled"
 capabilities = ["instruction.config_mutation"]
 evidence = ["SKILL.md:200"]
 note = "Directs adding an auto-load routing line to the project CLAUDE.md and creating the file if it is absent, then lists that edit in its own completion checklist. Unambiguous instance of the term."
+
+[[label]]
+digest = "sha256:86c61c4d86f5bf1e6a430b4f2021f46479738955c79714ff5ab47352fa0d26c4"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "The git-hook collision again, and the purest instance of it: a pre-commit setup skill with a whole reference document on git hook types, husky and lint-staged. Thirty-five matching lines in the entry document and not one of them touches agent configuration. Second bundle in this stratum whose only reason for matching is that hook means two different things."
+
+[[label]]
+digest = "sha256:896861425b3ff6f3c52e27f972407a32feed37d0e35af9c940b0d76662965573"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:598"]
+note = "Cloud agent-orchestration skill. Directs registering its MCP server with the agent, which is the term. Its other hook-shaped lines are a third meaning of the word again - a vendor CLI subcommand named hooks that emits task metrics - so this bundle carries both a real config registration and the collision, in the same file."
+
+[[label]]
+digest = "sha256:d4dfb2570fab8a5dfff7368c8b57b060fd4386d3d80a4da5aac2a26653f7472a"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:178", "SKILL.md:198"]
+note = "Learning-promotion skill and one of the strongest instances of the term in the stratum: it copies a hook into the agent hooks directory under the home, enables it through the agent CLI, and promotes accepted learnings into CLAUDE.md, AGENTS.md and other always-loaded instruction files by design. Its exfil-shaped lines are the opposite of the term - a guardrail saying never to send secrets or hidden system prompts and to require approval before any external submission - which is the prose-warns-against-it class the shipped rule notes predict."
+
+[[label]]
+digest = "sha256:28a4308dba66fc929fb4a258308564b5f6b56d50d9125bd772ea996fc85d8b9b"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:143"]
+note = "Memory-management skill built entirely around CLAUDE.md as a hot cache: create it from a template, promote items into it, demote items out of it, refresh its tables after each report, and verify its line count in a checklist. Thirty-odd directives to edit agent configuration in one document, which makes it the least ambiguous true positive in the stratum."
+
+[[label]]
+digest = "sha256:e6122c640fa1e9c91376027c251bd0c81cb9a54363ccc4d9b4718efe11d7959a"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:38"]
+note = "Memory protocol whose second setup step is adding the protocol to AGENTS.md, so the behaviour applies to every later session. Plain instance of the term."
+
+[[label]]
+digest = "sha256:664b8f455b8685b8479e44c32a3b199db37128155c368d68dedc5e984481148b"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "THE THIRD EDGE, and the one that most clearly breaks the definition. This skill directs installing crontab entries that run its own scripts under the home directory every three and every six hours, indefinitely, and generates a state file described as being auto-injected into the agent context. That is a more consequential and longer-lived change than adding a line to CLAUDE.md, and it is NOT this term, because the definition fixed before the pass enumerates agent config filenames and a crontab is not one of them. Recorded as a negative and flagged: with the workspace-root personality file and the skill that overwrites its own definition from a URL, three bundles now demonstrate that persistence does not live where the term looks."
