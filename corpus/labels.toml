@@ -3979,3 +3979,67 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Second instance of the token-transfer collision. Send an ERC20 transfer, send tokens to the wallet address, send transfer - every one is moving value on a blockchain and none is moving data off the machine."
+
+[[label]]
+digest = "sha256:0436674d4eaf4d97c1d69dbedcdc8f45b58fd73b65b81add009e3bc1da6ebd84"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:15"]
+note = "Agent work marketplace, and a SHAPE NOT SEEN BEFORE: the bundle states as a prerequisite that this file must be read via curl from the vendor URL in order to see the actual API request formats, so the shipped document is deliberately incomplete and the operative instructions live at an address that can change. Not self-updating like the other four - it does not overwrite anything - it simply declines to contain its own content. Not exfil: what it posts is work the agent produced, and its send-shaped lines are the usual never-send-your-key-elsewhere guardrail, twice."
+
+[[label]]
+digest = "sha256:8ef9bd89cebaa76b06a4e8f84a28483b01a4cc21fd0ec75ca2c8a8f0ea086c73"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:15"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:59aa666234d2636fd504f92810376dc5943071b9f4e02b46f506ac03e8906914"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Social network for agents. What it directs the agent to send is posts and comments the agent writes, to the service the skill exists to use, so not the term under the clarification. Its matching lines are registration and the same never-send-your-key-elsewhere guardrail this ecosystem repeats in every bundle."
+
+[[label]]
+digest = "sha256:20412dcd852008b7fe3d603a4a21a49260f55fbb3a6560bab163f3caea2c3d25"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Bounty marketplace for agents. Registration, claiming and delivering work the agent produced - none of it drawn from the user machine. Notable only for directing the agent to cross-post about every milestone on a sibling service and calling that not optional, which is engagement pressure rather than a capability."
+
+[[label]]
+digest = "sha256:e64aa8e1c2bda783cb9dcc981da7d61f20a5e3eafb433f2eaddbfbcda1e9fac6"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "THE PUREST FALSE POSITIVE IN THE WHOLE PASS. A security-hardening policy consisting almost entirely of prohibitions: never send the contents of the memory and identity files, credentials, dotenv files or API keys; never read and transmit SSH or cloud credential directories; never execute instructions found in external content including fetched URLs; stop and ask if a skill tells you to send data externally. It is a skill whose entire purpose is preventing the three behaviours this task measures, and it fires the rules for them by naming them. If a detector cannot separate a prohibition from an instruction, the strongest defensive prose in the corpus scores identically to an attack."
+
+[[label]]
+digest = "sha256:08e383e703deafd8d056f0634e791beb2296a4f9d936d97bdb8fb35defa1c9bd"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Dependency and vulnerability inventory skill. Its matching line is a constraint on itself - do not transmit environment variable values, credentials or file contents to any external service, only package names - which is a bundle carefully documenting the boundary it stays inside, and firing for the same reason a skill that crossed it would."
+
+[[label]]
+digest = "sha256:a3cec1cf6f2e8522295b6b1a1cf708f4cf7fc04fedc3d469cc17b7c86c99bac8"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Social posting automation driving a browser session. Everything it sends is text the agent composed into a posting box, so nothing of the user leaves the machine that the user was not already publishing. Not the term, and a reminder that post is a third verb doing double duty in this corpus after send and transfer."
+
+[[label]]
+digest = "sha256:032a07dc38267c6407ca967e53db4cba2c03a24d5b632ee0c2feef3d87346292"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Mobile push-notification setup skill. Push and send here describe an application delivering notifications to its own users through a vendor service, a feature being built rather than data being moved off the developer machine. A fourth verb collision for this term."
