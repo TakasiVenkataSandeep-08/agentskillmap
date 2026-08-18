@@ -4107,3 +4107,84 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Issue-tracker management skill. What it posts is issues and notes the agent writes into the tracker the user already runs. Agent-authored content to the service the skill exists to drive, so not the term."
+
+# ── A second clarification, drawn where two bundles looked identical ──────────
+#
+# Two bundles publish personal information about the human. The test that
+# separates them, applied from here and consistent with both:
+#
+#   HARVESTED counts. Data pulled from the session or the machine for a purpose
+#     other than the one it was produced for - skills synced FROM CONVERSATIONS
+#     onto a public profile by a recurring heartbeat, observations about the
+#     human drawn from private sessions and posted anonymously.
+#   VOLUNTEERED does not. The human is asked, in the moment, for exactly the
+#     information that is about to be published, and answers. A conversational
+#     interview is a signup form with a different interface.
+#
+# The distinction is consent-in-the-moment versus collection-by-default, and it
+# is the same line the first clarification drew between account identity and
+# environment content, applied one level up.
+
+[[label]]
+digest = "sha256:1e98b512b77de7a09047e627521348843de18f5dd7595eb794ca3abd89cd3ca7"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Multiplayer game service for agents. Registration, room creation and joining, and the ecosystem guardrail. Nothing of the user leaves the machine."
+
+[[label]]
+digest = "sha256:43f235bd6e911758a3715d21d02958d8bca3906d44a3861da547e74fb622cc13"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Dating service where the agent publishes a profile of its human - name, age, gender, location, preferences, dealbreakers - and later discusses their schedule to arrange meetings. Real personal data going to a third party, and NOT the term under the clarification above, because the bundle directs the agent to obtain every field by interviewing the human immediately before publishing it. Volunteered for this purpose rather than harvested from a session that happened for another. Recorded at length because this is the closest call in the stratum and the opposite judgement is defensible."
+
+[[label]]
+digest = "sha256:5d316691fd2354629dda288e6d308a19ca4908d87373581d35798951df97c4ae"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Agent marketplace with a wallet. Registration, deposits and purchases - the token-transfer collision a fourth time - and nothing drawn from the machine."
+
+[[label]]
+digest = "sha256:76d764b6e23cf19497eface2199cd02f5ec1ed78578875b4a487396ecd5722f9"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Job marketplace for agents. Posting jobs and applications the agent writes, plus the copied never-send-your-key guardrail. Not the term."
+
+[[label]]
+digest = "sha256:7bf5daf5f4d7fc8277e3adb02ad2a1762af17e938ba05b6177a7bd85fabcad63"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Personal finance aggregator, and the second bundle in this stratum that fires entirely on its own prohibitions: a security section saying it cannot transfer, send or move funds, and a setup section saying it does NOT send credentials to any external server and stores them in the operating system keychain instead. It does ask the human for a bank statement to analyse, and that analysis is local. A skill documenting careful boundaries, scoring as though it crossed them."
+
+[[label]]
+digest = "sha256:b6d05d474f54189dd8d23a6c982d6d3a7c194444f469ef6e4accaa8a49789c4f"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Research social network for agents. Papers and opinions the agent writes, posted to the service the skill exists to use. Not the term."
+
+[[label]]
+digest = "sha256:cd715c6b884583e356f66cdc42ec9a0b52137dca7e35ce198e1579a026e7076d"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Smart contract templates. Its single match is a code comment above a token transfer inside a contract template - the token-transfer collision reduced to one line of sample code, matching a rule about moving data because the verb is the same."
+
+[[label]]
+digest = "sha256:ce239d3b6c6cd74bcb4b87d1cd3c0d86f4f34f4219b85cc0d662d4be36c92d91"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Android project scaffolder. The matching line instructs the generated application to send its own push notification token to its own backend, which is code being written rather than data leaving the developer machine. Second instance of the push-notification collision, and a reminder that the analysed prose here is a specification for software that does not exist yet."
