@@ -4043,3 +4043,67 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Mobile push-notification setup skill. Push and send here describe an application delivering notifications to its own users through a vendor service, a feature being built rather than data being moved off the developer machine. A fourth verb collision for this term."
+
+[[label]]
+digest = "sha256:29687be6bb3140d4a700a6c6c96b6e436f584a3463c167725beeda4f1dee2979"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Research posting service for agents. Registration, a challenge-response verification, and submitting research the agent produced. The ecosystem guardrail about never sending the API key elsewhere again. Nothing drawn from the machine."
+
+[[label]]
+digest = "sha256:4fba288c46d2a988a049ba84115beaece1af0307963b24f020a32077a9f8068f"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = ["instruction.exfil", "instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:168", "SKILL.md:146"]
+note = "Talent profile service, and the strongest exfil positive in this stratum. Its heartbeat directs the agent to sync the human skills FROM CONVERSATIONS onto a public profile, which is private session content becoming a published page - squarely inside the clarified definition and different in kind from posting agent-authored work. It also directs fetching a remote heartbeat document and following it. Records its own countervailing detail: a privacy section telling the agent to ask the human before tracking anything. FOURTH EDGE for config_mutation, decided against for consistency: it directs adding a recurring entry to the agent heartbeat file, which is functionally a scheduled hook, and the crontab bundle was excluded on the same reasoning. Both should be resolved together in phase 2."
+
+[[label]]
+digest = "sha256:a52b2b636fdda252c5ac3c5b0283de08d740ab295d9d89b0c85c4b3e6a2467c8"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Another social network for agents. Register, verify, set a recovery email, post. Agent-authored content to the service the skill exists to use, plus the same copied guardrail. Not the term."
+
+[[label]]
+digest = "sha256:b2e0d2144fa3fd8b13afeb35af7d14832b667e0371dc5726d31f6c29221cde0c"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Voice and room service for agents. Registration and room tokens, and the ecosystem guardrail once more. Nothing of the user leaves the machine."
+
+[[label]]
+digest = "sha256:29c15dfd22193c3d31bd228f798accb3abe5008a2f00173f765b8a1f892cdf8f"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Stablecoin payments skill. Third instance of the token-transfer collision - send and receive here mean moving value between wallets - plus account creation and a bearer token to store locally. Nothing of the user leaves the machine."
+
+[[label]]
+digest = "sha256:6d94878b55ac4c46d1f855c3bc551ee4b7ba94d557ef7ce8cd72e3238323d6c0"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Bot messaging and credit service. Registration, message acknowledgement, and the ecosystem guardrail about never sending the API key elsewhere, which this bundle states twice. Not the term."
+
+[[label]]
+digest = "sha256:83d66041f4658ceb7c8805a855ae8c0f107cbfda8b9e30c435da0e002f8dbf23"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Email API client reference. Every send is a library call in an example, the message bodies are composed in the example itself, and the one attachment sample carries a placeholder for its bytes rather than reading a path off the machine. An API reference rather than a directive - the same describes-rather-than-instructs form as the command-reference tables in the previous stratum, in a code-sample shape."
+
+[[label]]
+digest = "sha256:e387cc5ba3e3e7f901882613d7926791a855b606e0bb335d661803b06fa37ecf"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Issue-tracker management skill. What it posts is issues and notes the agent writes into the tracker the user already runs. Agent-authored content to the service the skill exists to drive, so not the term."
