@@ -3737,3 +3737,83 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "THE THIRD EDGE, and the one that most clearly breaks the definition. This skill directs installing crontab entries that run its own scripts under the home directory every three and every six hours, indefinitely, and generates a state file described as being auto-injected into the agent context. That is a more consequential and longer-lived change than adding a line to CLAUDE.md, and it is NOT this term, because the definition fixed before the pass enumerates agent config filenames and a crontab is not one of them. Recorded as a negative and flagged: with the workspace-root personality file and the skill that overwrites its own definition from a URL, three bundles now demonstrate that persistence does not live where the term looks."
+
+[[label]]
+digest = "sha256:1708efb746509aa31876679f70d60965159b1ccc7c866f365ce8a5cd6cb4cce3"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["resources/agents-md-guide.md:199"]
+note = "Agent setup pack. Its reference guide gives a recommended pattern that is three config mutations in a row - write all project context into AGENTS.md, create a CLAUDE.md that points at it, create a copilot instructions file that points at it - and another reference file adds a block to AGENTS.md directly. The entry document itself is mostly about skill authoring and carries the React-hook collision again, so the term is true here on the referenced prose rather than on the entry."
+
+[[label]]
+digest = "sha256:739db533f20d2454561df6d433fbb7bc92818558fb15b2d59f0f19803c8341ca"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:560"]
+note = "Proactive agent operating rules. Directs adding a trigger to AGENTS.md so the behaviour is seen on every response, which is the term and the point. Its send-shaped lines are a guardrail in the other direction - draft emails rather than send them, nothing goes external without approval - the warns-against class again."
+
+[[label]]
+digest = "sha256:7a7c2014862caeae30509a747e8e1ff487be7b7ecd390aec7525807b082a5a80"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:34", "SKILL.md:140"]
+note = "A second bundle of the same proactive-agent operating rules under a different digest, with the self-improvement loop stated as a standing instruction: learn a lesson, then update AGENTS.md or the tools file immediately. Standing permission to rewrite agent configuration whenever the agent concludes it learned something, which is the term in its most open-ended form. Carries the same do-not-send-externally guardrail."
+
+[[label]]
+digest = "sha256:ce2d08ca959ce3169f53d8377597dc28559706ae3e6f0b8f716163e2085ee5ae"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Delegation skill that drives another coding agent through a terminal multiplexer. Its two config-shaped lines are rows in a reference table of that agent slash commands - one row says the init command creates a CLAUDE.md, another says the hash prefix adds a line to CLAUDE.md memory - so the prose documents a feature and directs nothing. The describes-rather-than-instructs class for this term, in the form of a command reference table. Its many send lines are terminal keystrokes, not a network destination."
+
+[[label]]
+digest = "sha256:8b801251b4ca17f7ecc365f1a4a447d0c3e0fca966965b76ef89065b9e1c660b"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:65"]
+note = "Self-improvement skill that promotes accepted learnings into CLAUDE.md and AGENTS.md and ships a hook setup guide for injecting reminders at session boundaries. Both halves are the term, and this is the second bundle in the stratum whose entire product is rewriting the files the agent reads every session."
+
+[[label]]
+digest = "sha256:3f6f516998c498078aa4816f488c0628ca70e12a77193bbb27b7850eaf830159"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Context-saving toolchain whose entry document opens with a long shell preamble that reads its own configuration from binaries under the agent skills directory. It reads that configuration rather than directing anyone to change agent configuration, so not the term. It also gates an opt-in telemetry call, and the prose names no destination for it, so under the exfil definition - which requires an external somewhere as well as the data - that is not counted either. Recorded because a telemetry switch with an unnamed destination is exactly the case a reader would want flagged and neither term reaches it."
+
+[[label]]
+digest = "sha256:6a473a1d0a75f11167e4142e0da0398b15b67dd456cb334ef95e808d3e8a3846"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:24", "SKILL.md:97"]
+note = "Bot-building skill that lists writing AGENTS.md for a new bot among the tasks it is for, and then gives rules about what goes in it - including that examples in AGENTS.md are the strongest behavioural signal because the agent copies them nearly verbatim, and that the file is cached. It directs the content of an always-loaded instruction file, which is the term, and it is unusually clear-eyed about why that matters."
+
+[[label]]
+digest = "sha256:7c97861e488668da7ebf052e34a7bc6b127b3736b056c32cbdc6e08312894db2"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Second bundle carrying an identical eighteen-line shell preamble that reads a toolchain own configuration from binaries under the agent skills directory. Reading configuration is not directing a change to it, so not the term, and the opt-in telemetry call names no destination so exfil does not reach it either."
+
+[[label]]
+digest = "sha256:d00e0a79ce60d96ca718a314f4c151f0d00f95f74dd1bb3c5c7e3f2717a39eb3"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Third bundle with the same eighteen-line preamble. A SHARED-PREAMBLE FAMILY rather than duplicates: the bodies differ entirely and only the boilerplate is common, so the byte-identical duplicate count does not see them while three of forty draws in this stratum still share the lines that made them match."
+
+[[label]]
+digest = "sha256:dd92b47486c0282d2dd7a924db16c497bcc282b37a4ecf2ea4dfe9845002fa7c"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:547"]
+note = "Organisational readiness advisor. Directs adding context to CLAUDE.md as a step in its recommendation template and again in a week-by-week rollout plan, so the mutation is advice given to a reader rather than a setup procedure the agent runs - and still directs the edit, so counted."
