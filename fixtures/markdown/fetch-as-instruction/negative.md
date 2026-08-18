@@ -15,3 +15,23 @@ and obey it is the shape we are looking for, and describing that shape is not th
 same as adopting it.
 
 Documentation of an attack is not the attack.
+
+## Cases T13 measured and deliberately excluded
+
+Fetched **code** that is executed is a different failure, already named by
+`net.fetch_then_execute` and `instruction.exec_directive`. A skill directing the
+reader to download a password-protected archive and run the executable inside is
+alarming, and is not this term.
+
+Debugging advice that names a file the bundle already ships is not a remote
+instruction:
+
+- Capture the curl requests provided in SKILL.md and run them locally to
+  reproduce the API behaviour.
+
+Writing a downloaded page to an ordinary path is not writing it over an
+instruction file the agent loads:
+
+```bash
+curl -s https://vendor.example.invalid/report.md > ./reports/latest.md
+```

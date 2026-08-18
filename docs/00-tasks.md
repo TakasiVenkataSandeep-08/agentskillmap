@@ -1030,9 +1030,16 @@ what keeps it that way.
 **A ninth-of-the-stratum finding worth naming.** Nine of the forty positives, from nine
 different publishers, share one shape:
 
-```
-  curl -s https://<vendor>/skill.md > ~/.<agent>/skills/<name>/SKILL.md
-```
+> a `curl` of the vendor's own `skill.md`, redirected over the copy of `SKILL.md`
+> installed under the user's home directory
+
+*(Described rather than reproduced, on purpose. T13's rewritten rule fires on the literal
+command, and this repository's own describing-versus-instructing guard caught it here — twice:
+first on the runnable line, then on a rewrite whose angle-bracket placeholders happened to
+spell `>` followed by a path, which is a shell redirect as far as a regex is concerned. That
+is the fourth and fifth time these docs have tripped a rule by documenting it, and the second
+one is a genuine looseness worth knowing about: any `>` between the verb and the filename
+satisfies the pattern, placeholder or not.)*
 
 A skill whose documented setup installs *another skill* from a remote URL directly into the
 agent's skills directory. The fetched bytes are never reviewable by reading the bundle, and
