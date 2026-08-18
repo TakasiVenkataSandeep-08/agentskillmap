@@ -11,6 +11,11 @@ and run with your agent's permissions, and almost nothing published about them c
 denominator. This repository harvested **34,284 distinct bundles** (snapshot `2026-08`,
 deduplicated by content digest) and reports what is actually in them:
 
+<sub>That figure counts bundles by the harvest's exact-name rule. Since v0.9.0 the tool
+discovers entry files case-insensitively and recognises **34,302** — eighteen more, 0.05%, far
+inside every interval below. The harvest figure is left as measured rather than quietly
+restated, because the rates in <code>corpus/report.md</code> were computed against it.</sub>
+
 ```
   ship an executable script            10.2%      carry files no documented path reaches   30.0%
   ship no parseable code at all        89.8%      frontmatter parses (head / tail)   100% / 85.7%
@@ -38,9 +43,21 @@ exact bytes it describes.
 **A capability differ for AI agent skills.** It records what a skill can do, with byte-level
 evidence, and tells you when that changes.
 
-Think `npm audit` for the folders your agent runs, not a scanner. The value is the **diff**: a
-skill you approved last month quietly starting to read `~/.aws/credentials` is the thing this
-catches, and the thing a pull request full of prompt edits will not show you.
+The value is the **diff**: a skill you approved last month quietly starting to read
+`~/.aws/credentials` is the thing this catches, and the thing a pull request full of prompt
+edits will not show you.
+
+**It reports something about roughly one published skill in seven.** Measured on 400 random
+bundles from the harvest: 5.9% carry a capability, 9.5% carry an instruction signal, and 86%
+produce nothing. Most of that silence is correct — a read of thirty silent bundles found 57%
+were personas, methodologies and domain knowledge that direct nothing an analyser could name —
+but roughly one in eight was a real miss. Every report now states how much of the bundle was
+actually read, so an empty result cannot be mistaken for a clean one.
+
+*This used to say "think `npm audit` for the folders your agent runs". That was the wrong
+comparison and it is cut rather than softened: `npm audit` has near-total coverage of its
+ecosystem, and importing that expectation oversold the tool by a factor of seven. The corpus
+below is the claim this project can defend.*
 
 **What it is not.** Not a linter, not a risk scorer, not a malware classifier, and **not an
 auditor** — a clean report is not an assurance. It emits a manifest; your `policy.toml` decides
@@ -54,8 +71,15 @@ Read these first:
 
 - **Every capability figure describes 14.6% of the corpus.** The code plane can only fire on
   bundles shipping a file in Python, shell, JavaScript or TypeScript. The other 85.4% is prose,
-  where two measured instruction signals now reach one shape each and three more have a firing
-  rate and no recall at all.
+  where four instruction signals now carry a measured precision and recall — two of them at
+  97-100%, one repaired to ~72%, and one withdrawn outright at 2/36 rather than kept with a bad
+  number attached.
+- **The published rates carry an annotator error the intervals do not show.** Nine hand labels
+  have been found wrong and corrected — roughly 5% of those written for the instruction terms —
+  each caught by accident when a rule experiment disagreed with the ground truth. Wilson
+  intervals quantify sampling error and say nothing about this. A second annotator independently
+  re-labelled 23 of the first 92 and disagreed five times, every one against the first pass.
+  Treat differences smaller than a few points as noise.
 - **84% of scanned bundles carry at least one `unresolved` entry**, about 4.5 computed targets
   apiece, and **40% of reported capabilities are `present` rather than `observed`** — the code
   is there and nothing established that it runs. "Zero false positives" and "the analysis was
