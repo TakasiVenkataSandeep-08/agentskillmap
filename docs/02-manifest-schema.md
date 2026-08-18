@@ -12,7 +12,7 @@ against that schema in CI — if the two ever disagree, the build fails.
 ```json
 {
   "schema_version": "1.4.0",
-  "tool": { "name": "skillmap", "version": "0.7.1" },
+  "tool": { "name": "skillmap", "version": "0.8.0" },
 
   "target": {
     "kind": "skill",
