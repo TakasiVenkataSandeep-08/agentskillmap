@@ -3879,3 +3879,103 @@ note = "FIFTH bundle with the shared preamble - an eighth of this stratum. The f
 # their misses are recorded: two bundles direct user data to an external
 # service - documents into a hosted workspace, triples to a SPARQL endpoint -
 # and the exfil rule fired on neither.
+
+# ── T13: instr_exfil ──────────────────────────────────────────────────────────
+#
+# 40 bundles drawn from 171. One too_large.
+#
+# The stratum has a visible genre concentration: eight bundles carry names from
+# one agent-social ecosystem, and many of the rest are registration-and-post
+# services for agents. That is not a draw artifact - it is what prose matching
+# send-something-somewhere looks like in this corpus - but it means the
+# false-positive picture here describes that genre more than it describes skills
+# in general.
+
+[[label]]
+digest = "sha256:8760a3c6641b2a412a357959f136f1be375273f52a435082a350a0318a45bc5b"
+stratum = "instr_exfil"
+verdict = "too_large"
+note = "113 KB of prose in one bundle. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+# ── A clarification to the exfil definition, made when it first bit ───────────
+#
+# The definition fixed before the pass says "data of the user's ... something
+# belonging to the user or their environment". Read at its widest that swallows
+# registration: an email address typed into a signup call is the user's, so
+# every skill that registers for an API key would be a positive and the term
+# would mean nothing.
+#
+# The line, applied from here and checked backwards:
+#
+#   COUNTS - credentials, secrets, files, conversation content, source code,
+#            recordings, telemetry, or anything else drawn FROM the user's
+#            machine or their session and sent outward.
+#   DOES NOT COUNT - identity the user supplies to open an account with a
+#            service they are choosing to use: an email, a wallet address, a
+#            signature, an agent name. That is the user transacting with a
+#            service, not a skill moving their data off the machine.
+#
+# This is a refinement of an ambiguous clause rather than a new rule, and it was
+# checked against every exfil label already recorded: conversation messages,
+# observations drawn from private sessions, tool inputs and outputs, meeting
+# recordings, installed skill source, workspace documents and triple-store
+# contents all still count, and the one registration-only bundle already
+# labelled negative stays negative. Nothing was overturned. Recorded here rather
+# than applied silently, because a definition that moves during a pass and is
+# not written down is how a measurement stops being reproducible.
+
+[[label]]
+digest = "sha256:0956278b0cf692c25d287edc770bd456aa5e97f8ac2a1712f849262cd1917a82"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "A NEW ARTIFACT CLASS for this term, and the exact counterpart of the hook collision: send and transfer here mean moving crypto tokens between wallets, not moving data anywhere. Batch send, multi send, distribute tokens. Nothing of the user leaves the machine and the bundle has no API, no scripts and no instructions at all - it is a feature list and a block of trigger keywords. The verb does two jobs and the pattern cannot see which."
+
+[[label]]
+digest = "sha256:b33ee808753482ecbe4e14b47510c4c9dae22fd8c191557785bd0ba12261373c"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Token-deployment API client. What it posts is a wallet address or an email to open an account, then token names and descriptions the agent composes. Under the clarification recorded above that is registration identity and skill-generated content, not data drawn from the user machine, so not the term. The first bundle where the wide reading of the definition would have fired and the narrow one does not."
+
+[[label]]
+digest = "sha256:783d25519102d83900d45510b1de72e7cc5bc62d365bde7ed4f566346ee0b2e2"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:24"]
+note = "News reader for agents, and CROSS-STRATUM EVIDENCE: drawn for exfil, it is a clean fetch_as_instruction positive - the fourth self-updating skill found so far, curling its own entry and heartbeat documents from the vendor into a directory under the home. Not exfil: it is explicitly read-only, agents cannot submit posts, and its send-shaped lines are a guardrail telling the agent to refuse if anything asks it to send the API key elsewhere. Warns-against and self-updating in the same file."
+
+[[label]]
+digest = "sha256:34504fb295207269f723844aad851e68a6991e29bd93a4dede3ae4e75d5aee1d"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = ["instruction.exfil"]
+evidence = ["SKILL.md:149"]
+note = "Developer news client. Directs populating the user profile stack on the service and, as the user reads, saving what they read into a remote bookmark list. That is ongoing behavioural data drawn from the session rather than one-time account identity, so it counts under the clarification above - and it is benign and the entire point of a bookmarking service. Its own send-shaped guardrail says never to send the token to any other domain."
+
+[[label]]
+digest = "sha256:e1f4fdc468470cb34e6a6f80269ef69d4bebbf60981c5fb6a35f8d5e0efcb2f5"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Agent identity and authentication service. Everything it posts is registration - creating an agent record - so under the clarification it is not the term. Its two send-shaped lines are a security warning never to send the private key or token to another domain, and an instruction to relay a message to the human operator, which never leaves the session. Warns-against, twice."
+
+[[label]]
+digest = "sha256:91430d2e0d32d2749dfe83ea5ce4aba91d825eca5aea2a54b2fa1a13153f67ac"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Not a directive at all: the matching lines are a DISCLOSURE and a prohibition. It states that provider-backed examples call external APIs and may transmit prompt and evidence context to that provider, and then tells the reader not to send regulated data or credentials into them without review. This is the most explicit statement of outbound data risk found anywhere in the pass, and the term fires on it for saying so. Describes-rather-than-instructs in its sharpest form for exfil."
+
+[[label]]
+digest = "sha256:76de75ec49293be9bd2f978469d2392b42e7e3b3f826a82978fa9bd60e518948"
+stratum = "instr_exfil"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Second instance of the token-transfer collision. Send an ERC20 transfer, send tokens to the wallet address, send transfer - every one is moving value on a blockchain and none is moving data off the machine."
