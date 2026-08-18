@@ -4437,3 +4437,87 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "Messaging client. Sends and edits messages the agent composes, using a bot token, into the workspace the skill exists to operate in. Not the term."
+
+[[label]]
+digest = "sha256:4d63fb00680817014656da788f9cfefbce8c755ee711f55e0020fbd181fabbe8"
+stratum = "instr_control"
+verdict = "too_large"
+note = "223 KB of prose. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:73957e25124f8b3182c19f515aefd97dd45444ebfed907a68bcb57c7893bda3f"
+stratum = "instr_control"
+verdict = "too_large"
+note = "102 KB of prose. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:9c107fa55f1a54761d30b939bf623196c01fd3dffd99026916ec5b550967a257"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:14"]
+note = "TWELFTH MISS, and it proves the failure is in the pattern rather than in the vocabulary. This skill installs itself as a session-end hook and writes extracted skills into the agent skills directory under the home - the term twice over - and the rule is silent because the prose says configuring the Stop hook, putting a word between the article and the noun. The MCP half of the same pattern fails on a URL in that position; the hook half fails on an adjective. Same defect, both branches."
+
+[[label]]
+digest = "sha256:3528f6094e262e79ffcb00d8f5581c0524dfb1c5f1b774f9490747b8db539c4f"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:17"]
+note = "THIRTEENTH MISS. Gives the JSON to enable subagent routing and names the per-agent configuration file under the home that has to carry it. Counted for consistency with the permissive phrasings counted in the config stratum - the prose supplies the change and the destination, which is directing the edit even without an imperative verb. The rule cannot fire at all here because the directive is a JSON block rather than a sentence."
+
+[[label]]
+digest = "sha256:a23aee18e0fc60cde7f1141072f8d4de379893d8e8a5e3dc202305d5ab739f7a"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Git hook manager. The word appears fourteen times and never means an agent hook. A correct silence, and a useful one to have in the denominator: the collision that produced false positives in the config stratum produces a true negative here, so the noun alone is not what is wrong - the pattern around it is."
+
+[[label]]
+digest = "sha256:484ba1290a136c8e7398ba2c7df48aff985dca17a272446ebc60c0fa29d4fbae"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Email account management CLI. Despite the name it directs a global package install rather than any agent configuration change, and the mail it sends is composed in the session. Correct silence on all three terms."
+
+[[label]]
+digest = "sha256:28498cae2302ca4c18d0890d487690d66aa5f394e600659760c1c7c4332dca21"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Payments API integration patterns. Reference material about an API surface, directing no config change and moving nothing off the machine. Correct silence."
+
+[[label]]
+digest = "sha256:dd9e7063bf853ce2dffa657d1ef755cbb72a85b373ff612174edeeb4e707f670"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Form service client routed through a connection broker. It reads an API key from the environment and sends it to the broker it authenticates against, which is the credential going to its own service rather than off the machine - the same judgement as the repository client in this stratum. Correct silence."
+
+[[label]]
+digest = "sha256:cf93ac6688d6dd8bf9d906411a0a4b4135ce6d8c3c9152c19a44b43a12b640b8"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Shopping and purchase API. What it posts is an order the agent composes plus an email and a wallet address, which is transaction identity under the clarification rather than data drawn from the machine. Correct silence."
+
+[[label]]
+digest = "sha256:8c2c5721757ac7927c17fa27023d56cdd255037519854ac80fcf071e98afb2f6"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Content distribution planner. It produces ready-to-post copy and a channel plan and posts nothing itself. Correct silence, on prose full of the verb post."
+
+[[label]]
+digest = "sha256:f27a5d55245f3cfc3bb45b983391bc649cf7b8b7e87a3a7ccc6e443da053770d"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Social posting pipeline. Uploads images it generated to a public image host and then publishes them, so what leaves is content the pipeline made rather than anything of the user. Correct silence, and a close one: upload to public hosting is the phrase an exfil rule most wants to fire on."
