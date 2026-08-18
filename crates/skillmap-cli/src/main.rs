@@ -22,10 +22,11 @@
 
 mod hook;
 
-use skillmap_core::Manifest;
+use skillmap_core::{Manifest, ParseStatus};
 use skillmap_policy::{Outcome, Policy};
 use skillmap_resolve::{ClaudeCode, Scope};
 use skillmap_rules::RuleSet;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -473,9 +474,66 @@ fn emit_manifests(args: &Args) -> Result<(), String> {
                 .map_err(|error| format!("cannot serialize the manifests: {error}"))?;
             print!("{json}");
         }
-        Format::Human => print!("{}", render_human(&manifests)),
+        Format::Human => {
+            // `markdown` is a loaded language but is the prose plane, not the
+            // code plane; the distinction is the whole point of the line.
+            let code_languages: BTreeSet<String> = rules(args)?
+                .languages
+                .keys()
+                .filter(|name| *name != "markdown")
+                .cloned()
+                .collect();
+            print!("{}", render_human(&manifests, &code_languages));
+        }
     }
     Ok(())
+}
+
+/// What was actually read, so an empty result cannot be read as a clean one.
+///
+/// **This is the fix for the most misleading output this tool produced.**
+/// `nothing detected` was doing two incompatible jobs: *I read this bundle and
+/// found nothing*, and *I could barely read this bundle at all*. Over 390 random
+/// bundles from the corpus, 91% render as empty — and for most of them the
+/// second reading is the true one, because 89.8% of published skills ship no
+/// file this build has a grammar for.
+///
+/// `scan` already says this out loud at the discovery level: *"could not look"
+/// must never look like "looked and found nothing"*. That is invariant 3, and it
+/// was being honoured for the bundle count and dropped for the bundle contents.
+///
+/// The counts come from the inventory and the language set the rules actually
+/// loaded, so adding a grammar changes this line with no edit here (invariant 7).
+fn coverage(manifest: &Manifest, code_languages: &BTreeSet<String>) -> String {
+    let (mut code, mut prose, mut unread) = (0usize, 0usize, 0usize);
+    for entry in &manifest.inventory {
+        if entry.parse_status != ParseStatus::Ok {
+            unread += 1;
+        } else if code_languages.contains(&entry.parsed_as) {
+            code += 1;
+        } else if entry.parsed_as == "markdown" {
+            prose += 1;
+        } else {
+            // json, yaml, binaries, and every language with no grammar. Counted
+            // as unread on purpose: `parsed_as` labels what a file *is*, and a
+            // file nothing analysed is a file nothing analysed.
+            unread += 1;
+        }
+    }
+    let tail = if unread > 0 {
+        format!(", {unread} not analysed")
+    } else {
+        String::new()
+    };
+    if code == 0 && prose == 0 {
+        return "    read nothing in this bundle — every file was skipped".to_owned();
+    }
+    if code == 0 {
+        return format!(
+            "    no code this build can read; {prose} prose file(s) checked by pattern rules only{tail}"
+        );
+    }
+    format!("    read {code} code file(s), {prose} prose file(s){tail}")
 }
 
 /// What a person needs from a manifest, in a few lines.
@@ -490,7 +548,7 @@ fn emit_manifests(args: &Args) -> Result<(), String> {
 /// short report that hides them would say "clean" where the tool means "clean,
 /// and I could not read four things" — which is the distinction invariant 3
 /// exists to preserve.
-fn render_human(manifests: &[Manifest]) -> String {
+fn render_human(manifests: &[Manifest], code_languages: &BTreeSet<String>) -> String {
     use std::fmt::Write as _;
     let mut out = String::new();
     if manifests.is_empty() {
@@ -508,6 +566,9 @@ fn render_human(manifests: &[Manifest]) -> String {
         if manifest.capabilities.is_empty() && manifest.instructions.is_empty() {
             let _ = writeln!(out, "    nothing detected");
         }
+        // Printed whether or not anything was found. A partial read matters just
+        // as much when two capabilities came back as when none did.
+        let _ = writeln!(out, "{}", coverage(manifest, code_languages));
         for capability in &manifest.capabilities {
             let evidence = capability.evidence.first();
             let (file, line) = evidence.map_or(("?", 0), |first| {

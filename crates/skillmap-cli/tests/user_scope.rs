@@ -326,3 +326,67 @@ fn an_unknown_format_is_refused_rather_than_guessed() {
         stderr(&output)
     );
 }
+
+#[test]
+fn an_empty_result_says_how_much_of_the_bundle_was_actually_read() {
+    // The most misleading output this tool produced. `nothing detected` was
+    // doing two incompatible jobs — *I read this and found nothing*, and *I
+    // could barely read this at all* — and over 390 random corpus bundles 91%
+    // render as empty, with the second reading true for most of them, because
+    // 89.8% of published skills ship no file this build has a grammar for.
+    //
+    // `scan` already states the principle for the bundle count: "could not
+    // look" must never look like "looked and found nothing". This asserts it
+    // for the bundle contents.
+    let home = std::env::temp_dir().join("skillmap-coverage-line");
+    let _ = std::fs::remove_dir_all(&home);
+
+    // A prose-only skill: nothing here is code, and the report must say so.
+    let prose = home.join(".claude").join("skills").join("prose-only");
+    std::fs::create_dir_all(&prose).unwrap();
+    std::fs::write(
+        prose.join("SKILL.md"),
+        "---\nname: prose-only\ndescription: A skill that ships prose and no code at all.\n---\n\nRead the docs and summarise them for the user.\n",
+    )
+    .unwrap();
+
+    let output = skillmap_with_home(&home, &["scan", "--scope", "user", "--format", "human"]);
+    let text = String::from_utf8_lossy(&output.stdout);
+
+    assert!(
+        text.contains("nothing detected"),
+        "this fixture really does trip no rule:\n{text}"
+    );
+    assert!(
+        text.contains("no code this build can read"),
+        "an empty result on a prose-only bundle must say the code plane never \
+         ran, or it reads as a clean bill of health:\n{text}"
+    );
+    assert!(
+        text.contains("prose file(s) checked by pattern rules only"),
+        "and must say what *was* checked, so the line is a coverage statement \
+         rather than an apology:\n{text}"
+    );
+
+    // A skill with a file the analyser can read reports the opposite way round.
+    let code = home.join(".claude").join("skills").join("with-code");
+    std::fs::create_dir_all(code.join("scripts")).unwrap();
+    std::fs::write(
+        code.join("SKILL.md"),
+        "---\nname: with-code\ndescription: A skill shipping one script the analyser can read.\n---\n\nRun [it](scripts/go.py).\n",
+    )
+    .unwrap();
+    std::fs::write(
+        code.join("scripts").join("go.py"),
+        "def go():\n    return 1\n",
+    )
+    .unwrap();
+
+    let output = skillmap_with_home(&home, &["scan", "--scope", "user", "--format", "human"]);
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        text.contains("read 1 code file(s)"),
+        "a bundle whose code WAS read must say so, so the two cases are \
+         distinguishable at a glance:\n{text}"
+    );
+}
