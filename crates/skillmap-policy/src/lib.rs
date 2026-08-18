@@ -44,6 +44,34 @@ pub struct Policy {
     /// how an allowlist becomes unreadable.
     #[serde(default)]
     pub bundle: BTreeMap<String, Allow>,
+    /// What to fail on beyond capability escalation.
+    #[serde(default)]
+    pub review: Review,
+}
+
+/// Failures a repository opts into, over and above capability escalation.
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Review {
+    /// Fail when a bundle's bytes change and **no code in it could be read**.
+    ///
+    /// Off by default, and the default is the load-bearing decision. Nine
+    /// published skills in ten ship no file any grammar covers, so turning this
+    /// on globally would fail CI on every routine prose edit — the failure mode
+    /// `hook.rs` argues at length, where a check that fights the author gets
+    /// switched off and takes the real detections with it.
+    ///
+    /// On, it closes the gap an external review named: for those nine in ten the
+    /// capability diff is silent because nothing looked, and a lock entry that
+    /// is only a digest gives a reader nothing a checksum would not. This makes
+    /// the digest mean something — *these bytes changed and no analysis saw
+    /// them* — which is a claim worth a human's eye on a skill an agent runs.
+    ///
+    /// Repositories that vendor a small set of prose skills and want every edit
+    /// reviewed are the case this is for. A repository tracking hundreds of
+    /// third-party skills should leave it off and rely on escalation.
+    #[serde(default)]
+    pub unanalysed_content_changes: bool,
 }
 
 /// A set of permitted capability terms.

@@ -179,3 +179,39 @@ skillmap ci
 
 The GitHub Action at `action.yml` wraps exactly that. Accepting a change is
 `skillmap lock` again — a reviewable diff, which is the point.
+
+## `[review]` — failing on changes nothing analysed
+
+`skillmap ci` fails on **capability escalation**. For most published skills there is no
+capability to escalate: 89.8% ship no file any grammar covers, so their lock entry is a
+content digest and nothing else, and a digest change is reported and exits 0. For those
+bundles the differ offers nothing a checksum would not.
+
+```toml
+[review]
+unanalysed_content_changes = true
+```
+
+With this on, a bundle whose bytes changed **and whose code nothing could read** fails the
+check:
+
+```
+✗ prose-skill  content changed and no code in it could be read
+    review the diff by hand — nothing analysed these bytes
+```
+
+**Off by default, and that default is the load-bearing half.** Turning it on globally fails CI
+on every routine prose edit, which is how a check gets switched off and takes the real
+detections with it — the argument `crates/skillmap-cli/src/hook.rs` makes at length about
+session hooks applies here.
+
+**Turn it on** when you vendor a small set of prose skills and want every edit seen. Prose is
+the payload for those bundles: the agent reads it and acts on it, so an unreviewed prose edit
+is the same class of change as an unreviewed code edit.
+
+**Leave it off** when you track many third-party skills. You will get a failure on every
+upstream release and stop reading them.
+
+It is scoped deliberately narrowly. A bundle whose code **was** read and whose capabilities did
+not move is genuinely checked, and does not fail — the gate is for the case where silence
+means *nothing looked*, not *nothing was there*.

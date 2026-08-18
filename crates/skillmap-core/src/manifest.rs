@@ -13,6 +13,7 @@
 
 use crate::{Digest, Error, NonEmpty};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 use std::num::NonZeroU64;
 
 /// The schema version this crate produces.
@@ -49,6 +50,30 @@ pub struct Manifest {
     pub advisory: Advisory,
     /// Problems with **the run**, not with the bundle.
     pub diagnostics: Vec<Diagnostic>,
+}
+
+impl Manifest {
+    /// How many files the **code plane** actually read.
+    ///
+    /// Zero is the common case and the important one: 89.8% of published skills
+    /// ship no file any grammar covers, so their manifest is empty because
+    /// nothing looked, not because nothing was there. Every caller that needs to
+    /// tell those apart — the human report, and the differ deciding whether a
+    /// content change went unreviewed — asks here, so there is one definition.
+    ///
+    /// `code_languages` comes from the loaded [`RuleSet`](skillmap_rules) minus
+    /// markdown, so adding a grammar changes every answer with no edit here
+    /// (invariant 7). A file whose language has no grammar counts as unread:
+    /// `parsed_as` records what a file *is*, not what was done to it.
+    #[must_use]
+    pub fn code_files_read(&self, code_languages: &BTreeSet<String>) -> usize {
+        self.inventory
+            .iter()
+            .filter(|entry| {
+                entry.parse_status == ParseStatus::Ok && code_languages.contains(&entry.parsed_as)
+            })
+            .count()
+    }
 }
 
 /// Identity of the tool that produced a manifest.

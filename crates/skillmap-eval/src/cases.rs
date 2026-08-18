@@ -262,7 +262,14 @@ fn check_escalation(capability: &str, manifest: &Manifest, dir: &Path) -> Vec<St
         }
     };
 
-    let delta = skillmap_diff::diff(&lock, std::slice::from_ref(manifest));
+    // This case checks capability escalation only, so the code-language set is
+    // empty: it decides whether a content change counts as unanalysed, and
+    // `escalations()` below never looks at that.
+    let delta = skillmap_diff::diff(
+        &lock,
+        std::slice::from_ref(manifest),
+        &std::collections::BTreeSet::new(),
+    );
     let added: Vec<&str> = delta
         .escalations()
         .iter()

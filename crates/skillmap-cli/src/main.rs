@@ -474,19 +474,24 @@ fn emit_manifests(args: &Args) -> Result<(), String> {
                 .map_err(|error| format!("cannot serialize the manifests: {error}"))?;
             print!("{json}");
         }
-        Format::Human => {
-            // `markdown` is a loaded language but is the prose plane, not the
-            // code plane; the distinction is the whole point of the line.
-            let code_languages: BTreeSet<String> = rules(args)?
-                .languages
-                .keys()
-                .filter(|name| *name != "markdown")
-                .cloned()
-                .collect();
-            print!("{}", render_human(&manifests, &code_languages));
-        }
+        Format::Human => print!("{}", render_human(&manifests, &code_languages(args)?)),
     }
     Ok(())
+}
+
+/// Loaded grammars, minus markdown.
+///
+/// Markdown is a loaded language and is the prose plane; the code plane is
+/// everything else. Both the human report and the differ's unanalysed-change
+/// gate need exactly this set, so it is derived once from the rules rather than
+/// listed anywhere (invariant 7).
+fn code_languages(args: &Args) -> Result<BTreeSet<String>, String> {
+    Ok(rules(args)?
+        .languages
+        .keys()
+        .filter(|name| *name != "markdown")
+        .cloned()
+        .collect())
 }
 
 /// What was actually read, so an empty result cannot be read as a clean one.
@@ -759,7 +764,7 @@ fn check(args: &Args) -> Result<u8, String> {
     let lock = read_lock(&args.lock)?;
     let policy = Policy::load(&args.policy).map_err(|error| error.to_string())?;
 
-    let delta = skillmap_diff::diff(&lock, &manifests);
+    let delta = skillmap_diff::diff(&lock, &manifests, &code_languages(args)?);
     // An absent policy.toml is an absent opinion, so the policy half simply does
     // not run — and says so, because a check that quietly stopped checking is the
     // failure mode this project exists to describe.
@@ -774,12 +779,40 @@ fn check(args: &Args) -> Result<u8, String> {
             Vec::new()
         }
     };
-    let outcome = skillmap_policy::decide(&delta, &violations);
+    let mut outcome = skillmap_policy::decide(&delta, &violations);
+
+    // The opt-in gate for the nine skills in ten whose code nothing can read.
+    // Reported as an escalation because that is what it is: the bytes an agent
+    // will act on changed, and no analysis saw the change. Never on by default —
+    // see `Review::unanalysed_content_changes` for why that default is the
+    // load-bearing half of the feature.
+    let unanalysed = if policy
+        .as_ref()
+        .is_some_and(|policy| policy.review.unanalysed_content_changes)
+    {
+        delta.unanalysed_content_changes()
+    } else {
+        Vec::new()
+    };
+    if !unanalysed.is_empty() {
+        outcome = match outcome {
+            Outcome::Clean => Outcome::Escalation,
+            Outcome::PolicyViolation => Outcome::Both,
+            other => other,
+        };
+    }
 
     if !delta.is_empty() {
         print!("{}", skillmap_diff::render(&delta, &manifests));
     }
     print!("{}", skillmap_policy::render(&violations));
+    for change in &unanalysed {
+        println!(
+            "✗ {}  content changed and no code in it could be read",
+            change.root()
+        );
+        println!("    review the diff by hand — nothing analysed these bytes");
+    }
 
     match outcome {
         Outcome::Clean => println!(

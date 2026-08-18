@@ -139,6 +139,18 @@ pub enum Change {
         before: String,
         /// Digest the scan computed.
         after: String,
+        /// Whether the fresh scan could read any code in this bundle.
+        ///
+        /// `Some(false)` is the case this field exists for: the bytes moved and
+        /// **nothing analysed them**, so the capability diff above is silent for
+        /// a reason that has nothing to do with the bundle being unchanged. 89.8%
+        /// of published skills ship no file this build has a grammar for, and
+        /// over 390 random corpus bundles 90.3% land here.
+        ///
+        /// `None` when the comparison had no scan on either side — [`compare`]
+        /// of two committed locks cannot know, and inventing an answer there
+        /// would manufacture a failure nothing observed.
+        analysed: Option<bool>,
     },
     /// A bundle present now and absent from the lock.
     BundleAdded {
@@ -198,6 +210,29 @@ impl Delta {
         self.changes.is_empty()
     }
 
+    /// Content changes in bundles whose code nothing could read.
+    ///
+    /// Separate from [`Delta::escalations`] and never folded into it, because
+    /// gating on these by default would fail CI on every routine prose edit and
+    /// train people to ignore the check — the failure mode `hook.rs` argues at
+    /// length. It is opt-in through `policy.toml`, and it is the only thing this
+    /// differ can offer for the nine skills in ten whose code it cannot read.
+    #[must_use]
+    pub fn unanalysed_content_changes(&self) -> Vec<&Change> {
+        self.changes
+            .iter()
+            .filter(|change| {
+                matches!(
+                    change,
+                    Change::ContentChanged {
+                        analysed: Some(false),
+                        ..
+                    }
+                )
+            })
+            .collect()
+    }
+
     /// Only the changes that grant new capability.
     #[must_use]
     pub fn escalations(&self) -> Vec<&Change> {
@@ -214,8 +249,26 @@ impl Delta {
 /// always produce the same report — a diff tool whose output reordered between
 /// runs would make every CI log a false alarm.
 #[must_use]
-pub fn diff(lock: &Lock, manifests: &[Manifest]) -> Delta {
-    compare(lock, &Lock::from_manifests(manifests))
+pub fn diff(lock: &Lock, manifests: &[Manifest], code_languages: &BTreeSet<String>) -> Delta {
+    let mut delta = compare(lock, &Lock::from_manifests(manifests));
+    // `compare` works on two locks and cannot know what was readable, so the
+    // answer is filled in here, where a scan exists. Anything the scan did not
+    // produce a manifest for keeps `None` rather than guessing.
+    let readable: BTreeMap<&str, bool> = manifests
+        .iter()
+        .map(|manifest| {
+            (
+                manifest.target.root.as_str(),
+                manifest.code_files_read(code_languages) > 0,
+            )
+        })
+        .collect();
+    for change in &mut delta.changes {
+        if let Change::ContentChanged { root, analysed, .. } = change {
+            *analysed = readable.get(root.as_str()).copied();
+        }
+    }
+    delta
 }
 
 /// Compare two locks directly.
@@ -265,6 +318,7 @@ pub fn compare(before: &Lock, after: &Lock) -> Delta {
                         root: root.to_owned(),
                         before: before.content_digest.clone(),
                         after: now.content_digest.clone(),
+                        analysed: None,
                     });
                 }
             }
