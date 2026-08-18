@@ -3521,3 +3521,123 @@ note = "Developer-experience auditing skill and the most self-aware instance of 
 # article immediately and real prose puts a product name in between - add the
 # Composio MCP server, ensure your MCP settings include. That is a fixable rule,
 # on evidence, in phase 2.
+
+# ── T13: instr_config_mutation ────────────────────────────────────────────────
+#
+# 40 bundles drawn from 178. Six are recorded too_large below and that is a
+# BIASED loss worth stating rather than burying: setup, onboarding and
+# memory-management skills are exactly the genre that both directs config edits
+# and runs long, so the unreadable tail is enriched for the term being measured.
+# The rate below therefore describes the readable 34.
+#
+# One bundle was rescued by measuring the budget over prose rather than over the
+# whole bundle. All three terms here are markdown rules, so a bundle whose bulk
+# is code is not expensive to judge for them.
+
+[[label]]
+digest = "sha256:4ad57286ecd633ac681f31fc5ca3e52c3d9367e25ba92a5b6041a3a2871f34dd"
+stratum = "instr_config_mutation"
+verdict = "too_large"
+note = "84 KB of prose. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:64da85961aa23e7f627dd2db1badedd3103ef2e01c77577049740cc92bb7b6fd"
+stratum = "instr_config_mutation"
+verdict = "too_large"
+note = "78 KB, all of it prose. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:7b6cf855c9296a7ac1ebf57e4a654f9456b69488b4f331d2ffb21af27bd740a9"
+stratum = "instr_config_mutation"
+verdict = "too_large"
+note = "1.7 MB of prose across a design-system pack. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:a4d74c2dff815fa0f7c86fa32c3f2adfc2926cf9416a29bd62f72506f59d7328"
+stratum = "instr_config_mutation"
+verdict = "too_large"
+note = "59 KB of prose, just over the cap. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:db46ac086e2bd7fcfd4cd917bf6e00812e7365e49de28d8a08ced8b02f4d072f"
+stratum = "instr_config_mutation"
+verdict = "too_large"
+note = "84 KB of prose. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:dc306eb286701ac180eb7a987379a00e5d7d25c4bc8e4281225745ff62249848"
+stratum = "instr_config_mutation"
+verdict = "too_large"
+note = "95 KB of prose. Beyond the reading budget for one label, and counted as unscoreable rather than dropped."
+
+[[label]]
+digest = "sha256:21f5e512522d4b9b8b988d0893b07f59ccce2b5fb9e1af0d83c7018e3f4b79a5"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:20"]
+note = "Memory-governance skill whose entire job is routing durable changes into agent instruction files, and it names AGENTS.md as the destination for governance rules. Unambiguous instance of the term, and benign: the user asks it to remember something and it writes it where the agent will read it next session."
+
+[[label]]
+digest = "sha256:723981bb77f55cd9e15e65c572e8f06ab5d58dca134baf75c45141761a56f3bc"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:46"]
+note = "Self-improvement pattern skill. Directs adding a block to AGENTS.md that tells the agent to log every user correction to a rules file and re-read it each session, so the change alters behaviour in every later session. Ships no frontmatter at all, which is a separate observation about how loosely this corpus follows the documented shape."
+
+[[label]]
+digest = "sha256:27798c826da648f717ca26f65a474087a1859547b5883a785a22d62d25790681"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation", "instruction.exfil"]
+evidence = ["SKILL.md:47", "SKILL.md:22"]
+note = "Bundle of ten workspace-integration skills. Directs editing the agent MCP configuration under the home directory and pasting an app secret into it, which is the term twice over. Also directs uploading the user documents and messages into a hosted workspace, which is user data crossing under the exfil definition fixed before this pass - benign and by design, and see the note at the end of this stratum on how broad that reading turns out to be."
+
+[[label]]
+digest = "sha256:90b10765ad28da2f70561492127efcb002573dbd5f7538f23e06f0483a382639"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:17"]
+note = "Guide skill for the agent itself. Directs creating a CLAUDE.md at the project root and gives a template for it, which is the term in its most ordinary and most benign form - and the form the shipped rule notes predict will dominate, since setup and onboarding documentation is most of what matches."
+
+[[label]]
+digest = "sha256:62c8ae3fe7e205effcb916aa65295eccf73af4efdd94508996dfa2ef1d061c34"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:25"]
+note = "Shopping wishlist integration. Directs adding an MCP server block to the agent configuration file under the home directory and restarting the gateway. Its own frontmatter declares the config path it requires, which is a more honest disclosure than most bundles here manage."
+
+[[label]]
+digest = "sha256:d09b22694248f316679974697cfcc8d0bf3433d2d0e73b2d3185340f050d7cf3"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:37"]
+note = "Installs a pre-tool hook into the agent settings file, at project or home scope, to block destructive git commands. The term exactly, and worth recording that the behaviour is protective: it adds a guardrail rather than removing one. It is also the same operation this repository performs in its own hook install command, which is the reason invariant 1 keeps verdicts out of the manifest - the shape cannot tell a guardrail from a backdoor."
+
+[[label]]
+digest = "sha256:2c1912683d99833a71600c1a3a5525cd1714b58f4e4fc3444bf0ebba0d4757d3"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Personality-configuration protocol. Creates and updates a YAML file in the workspace root that shapes how the agent responds, which is persistent and behaviour-changing - and is NOT this term under the definition fixed before the pass, because the file is the skill own convention rather than configuration the agent loads on its own. The second edge of this kind in the pass, after a skill overwriting its own definition under the home directory, and both point the same way: the definition is drawn around a list of known filenames and real persistence does not respect that list. For phase 2."
+
+[[label]]
+digest = "sha256:91f5fe237d930901a6a162f7a947e2f1442dcd1acac2b707076627f0006b7012"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:24"]
+note = "Guidance for authoring skills, and a borderline call recorded as such. It is documentation about where content belongs rather than a setup procedure, but it does direct the reader to put one-line rules and guardrails into AGENTS.md, and following it means editing that file. Counted, because the definition asks whether the prose directs an edit and this does."
+
+[[label]]
+digest = "sha256:7482e88cc67735339602aef3406404621c40774eaac6d4b30ecaddd235673795"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:23"]
+note = "Scoped memory system. Generates a root CLAUDE.md plus one per subdirectory, so the agent loads different instructions depending on where it is working. The term plainly, and one of the cases where the mutation is the entire product rather than a setup step."
