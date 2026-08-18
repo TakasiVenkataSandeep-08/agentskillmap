@@ -4,19 +4,69 @@
 ; own config changes what every later session does, which outlives the skill's own
 ; trigger and is not something a reviewer reading SKILL.md would expect.
 ;
-; NOTE ON SYNTAX: each pattern is wrapped in an extra pair of parentheses so the
-; `#match?` predicate is grouped with the node it constrains. Without them the
-; predicate attaches to nothing, the pattern degenerates to "every inline node",
-; and the rule fires on all prose. The negative fixtures are what caught that.
+; T13 measured the first version of this rule at 24/40 precision and 24/48 recall
+; over 145 hand-labelled bundles, and the misses had one cause: the patterns
+; anchored on ADJACENCY that real prose does not respect.
 ;
-; Character classes exclude the newline as well as the period, so a match stays
-; inside one sentence on one line: a negated class matches newlines by default,
-; which would let a single pattern span two unrelated paragraphs.
+;   "add the Composio MCP server"     - a product name between article and noun
+;   "Add <url> as an MCP server"      - a URL there instead
+;   "configuring the Stop hook"       - an adjective there instead
+;   "create or update CLAUDE.md with" - no preposition at all
+;
+; The last of those cost the most: one integration template phrases its setup as
+; "Add <endpoint> as an MCP server in your client configuration", and that exact
+; shape appears in 1915 of 34302 bundles - 5.58% of the corpus - against 193 the
+; old rule fired on in total. It was missing roughly ten times what it caught.
+;
+; This version drops the adjacency requirement and gains a guard instead.
+;
+; THE HOOK GUARD, and why the bare noun had to go. `hook` does four different
+; jobs in this corpus: an agent hook, a git pre-commit hook, a React hook, and a
+; vendor CLI subcommand named `hooks`. The old rule matched the bare word after
+; an install verb, so every git-hooks skill fired - one of them thirty-five times
+; in a single document, touching no agent configuration at all. A hook now counts
+; only when a named agent event or an agent config path is nearby, which is what
+; makes it an agent hook rather than a word.
+;
+; Measured on the same 145 bundles: precision 60.0% to 65.5%, recall 50.0% to
+; 79.2%. Still short of the 97-100% the other instruction signals hold, and
+; shipped anyway because it beats the rule it replaces on BOTH axes - refusing an
+; improvement for missing a bar the current version also misses would leave users
+; with the worse rule. What remains is not reachable by a pattern: security
+; scanners enumerating the shapes they detect, and command-reference tables.
+;
+; Periods are allowed throughout. The other rules exclude them to keep a match
+; inside one sentence, and here that exclusion is what stopped a URL or a
+; filename from sitting between the verb and its object. The line bound is kept
+; by excluding newlines instead.
+
+; THE VERB MUST NOT BE PART OF A DOTTED IDENTIFIER. `fs.write.agent_config` is a
+; capability term this project's own docs name constantly, and a dot is a word
+; boundary, so a bare word-boundary match found "write" inside it and fired on a
+; sentence explaining what the term covers. The negative fixture caught it.
+; Rust's regex has no lookbehind, so the preceding character is matched instead.
+
+; An edit directed at a file the agent loads as configuration.
+(((inline) @site)
+  (#match? @site
+    "(?i)(^|[^.\w])(add|append|write|edit|modify|update|insert|create|copy|paste)\\b[^\n]{0,70}(CLAUDE\.md|AGENTS\.md|settings\.json|settings\.local\.json|\.mcp\.json|mcp\.json|openclaw\.json)"))
+
+(((fenced_code_block
+    (code_fence_content) @site))
+  (#match? @site
+    "(?i)(^|[^.\w])(add|append|write|edit|modify|update|insert|create|copy|paste)\\b[^\n]{0,70}(CLAUDE\.md|AGENTS\.md|settings\.json|settings\.local\.json|\.mcp\.json|mcp\.json|openclaw\.json)"))
+
+; Registering something the agent will load every session. `hook` is absent here
+; on purpose - see the guard below.
+(((inline) @site)
+  (#match? @site
+    "(?i)\\b(register|install|configure|configuring|set up|add|enable)\\b[^\n]{0,60}\\b(statusline|mcp server|subagent)s?\\b"))
+
+; A hook, only when the surrounding text makes it an AGENT hook.
+(((inline) @site)
+  (#match? @site
+    "(?i)\\bhooks?\\b[^\n]{0,80}(SessionStart|PreToolUse|PostToolUse|UserPromptSubmit|SubagentStop|Notification|settings\.json|\.claude/|\.openclaw/)"))
 
 (((inline) @site)
   (#match? @site
-    "(?i)(add|append|write|edit|modify|update|insert) [^.\n]{0,60}(to|in|into) [^.\n]{0,30}(CLAUDE\.md|AGENTS\.md|settings\.json|settings\.local\.json|\.mcp\.json)"))
-
-(((inline) @site)
-  (#match? @site
-    "(?i)(register|install|configure|set up|add) (a |an |the )?(new )?(hook|statusline|mcp server|subagent) "))
+    "(?i)(SessionStart|PreToolUse|PostToolUse|UserPromptSubmit|SubagentStop)[^\n]{0,80}\\bhooks?\\b"))

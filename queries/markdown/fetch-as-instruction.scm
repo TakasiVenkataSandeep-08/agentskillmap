@@ -51,22 +51,28 @@
   (#match? @site
     "(?i)(curl|wget|fetch)[^\n]{0,90}>\s*[^\n]{0,60}(SKILL|HEARTBEAT|AGENTS|CLAUDE)[^\n]{0,10}\.md"))
 
-; A markdown document fetched and then followed, obeyed, executed or run.
+; THE DOCUMENT MUST BE REMOTE. Without the URL requirement this matched a
+; troubleshooting tip - capture the curl requests provided in SKILL.md and run
+; them locally - where the .md names a file the bundle already ships and nothing
+; arrives from anywhere. This term is about instructions that are NOT in the
+; bundle, so the address is the thing that makes it the term.
+
+; A markdown document fetched from a URL and then followed, obeyed or executed.
 (((inline) @site)
   (#match? @site
-    "(?i)\b(fetch|download|retrieve|curl|wget)\b[^\n]{0,70}?\.md\b[^\n]{0,40}?\b(and|then)\b[^\n]{0,30}?\b(follow|obey|execute|run)\b"))
+    "(?i)\\b(fetch|download|retrieve|curl|wget)\\b[^\n]{0,70}?https?://[^\n]{0,70}?\.md\\b[^\n]{0,40}?\\b(and|then)\\b[^\n]{0,30}?\\b(follow|obey|execute|run)\\b"))
 
 (((fenced_code_block
     (code_fence_content) @site))
   (#match? @site
-    "(?i)\b(fetch|download|retrieve|curl|wget)\b[^\n]{0,70}?\.md\b[^\n]{0,40}?\b(and|then)\b[^\n]{0,30}?\b(follow|obey|execute|run)\b"))
+    "(?i)\\b(fetch|download|retrieve|curl|wget)\\b[^\n]{0,70}?https?://[^\n]{0,70}?\.md\\b[^\n]{0,40}?\\b(and|then)\\b[^\n]{0,30}?\\b(follow|obey|execute|run)\\b"))
 
 ; The shipped file declaring itself incomplete and naming where the real one is.
 (((inline) @site)
   (#match? @site
-    "(?i)\b(must be read|read this file)\b[^\n]{0,60}\b(via|from)\b[^\n]{0,40}(curl|https?://)"))
+    "(?i)\\b(must be read|read this file)\\b[^\n]{0,60}\\b(via|from)\\b[^\n]{0,40}(curl|https?://)"))
 
 ; Instructions to follow, located at a URL.
 (((inline) @site)
   (#match? @site
-    "(?i)\bfollow\b[^\n]{0,30}\b(instruction|step|directive)s?\b[^\n]{0,30}\b(from|at|in)\b[^\n]{0,20}https?://"))
+    "(?i)\\bfollow\\b[^\n]{0,30}\\b(instruction|step|directive)s?\\b[^\n]{0,30}\\b(from|at|in)\\b[^\n]{0,20}https?://"))

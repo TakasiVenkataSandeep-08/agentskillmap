@@ -525,7 +525,7 @@ fn the_remote_instruction_signal_is_scored_against_its_own_ground_truth() {
     }
     assert_eq!(
         (tp, fp, fn_, tn),
-        (26, 0, 3, 1),
+        (29, 0, 0, 1),
         "the held-out remote-instruction score moved. This is the only figure for \
          this term that was not fitted, so change it deliberately and re-read the \
          bundles before touching the published rate"
@@ -554,8 +554,47 @@ fn the_remote_instruction_signal_is_scored_against_its_own_ground_truth() {
     }
     assert_eq!(
         (tp, fp, fn_, tn),
-        (13, 0, 13, 119),
+        (18, 0, 8, 119),
         "the in-sample remote-instruction score moved. Recall here is the honest \
-         half of this pair: thirteen of twenty-six real cases are still missed"
+         half of this pair: eight of twenty-six real cases are still missed"
+    );
+}
+
+#[test]
+fn the_config_mutation_signal_is_scored_against_its_own_ground_truth() {
+    // T13 measured this rule and held it back rather than repairing it, on the
+    // grounds that ~64% precision is far below the 97-100% the other instruction
+    // signals hold. That comparison was against the wrong thing: the rule it
+    // would have replaced was at 60%, so refusing the repair left users with the
+    // worse of the two. The repair ships, and this pins what it actually scores.
+    //
+    // Not gated on the held-out stratum, because that stratum was drawn and
+    // labelled for the remote-instruction term only. Scoring this one there
+    // would read silence as ground truth, which is the failure that took
+    // published precision from 113/113 to 113/119 during T11.
+    const TERM: &str = "instruction.config_mutation";
+    let Some((tp, fp, fn_, tn, missed, spurious)) = score_signal(
+        TERM,
+        &[
+            "instr_config_mutation",
+            "instr_exfil",
+            "instr_fetch_instruction",
+            "instr_control",
+        ],
+    ) else {
+        eprintln!("SKIPPED: corpus/raw/ is absent, so {TERM} could not be scored.");
+        return;
+    };
+    report_score(TERM, tp, fp, fn_, tn);
+    if !spurious.is_empty() {
+        println!("  false positives: {spurious:?}");
+    }
+    if !missed.is_empty() {
+        println!("  missed: {missed:?}");
+    }
+    assert_eq!(
+        (tp, fp, fn_, tn),
+        (37, 15, 11, 82),
+        "the config_mutation score moved. It is the weakest shipped signal and          the one most worth watching: what remains in `fp` is security scanners          enumerating the shapes they detect, which no pattern reaches"
     );
 }

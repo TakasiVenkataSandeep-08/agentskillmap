@@ -1,0 +1,126 @@
+{
+  "drawn_from": "random unlabelled bundles the scanner reports nothing for",
+  "seed": "coverage-gap-1",
+  "selected": [
+    {
+      "digest": "sha256:0e563725e4b56b2e5c71353f6561dd2731faa71a6f70a145710204eb42d44607",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:0f08631445a91282604c55d0bb84b831badc429b314067e5ada757d5ea888d14",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:10333456b91425fbde8b0335817a3b1444349219fd65fdce79739c80d3e4975e",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:16a0e5de1677748e2871e856b2bb65e9bad4be161cb1e19d312a1724d1902e67",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:185dd6066f6b702de6408a4234a4679419c3230e48296ba9238d38993f9fa2d3",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:1d455ca5dac211ac475e45e2cb0f4f49dc0b6205e21eeab1e9f66e49255c7407",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:20b3506975dfe8d55f9920799c38cbe623d26e41e1aceaa5dfb2c50962d9c8d6",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:25bb627b4628863ca3d70f48c8144befe5bf0e13f03380cd30deb84f2c56c9d1",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:2cb483c72d5042f52b1f6dc3eb364aea68521b7161d5cb1f30038b532bf49167",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:393b68ae6de5cd50b5bff0697a63f3bde8e7f8118f1b5a149f3dba041a3baf12",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:3d4e59277c379cd3851a1d2ddf971e5018f8f2839154fffa5ad66ff92743cc3a",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:434106b00d3da06ac299528d09e4da6e955baf08ff185bda4f6e9f5ba2cfe8ed",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:4e10d40fe1e40ac3aadd5bee47f54417d63fc4bf7deeb85db1dadf0f9718d7da",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:4e85c5b51bed6a93a15c4b1eaa1ea0ec18522c0e7c548f66ead07c04df310206",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:5053ee78caa2bbb9ed1e41c81aaf7d7397fb11291b90d3a392c42e7621f9e1d4",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:55ca2ddb15c4c1f3e4317b4cfcc4589bdbed16b53d8a544ec1d5de1df311fe3d",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:7181e328706b28d73f9ac0eaed08ab7144d03fa48d49ab5c719f1db3ee74c3f2",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:7a8dadc85ad51d7d00d65c8dcb4e7e6b0dd90069609a737496770006fcbcbc30",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:7ac32abbec5edd9dd9c13224b16bb76183243daaf61487e45b6d6956cabf202d",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:86ac58641cbc26fc360dc6470b30f9da996513ebd6667035b4444a7fde1729d3",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:92a1437352cc1165de5159d0a3d53fcb7c52cd72747034ad02e677b5d65832c7",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:945fe8b605137765a961e175649a57e3366350097f58e6a6e61b468786e9b61d",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:9a0f8b2fff6c4967fbba3e1a6be55fa7fc804c0e9f0e1e17b64be4126c037a09",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:a033935dbaabc373d02e124b57f180cfa77d6bccfe27b8e58dbf9dab856f465a",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:ad890e812f78b0194d2e2cd93f917db18161ced091baeb32cec204d223d687da",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:b602455e3eda9310511b661763eb93cbe834e652dfe94f3b06d40edb1bca7924",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:bdd81c80ced4e0d1ba9c9a5ee8f269ba76a4ce822316052e7c1691a910d21e1e",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:c886d9242feffa5da5a53fbf8c5f71f33d505fe37c64d56d16d82d1664bd9d9c",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:c9693d2cdf8086987a90c9a550e4b3dcf5af88dfd935a0b2f12eab350bebd844",
+      "stratum": "silent_sample"
+    },
+    {
+      "digest": "sha256:e59dd32bbd2fddf766add583bea93def7983a2b800910eaa6d725b76a564f804",
+      "stratum": "silent_sample"
+    }
+  ]
+}

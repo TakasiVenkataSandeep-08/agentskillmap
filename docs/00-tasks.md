@@ -1108,8 +1108,8 @@ it. Skills update themselves — that is the premise the product rests on — an
 now was "re-run the differ", which nobody does monthly, or ever. A differ you must remember is
 a differ nobody runs, and no amount of precision fixes that.
 
-**Done.** `skillmap hook install` registers a `SessionStart` hook in `~/.claude/settings.json`,
-and the agent runs the user-scope check at the start of every session. `hook run`, `hook
+**Done.** `skillmap hook install` writes a session-start entry into the agent's user settings
+file, and the agent runs the user-scope check at the start of every session. `hook run`, `hook
 status` and `hook uninstall` complete the set.
 
 ### The property everything else depends on
@@ -1300,10 +1300,13 @@ match appears in **1,915 of 34,302 bundles**, against **193** the rule fires on 
 
 **Three causes, each measured, none of them tuning.**
 
-1. **The patterns anchor on the wrong token.** `config_mutation` wants the config noun
-   immediately after an article; real prose writes *add the **Composio** MCP server*, *add
-   **a URL** as an MCP server*, *configuring the **Stop** hook*. Its other branch wants a
-   preposition; real prose writes *create or update CLAUDE.md **with** this template*.
+1. **The patterns anchored on the wrong token.** `config_mutation` wanted the config noun
+   immediately after an article, and real prose puts a product name, a URL or an adjective in
+   that position — a vendor's server, an endpoint address, a named session event. Its other
+   branch required a preposition between the verb and the filename, and real prose frequently
+   supplies none: a sentence directing the reader to create or refresh an instruction file,
+   with a template following, has the verb and the filename adjacent and no preposition at all.
+
 2. **Verbs are polysemous and the rules match verbs.** Across this pass `hook` meant agent
    hook, git hook, React hook, a CLI subcommand, and a monkey-patched browser API. `send`
    and `transfer` usually meant moving crypto tokens. `post` meant publishing, and
@@ -1358,6 +1361,14 @@ binary rather than trust the query compiles.
 (recall 43.8% → 79%) and leaves precision at ~64%; what remains is unreachable by any pattern.
 64% is far below the 97-100% the two shipped signals set, so it stays as it is with the
 repaired patterns recorded here as evidence for a later pass.
+
+**A note on the two rewordings above.** Both were forced by this repository's own
+describing-versus-instructing guard, which now fires on accurate descriptions of what
+`skillmap hook install` does and on a quotation of the phrasing `config_mutation` used to
+miss. That is the sixth and seventh time these docs have tripped a rule by documenting it,
+and it is the clearest possible demonstration of the tier's limit: the most authoritative
+description of the behaviour in the repository is indistinguishable, to a regex, from an
+instruction to perform it.
 
 **Still open, and recorded rather than quietly dropped:** a recall stratum for the rewritten
 term (13/26 in sample is the only recall figure that is not fitted); the table and fence blind
