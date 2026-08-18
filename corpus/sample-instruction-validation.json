@@ -1,0 +1,135 @@
+{
+  "draws_from": "corpus/raw, bundles matching the narrowed remote-instruction patterns, excluding every digest already in corpus/labels.toml",
+  "population": 100,
+  "seed": "skillmap-instruction-validation-1",
+  "selected": [
+    {
+      "digest": "sha256:03f18ba34f51eeef7f07442f08cc0d297a87e10c966924aeabd9a6c2ec54e40a",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:2b34c863160c5fc9a9bc08b7745dbbb548a75d2c781a61736e53f1f73f0745c9",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:30ce023813ce4fcda1a20d03b100ada01c99e41d4c7c2f395c06faffda97f9af",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:37c581ef6cc8d0f8a6b47bbf70803d001dc2cc70bb29c75963037f6c6dee4b34",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:431c39b636890eee53dd9858d1237e9fcfc98c686b63b0494f91b11f13ad5132",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:4a615b1f9ff71f6f882c01860350c7a02aa7d557b5e41520521f2ec546e2d6da",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:4a6bea4de2b138da91761f6d64fef57b468f5338445332f9bdb91eeb1ea9d326",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:4be190e470fef54b2f345e42c9eaa08c6f564a03b6b2292bdd86b5c463f73df9",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:51a07ddf1b1051abab3bb862068f9a071e7a2de48697d9af9fc201f16c406275",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:51fe7bd48b337654a7b4c7a330ff1e54664c5a0243a0fa6d24f1cec517c95ab8",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:710ceaeee48ac7e6f87f490b09292c350bf4b74ebde7c8d5831238f8fb0f424c",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:73306090b8e49eb155c2f5f7dc2646223006d602af5fbc6842ae8c855ae4bedd",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:76d2976f3dc6f5d5e3c70f5ba6fe8f5bb9db219077a83a2958c5950ab6a08216",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:7709c57228220cc74bfe8fbe8187af0df80af82c233631d915e421377a84c313",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:7c058977790b0e708d5f03139d633618794db912f58b5797b7910cdc4a94d164",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:81ca400ba80bced0f94946c50a640661353e64b4f3d31f6348234706edbccadb",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:85f1f88f18c461c7f39fd38db07cb027a4dee532f1d24e03c20421bd4838434a",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:8c00773c558f47b7e1f2d5aba93fc4c4740f8fdfc111788312ec6ce51202d836",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:8f54ab49ba0a27d15cfc004c0afc1640054b1147cd50809b195d82fe83be27bc",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:95cd9af896bb641d9bafee0bd378ff2c95b8f989135b5cba070c272da59eb26b",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:a3ddabfccda89c0bff5f0288955ad9e7cd8f384c090649302bc0a1c6aa71acf7",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:bb144fe839e0c7ae3b648e02340cea83c2fc658e18b8310c3cb05726bf5996f5",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:be4f6863f32b591e0f97f76720870908b58b3ec893065445b9dfbaa0fa550e26",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:c562057b2051480ce3b434a5647261e3b1c341fe17baa5917ef29ff9470cd0ff",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:d13e45b068d62c97a716b2f69b33470a6048a69c9a90d29a8e3a898eb2eeb8b8",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:dc872f566362f54980ee6db511ab177affaaa33a7278b174f66d41442b3fb279",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:e89b4f2cc7c88b77ddd83492318a63bb612f6adc7bef8ad79a6081fce8541809",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:e8fc34881941cc3cc131d152598ac32b008f5722924ac24c5b3cdbf99125a32f",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:eb2d70a0c0618c2affe2365f477ff97c6b32906767d0a60d7ddda1a35bd08aa2",
+      "stratum": "instr_remote_instructions_holdout"
+    },
+    {
+      "digest": "sha256:ff794258775a5654bfb023e20daf86a277aac0f613eb7b010a8a08559b84c950",
+      "stratum": "instr_remote_instructions_holdout"
+    }
+  ],
+  "shapes": {
+    "declared_incomplete": 2,
+    "fetch_md_follow": 40,
+    "follow_at_url": 1,
+    "self_overwrite": 87
+  },
+  "snapshot": "2026-08",
+  "why": "held-out validation: the narrowed patterns were written after reading the phase 1 sample, so their 18/18 on that sample is fitting, not precision"
+}
