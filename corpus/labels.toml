@@ -4298,3 +4298,142 @@ note = "Endurance coaching protocol, and the SIXTH bundle in this pass whose ope
 # operative instructions are not in it. Combined with its own census - 10/30
 # precision with 3 misses - the term now has poor precision AND poor recall,
 # measured on two independent strata.
+
+# ── T13: instr_control ────────────────────────────────────────────────────────
+#
+# 40 bundles that trip none of the three rule shapes, drawn from probes 42x, 16x
+# and 145x looser than the rules, so a bundle here COULD plausibly have fired and
+# did not. This is where misses live.
+#
+# THE LARGEST FINDING OF THE PASS IS IN THIS STRATUM. Ten of these forty bundles
+# direct the reader to add a hosted MCP endpoint as an MCP server in their client
+# configuration. That is instruction.config_mutation by any reading, and the rule
+# is silent on every one of them, for the structural reason already identified in
+# its own stratum: the pattern wants the config noun immediately after the
+# article, and this phrasing puts a URL in between.
+#
+# Nine of the ten are one integration template with the vendor name swapped.
+# Measured across the whole corpus, that phrasing appears in 1915 of 34302
+# bundles - 5.58%. The rule fires on 193 bundles in total. It is therefore
+# missing roughly ten times more than it catches, from a single template.
+
+
+[[label]]
+digest = "sha256:227029823bf98665c80084f671c0c3da1a4a219d03b40001b12eaa8d3d350a46"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:4885471d8a408fbdc2124b5207136668f370b12edccca44bdfd447ce18c53a03"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:5516abcd32b3394f1a75fdda7f8dd734fd17686433c8a2ec60fadb097c05f364"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. Same directive in a bundle whose surrounding structure differs, so the family is the phrasing rather than the file."
+
+[[label]]
+digest = "sha256:58b0e575fb5453bad01a67a0f852d30014f5296fcac99cfcea9ebb0ef0700a0b"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:715a1dd31573695c0bd86af247de469f67ea9dc21882b38eb4274ab46c0d86b2"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:8a3334f75893dd2dd24f834be77adcdbbadb86688b6dfde21d14e46f982bb1a1"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:b95cac85042b3b3603c00101bcca91d216fc84dec8b50536ac732a49b088af02"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:bcc9ae9467d94b56c34b7b0af67dc9c8035285a9f0bd2a322257b8444801de38"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:e546184e138c022655252b1ca216e8722f2694b94336b93146024fc019bfc74e"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:ee45a394325e0ed201b8753ba7be603f7dfdc75c31ec0e1a45953f8b7977c048"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:21"]
+note = "MISS. Directs adding a hosted MCP endpoint as an MCP server in the client configuration, which is the term, and the rule does not fire because a URL sits between the verb and the noun its pattern expects. One of nine bundles sharing a single integration template with the vendor name swapped."
+
+[[label]]
+digest = "sha256:dbe31e48796bc753c407d0eab6cf38290660095e6872306c122e4f9e743a5a42"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:18"]
+note = "ELEVENTH MISS in this stratum, and not from the template family. Directs registering a remote MCP endpoint through a CLI helper, or failing that adding it directly to the agent MCP configuration file under the home directory. Two ways to say the same thing and the rule catches neither, because in one the noun never appears next to the verb and in the other the sentence names the config file rather than the server."
+
+[[label]]
+digest = "sha256:2aa5f050da14dd1312421f9c4a5c0ba449c37f87d11688f8b28c8017fee1f936"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Booking skill that publishes a remote MCP endpoint address and its tool schemas without directing anyone to register it anywhere. The boundary case for the term: naming an MCP server is not adding one, and the control stratum is where that distinction can be checked."
+
+[[label]]
+digest = "sha256:56cf9b930bf8541e9908379274421ccfde9c086a2d2950c4b169650314aecb33"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Parallel code review skill. It launches subagents rather than registering one, which is using a capability the agent already has rather than changing configuration. A clean negative for the same noun the rule watches."
+
+[[label]]
+digest = "sha256:91b0ab4199f3c0d23799716f3d00237a26d6452a7eb8ec958c5cb47eaf8e2088"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Repository host API client. Reads an app password from the environment and calls the vendor API with it, which is the credential going to the service it authenticates against. Not the term under the clarification, and a good negative to have in the denominator because it is the shape a careless exfil rule would fire on."
+
+[[label]]
+digest = "sha256:f6a20b327a0660669cc1f2faae757777ca81d4aaf593c81f8cf61af26a48881a"
+stratum = "instr_control"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Messaging client. Sends and edits messages the agent composes, using a bot token, into the workspace the skill exists to operate in. Not the term."
