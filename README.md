@@ -297,8 +297,8 @@ been measured were worth keeping. **Two were not, and were removed at schema 1.4
 |---|---|---|---|
 | `instruction.exec_directive` | 31/31 (100%) | 31/35 (88.6%) | shipped |
 | `instruction.directs_outside_write` | 37/38 (97.4%) | 37/37 (100%) | shipped |
-| `instruction.fetch_as_instruction` | **26/26 held out** | 26/29 (89.7%) | rewritten at 1.4.0 |
-| `instruction.config_mutation` | 21/32 (65.6%) | 21/48 (43.8%) | **held, not repaired** |
+| `instruction.fetch_as_instruction` | **29/29 held out** | 29/29 (100%) | rewritten at 1.4.0 |
+| `instruction.config_mutation` | 37/52 (71.2%) | 37/48 (77.1%) | repaired at 0.9.0 |
 | ~~`instruction.exfil`~~ | 2/36 (5.6%) | 2/12 | **withdrawn at 1.4.0** |
 | ~~`instruction.silence`~~ | — | — | **withdrawn: never had a rule** |
 | ~~`instruction.privilege_claim`~~ | — | — | **withdrawn: never had a rule** |
@@ -314,12 +314,20 @@ after the rule was written, because the rule was rewritten *after* its other str
 labelled and those are in-sample for it. In-sample recall is 13/26, and that gap is published
 beside the flattering number rather than under it.
 
-`config_mutation` is measured and deliberately **not** shipped repaired. A repair closes half
-its misses (recall 43.8% → 79%) and leaves precision at ~64%, and what remains is unreachable
-by any pattern: security scanners enumerating what they detect, git-hooks skills where the
-word means something else entirely, and two cases where the rule is arguably right and the
-definition too narrow. 64% is far below the bar the two shipped signals set, so it stays as it
-is with the evidence recorded.
+`config_mutation` was repaired at 0.9.0, and the reasoning behind the earlier decision not to
+was wrong. It had been held back because ~64% precision sits far below the 97-100% the other
+signals hold — but **the rule it replaces scores 60%**, so refusing the repair left users with
+the worse of the two. The repaired version beats it on both axes and ships. What remains in
+its false positives is unreachable by any pattern: security scanners enumerating the shapes
+they detect, and command-reference tables.
+
+**One number in this table was wrong for a reason worth stating.** Three of the five patterns
+in the remote-instruction rule shipped *dead*: in a tree-sitter `#match?` predicate `` is a
+standard string escape — backspace — so the query parser consumes it and the regex never sees
+a word boundary. It compiles with no diagnostic and silently matches nothing. An audit found
+**36 dead word boundaries**, and fixing them took that rule's held-out recall from 89.7% to
+100%. The lesson is in `queries/markdown/fetch-as-instruction.scm`: a query that compiles is
+not a query that matches, and the only way to know is to smoke-test the rebuilt binary.
 
 **The last column is why this is a firing rate and not a false-positive rate.** Every firing
 was read. The three from `directs_outside_write` each install a skill into an agent workspace
