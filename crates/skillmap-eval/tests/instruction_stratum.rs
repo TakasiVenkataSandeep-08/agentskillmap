@@ -594,7 +594,7 @@ fn the_config_mutation_signal_is_scored_against_its_own_ground_truth() {
     }
     assert_eq!(
         (tp, fp, fn_, tn),
-        (37, 15, 11, 82),
+        (38, 15, 11, 81),
         "the config_mutation score moved. It is the weakest shipped signal and          the one most worth watching: what remains in `fp` is security scanners          enumerating the shapes they detect, which no pattern reaches"
     );
 }

@@ -298,7 +298,7 @@ been measured were worth keeping. **Two were not, and were removed at schema 1.4
 | `instruction.exec_directive` | 31/31 (100%) | 31/35 (88.6%) | shipped |
 | `instruction.directs_outside_write` | 37/38 (97.4%) | 37/37 (100%) | shipped |
 | `instruction.fetch_as_instruction` | **29/29 held out** | 29/29 (100%) | rewritten at 1.4.0 |
-| `instruction.config_mutation` | 37/52 (71.2%) | 37/48 (77.1%) | repaired at 0.9.0 |
+| `instruction.config_mutation` | 38/53 (71.7%) | 38/49 (77.6%) | repaired at 0.9.0 |
 | ~~`instruction.exfil`~~ | 2/36 (5.6%) | 2/12 | **withdrawn at 1.4.0** |
 | ~~`instruction.silence`~~ | — | — | **withdrawn: never had a rule** |
 | ~~`instruction.privilege_claim`~~ | — | — | **withdrawn: never had a rule** |

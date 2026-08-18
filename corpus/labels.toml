@@ -3779,9 +3779,9 @@ note = "A second bundle of the same proactive-agent operating rules under a diff
 digest = "sha256:ce2d08ca959ce3169f53d8377597dc28559706ae3e6f0b8f716163e2085ee5ae"
 stratum = "instr_config_mutation"
 verdict = "labelled"
-capabilities = []
-evidence = []
-note = "Delegation skill that drives another coding agent through a terminal multiplexer. Its two config-shaped lines are rows in a reference table of that agent slash commands - one row says the init command creates a CLAUDE.md, another says the hash prefix adds a line to CLAUDE.md memory - so the prose documents a feature and directs nothing. The describes-rather-than-instructs class for this term, in the form of a command reference table. Its many send lines are terminal keystrokes, not a network destination."
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:588"]
+note = "LABEL CORRECTED. Originally labelled with no term. It carries a Hooks section that directs the reader to configure .claude/settings.json at project or global scope and supplies the exact JSON, which is the term and is the same shape labelled positive throughout this stratum. The error was mine and it has the same cause as the eight corrected in phase 2: I read the lines a filter surfaced - two rows of a command-reference table describing another agent slash commands - concluded describes-rather-than-instructs, and did not read on to a section four hundred lines later that plainly instructs. Found because a corpus-derived verb list fired here and the aggregate looked like a precision regression; investigating the single new false positive showed the label was the thing that was wrong. Original note follows. Delegation skill that drives another coding agent through a terminal multiplexer. Its two config-shaped lines are rows in a reference table of that agent slash commands - one row says the init command creates a CLAUDE.md, another says the hash prefix adds a line to CLAUDE.md memory - so the prose documents a feature and directs nothing. The describes-rather-than-instructs class for this term, in the form of a command reference table. Its many send lines are terminal keystrokes, not a network destination."
 
 [[label]]
 digest = "sha256:8b801251b4ca17f7ecc365f1a4a447d0c3e0fca966965b76ef89065b9e1c660b"
