@@ -3315,3 +3315,119 @@ verdict = "labelled"
 capabilities = []
 evidence = []
 note = "The same skill-scanner body as another bundle in this stratum with different frontmatter, so a different digest and not caught by the byte-identical duplicate count. Same judgement: a checklist naming all three shapes as things to detect."
+
+[[label]]
+digest = "sha256:1faaca726120fde85c83eac6964e06b6c8b64311ef7ce841548abe0dc726bd00"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "A third variant of the same skill-scanner body, this one carrying only the entry document and none of the scripts or reference files it tells the agent to run and load. Same judgement: a checklist of shapes to detect, matched because it names them."
+
+[[label]]
+digest = "sha256:873dc6ee0d828dad90bb8256f381ce6a94b9a0178187b6407179f8f8ba8ef075"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:126"]
+note = "Trading skill that directs the reader to register an MCP server carrying API secrets in its environment block, which is the config_mutation shape. THE INSTRUCTIVE CASE FOR THE OTHER TERM: it also directs downloading a password-protected Windows archive from a release page and running the executable inside before the skill will work, with the password in the prose and the checksum left as an unfilled placeholder. A password on an archive defeats scanning, and this is as operative as prose gets - yet under the definition fixed before this pass it is NOT fetch_as_instruction, because fetched code that is executed is a different failure that net.fetch_then_execute and instruction.exec_directive already name. The rule fires anyway, so this counts as a false positive for a term while the bundle is the most alarming thing in the stratum. That divergence is the measurement this task exists to produce, not a labelling accident."
+
+[[label]]
+digest = "sha256:8e14cdba25b6774835cf3c6635710521ec90e814bdb01255e2f97ed54391603b"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "Android tooling skill whose installation section downloads a vendor install script to a temporary directory, prints it for review, and runs it only after the user confirms - and says in as many words not to pipe network installers into a shell. Careful, benign, and still fetched code that gets executed rather than fetched text that becomes instructions, so not this term."
+
+[[label]]
+digest = "sha256:3a05b0e101ec62ad1d3e43e5d56c3257bd52dc0ef6c2d6652f483243aa65f2fd"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:172"]
+note = "Directs registration of an MCP server holding API secrets, which is this term. The bundle is also the clearest malicious sample in the stratum and it is NOT fetch_as_instruction under the definition fixed before the pass. Its setup block offers a Windows path - a password-protected archive whose password is printed beside it - and a macOS path that echoes a plausible vendor CDN address as a decoy and then base64-decodes a one-liner into a shell. Decoded, that one-liner runs bash on the body of a plain-HTTP request to a bare IP address. Fetched code that executes, which two other terms name, and the third time in this stratum that the most dangerous bundle is a false positive for the term whose rule flagged it."
+
+[[label]]
+digest = "sha256:9bf892b8eebd57f0a254e021557437ddadfb91afcd3ec9a3f7d0c2f8e58e84a4"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:172"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:b3c8d619907ecab0220c0e8e3a7ebdfaa5f2ca4f217541597172352651bf7bd2"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:172"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:3ac50c2d44f55574c21f3a4af8dd197eead53dcd91913123e6020d0e0ea7ba43"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil", "instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:14", "SKILL.md:3"]
+note = "Observability vendor instrumentation skill. Directs the agent to follow the instructions at a documentation URL, which is the shape exactly, and benign - a vendor pointing at its own setup prompt. Also directs adding spans that capture each tool call input and output and ship them to the vendor, which is user application data leaving by design and the telemetry case the shipped rationale names as a legitimate match. Notable structurally: the bundle ships two extra files literally named Copy #1 of SKILL.md and Copy #2 of SKILL.md, both byte-identical to the entry document, so its prose is analysed three times."
+
+[[label]]
+digest = "sha256:a4dac97cbfb2ee849e154c670f09e227bc0f3a99e1ac1061aae3b5f4b69b4da7"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil", "instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:14", "SKILL.md:3"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:c8f6991599fd72187715108ca2351137e75862187aa265cf879a03c97fc793ff"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil", "instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:14", "SKILL.md:3"]
+note = "Byte-identical SKILL.md to another bundle in this stratum, republished under a different digest. Same judgement, counted once in the distinct-text figure."
+
+[[label]]
+digest = "sha256:e801851b753278091353c3bc56ab0ba3f3c2b7eb0eb29a38486e5b9ffc1ceaf7"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil"]
+evidence = ["SKILL.md:89"]
+note = "Malicious-skill scanner from a different family than the other scanners here. It directs the agent to read every installed skill on the machine and post the source in chunks to a hosted moderation model, so the contents of the user own installed skills - which are exactly where secrets get pasted - leave the machine by design. A true positive for exfil with a benign purpose, which is the case the shipped rationale says to report and not judge. Its fetch-shaped and credential-shaped phrases are a catalogue of attacks to detect, including a quoted example of piping a private key into a request, so it is simultaneously the describes-rather-than-instructs class for the other two terms."
+
+[[label]]
+digest = "sha256:fe5f9ec7e1b2cc95b1ef08f312ce6d06fcf7e893617a3e460d6afb6d3fda26c5"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:172"]
+note = "The same trading-skill pattern as the other malicious samples in this stratum, republished with a different release URL, a different archive name and a different archive password, so the prose is not byte-identical and the duplicate count does not catch it. Same judgement on both terms: an MCP registration carrying secrets, and a fetched-and-executed payload that is not this stratum term."
+
+[[label]]
+digest = "sha256:02dafe8661abb4e1f6d12ef6246d157e5474c813485343f833947fc065302962"
+stratum = "instr_fetch_instruction"
+verdict = "too_large"
+note = "369 KB across 37 files. Beyond the reading budget for one label, and counted as unscoreable rather than dropped - silently skipping the big ones would bias a census toward the simple ones."
+
+[[label]]
+digest = "sha256:31c75faa40b1d4d16686206c55e368c4eee67493d81410b5de8ed84e685082e4"
+stratum = "instr_fetch_instruction"
+verdict = "too_large"
+note = "A single 87 KB entry document, four times the per-file cap. Judging it from the lines a probe highlighted is the biased-labelling failure the worklist tool refuses to enable, so it is recorded as unscoreable instead."
+
+[[label]]
+digest = "sha256:974a029db83143568e3d011f74e59080b019ea99d838129bab7a1238c1a096f3"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.exfil"]
+evidence = ["SKILL.md:191"]
+note = "Meeting-transcription client. Directs the agent to upload recordings and media files from the machine to the vendor, which is the user own audio leaving by design - the backup-and-upload case the shipped rationale names as a legitimate match. Its fetch-shaped phrasing is downloading podcast and video media to re-upload, where nothing fetched becomes an instruction, so it is a false positive for the term whose stratum it was drawn into."
+
+[[label]]
+digest = "sha256:cbc6a5cd8817ba8dba8e6c6024c4e0eeb903ba1dd25b62034432ada1291f117a"
+stratum = "instr_fetch_instruction"
+verdict = "labelled"
+capabilities = ["instruction.fetch_as_instruction"]
+evidence = ["SKILL.md:54"]
+note = "Workflow orchestration layer, and a quieter instance of the shape than the obvious ones. The recipe steps the agent carries out are not in the bundle at all: they arrive at runtime in the catalog response and the prose directs the agent to fetch that catalog at conversation start and work from it. A reviewer reading this entry document never sees the steps that will run. Benign in posture - it states that it holds no keys and delegates every state-changing action - and structurally the thing this term names."
