@@ -3641,3 +3641,51 @@ verdict = "labelled"
 capabilities = ["instruction.config_mutation"]
 evidence = ["SKILL.md:23"]
 note = "Scoped memory system. Generates a root CLAUDE.md plus one per subdirectory, so the agent loads different instructions depending on where it is working. The term plainly, and one of the cases where the mutation is the entire product rather than a setup step."
+
+[[label]]
+digest = "sha256:a45417e858c87a47fa382b953b0fc827c0481770a91854e655e8ca342c69d890"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:142"]
+note = "Onboarding tour. The weakest true positive in this stratum and marked as such: it tells the reader that skill routing is already configured in the project CLAUDE.md and that they can add their own routing rules there at any time. Permissive rather than imperative, and counted for consistency with the authoring skill labelled the same way - the term asks whether the prose directs an edit into agent configuration, and both do, conditionally."
+
+[[label]]
+digest = "sha256:3a896795951580368103f20db6091dc484d75723edc98e60ce99006b3edbb9ed"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:170"]
+note = "STRUCTURALLY UNUSUAL and the reason worth recording: one entry document containing TWO complete skill definitions concatenated, each with its own frontmatter block. The first is a Gradle build fixer and matches nothing. The second is a setup skill that reads whichever of CLAUDE.md or AGENTS.md exists and edits it to add an agent-skills block, which is the term. A parser reading only the leading frontmatter describes this bundle as a build fixer while the config directive sits below, unannounced by the metadata."
+
+[[label]]
+digest = "sha256:e8d1b6e9a5db1ed64125d965d61c704ca18615a127514fdf4077a69560913cfc"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation", "instruction.exfil"]
+evidence = ["SKILL.md:60", "SKILL.md:36"]
+note = "Ontology engineering toolkit. Directs adding an MCP server block to the agent configuration file, which is the term. Also carries a push operation that sends the user triple store contents to a SPARQL endpoint the user names, which is user data leaving under the exfil definition - optional, user-directed, benign, and counted because the definition asks what crosses rather than who chose it. Notable for disclosing its own outbound network use in frontmatter, which almost nothing else in this corpus does."
+
+[[label]]
+digest = "sha256:107aed033ccfd85be3e110d8c27957d179b34229c64a3af94e556c73545825c4"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:334"]
+note = "Repository conventions document. Most of what looks like the term here is not - the word hook appears as a React import path, as a line in a changelog, and as the name of a documentation file - but a maintenance procedure does direct updating agent, skill and command counts in AGENTS.md, which is an edit to agent configuration. Counted on that line and not on the others."
+
+[[label]]
+digest = "sha256:21a22e1644bad286774359e1bb9268293d1074eb4a4ac425959a551ce79890da"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = []
+evidence = []
+note = "A NEW ARTIFACT CLASS, and probably the largest single source of noise for this term. The skill sets up git pre-commit hooks through husky, lefthook or the pre-commit framework. Every one of those is a git hook in the repository, not an agent hook in agent configuration, and the bundle touches no agent config file at all. The rule pattern matches set up, install or add followed by the bare word hook, so every git-hooks skill in the corpus fires. The word is doing two jobs and the pattern cannot see which."
+
+[[label]]
+digest = "sha256:641a7f604c23c995088286c165f86293282ef37e79a2dd3049670d4147933f0d"
+stratum = "instr_config_mutation"
+verdict = "labelled"
+capabilities = ["instruction.config_mutation"]
+evidence = ["SKILL.md:200"]
+note = "Directs adding an auto-load routing line to the project CLAUDE.md and creating the file if it is absent, then lists that edit in its own completion checklist. Unambiguous instance of the term."
