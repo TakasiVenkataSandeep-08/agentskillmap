@@ -322,7 +322,7 @@ been measured were worth keeping. **Two were not, and were removed at schema 1.4
 | `instruction.exec_directive` | 31/31 (100%) | 31/35 (88.6%) | shipped |
 | `instruction.directs_outside_write` | 37/38 (97.4%) | 37/37 (100%) | shipped |
 | `instruction.fetch_as_instruction` | **29/29 held out** | 29/29 (100%) | rewritten at 1.4.0 |
-| `instruction.config_mutation` | 38/53 (71.7%) | 38/49 (77.6%) | repaired at 0.9.0 |
+| `instruction.config_mutation` | **27/30 held out** · 38/53 in sample | 38/49 (77.6%) | repaired at 0.9.0 |
 | ~~`instruction.exfil`~~ | 2/36 (5.6%) | 2/12 | **withdrawn at 1.4.0** |
 | ~~`instruction.silence`~~ | — | — | **withdrawn: never had a rule** |
 | ~~`instruction.privilege_claim`~~ | — | — | **withdrawn: never had a rule** |
@@ -332,11 +332,17 @@ been measured were worth keeping. **Two were not, and were removed at schema 1.4
 prose *forbidding* the behaviour. Two repairs were measured — qualifying the noun gave 1/30,
 adding a negation guard gave 0/7, removing both true positives along with 23 false ones.
 
-`fetch_as_instruction` now detects one thing: **the bundle's operative instructions are not
-in the bundle.** Its precision column is the held-out figure — 30 bundles drawn and read
-after the rule was written, because the rule was rewritten *after* its other strata were
-labelled and those are in-sample for it. In-sample recall is 13/26, and that gap is published
-beside the flattering number rather than under it.
+**Two signals now carry a held-out precision**, and it is quoted first: 30 bundles drawn and
+read *after* the rule was written, because both rules were changed after their original strata
+were labelled and those strata are in-sample for them.
+
+The two figures for `config_mutation` differ a lot and both are real — **90% held out, 71.7%
+in sample**. The in-sample strata were deliberately enriched with confusable bundles: security
+scanners that enumerate these shapes, git-hooks skills where the word means something else
+entirely. The held-out draw is what the firing population looks like in the wild. Neither is
+*the* number: one says how the rule handles the hardest cases the corpus contains, the other
+says what a user actually meets. Quoting only the first would understate a shipped rule and
+quoting only the second would be the usual sin.
 
 `config_mutation` was repaired at 0.9.0, and the reasoning behind the earlier decision not to
 was wrong. It had been held back because ~64% precision sits far below the 97-100% the other

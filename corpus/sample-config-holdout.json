@@ -1,0 +1,129 @@
+{
+  "draws_from": "unlabelled bundles the SHIPPED config_mutation rule fires on, reached in seeded order",
+  "population_note": "117 confirmed firings from a 120-bundle probe pool, 7.5% base rate over 1606 scanned",
+  "seed": "skillmap-config-holdout-1",
+  "selected": [
+    {
+      "digest": "sha256:091977f02d17b85795532206747b90adae68b46f50c6020226d31995656f400b",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:1933ad2296a2927dfd954dc9dbd0fb50bdac1c829daea5693d042a03ab8e4958",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:1cd318f4200fbe61034ec15c1283664bf16306c2417888eb3e30c78afa43616e",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:26b2e9ddaec3dfa2bdb843d52b7061259e69b3072ab74b1611bf3791ee79eeb9",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:28d3be111585cf9e7b9131c2da91b558315f6bcf2c8de155ddf4485bb716b6e4",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:29f26b84245acbc2855295bafa9d89fe3eba3e0d909baddee97d77b73d65ffa6",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:2dd20b72a90b0d1e5fe31de704cf31d8bcb50912a82758f489dea465a231e975",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:375f052d393b917844708bb86a5ae52c2995e73cb766bcb5933c6e354c265673",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:3920df4dd93fed4cb9368f660edf1f4b2a6847d70b4785b2be730920cfe78cb9",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:49188795b2a80f14c5aae8d666065e06d40d0696f45b83d2ad837b021a8d5ef0",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:5010704ff09a7ddfae9bb287f8af0821fe2d0adbd603918cadfdd11f9c69f663",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:600069d472d61868dc4a4752db3684045214442f8a24511de43dae377091db52",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:675b4e7188b673335a6b5c2be17c79c013953c4ce6ca5de5f705c3d03f923c72",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:785cfb808af7af86c6cf0080094c34d2eb41e9d43dc98da5d4c177c5b94fba9d",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:868b96a8271613a69c4cc790c1bc971ce517250fdb9c67b4f7b7e4bd6aa3044d",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:893e0811b8150e46adbbb30c265de147f2816347a217336c5b2d39a87b0f06f4",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:8c2303467174f405339f3b4ddec392483f9f9fa9bf0df376c55a17e790c16c1b",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:8e14dd37128c695c1911dbb6b6ab606f8acfef4cb2fe4ec3a42d6519b285bb08",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:8e592ee14e1cd83d03a947b8afaa225f4a27c8a6d285309cf8b32d2e810722c3",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:92e3b5f4d715ac842b889f150ed7aa42f085787a7ba8a1b39ac095b3bf35b7af",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:a358e80cee9ca649157720ab1f04ba6f2252ddba3c9584251d3f6cf82e7a029f",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:bcc63a3dbeb8036223e2dc6a935b5c27fe4b28f18bc0470afa21ba73b05fe51f",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:bdde6423ddf12e6f8431c15e8e8441b40177d3ea03a742a118659f7007e623e2",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:d578a2e0c88e05e4ac137ab3e1c277fe0fefb79db8dd243a392fb1d5f27e7867",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:d9c0835359eb352379623d1502754dc671dc4a8d1d5bc3ead53b72522dc19c9c",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:dbc17474d2b514e82b53155629ae569c6c6d1acc1ba6de9bb889208cfb3977b6",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:e00e665a5fd4f6dc24224a2811e81f67ed5369ce8f78cbe648f1dbaf1289bcbf",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:e1706575c05addb071cffc32676b0c635f87eeb7d2f57b058fd32eb1a67a1f93",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:e1d77f2ba470d6f05c7e3113fd29f97a16cc3100484d313d05212a385234c17f",
+      "stratum": "instr_config_mutation_holdout"
+    },
+    {
+      "digest": "sha256:f5b91384f66fd4979158d4287a2909f1b37f4fd3c3caf245dfb0e3331a3a36ea",
+      "stratum": "instr_config_mutation_holdout"
+    }
+  ],
+  "snapshot": "2026-08",
+  "why": "the rule was repaired after its phase 1 strata were labelled, so those strata are in-sample for it"
+}

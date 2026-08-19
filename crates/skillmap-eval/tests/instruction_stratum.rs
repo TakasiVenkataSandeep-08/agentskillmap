@@ -598,3 +598,45 @@ fn the_config_mutation_signal_is_scored_against_its_own_ground_truth() {
         "the config_mutation score moved. It is the weakest shipped signal and          the one most worth watching: what remains in `fp` is security scanners          enumerating the shapes they detect, which no pattern reaches"
     );
 }
+
+#[test]
+fn the_config_mutation_signal_has_a_held_out_score_too() {
+    // The remote-instruction term got a held-out draw because its rule was
+    // rewritten after its strata were labelled. config_mutation has the same
+    // problem — repaired at 0.9.0, after its labels existed — and this closes it.
+    //
+    // The two numbers differ a lot and both are real. In-sample precision is
+    // ~72% because the phase 1 strata were deliberately enriched with confusable
+    // bundles: security scanners that enumerate these shapes, git-hooks skills
+    // where the word means something else. Held-out precision is 90% because
+    // that is what the firing population actually looks like in the wild.
+    //
+    // Neither is the "true" number. The enriched one says how the rule behaves
+    // against the hardest cases the corpus contains; the held-out one says what
+    // a user meets. Publishing only the flattering one would be the usual sin,
+    // and publishing only the pessimistic one would understate a shipped rule.
+    const TERM: &str = "instruction.config_mutation";
+    let Some((tp, fp, fn_, tn, _, spurious)) =
+        score_signal(TERM, &["instr_config_mutation_holdout"])
+    else {
+        eprintln!("SKIPPED: corpus/raw/ is absent, so {TERM} could not be scored.");
+        return;
+    };
+    report_score(
+        &format!("{TERM} [held out, unread when drawn]"),
+        tp,
+        fp,
+        fn_,
+        tn,
+    );
+    if !spurious.is_empty() {
+        println!("  false positives: {spurious:?}");
+    }
+    assert_eq!(
+        (tp, fp, fn_, tn),
+        (27, 3, 0, 0),
+        "the held-out config_mutation score moved. The three false positives are \
+         a settings reference table, a prohibition against writing to a settings \
+         file, and a filename collision on a skill's own config/settings.json"
+    );
+}
